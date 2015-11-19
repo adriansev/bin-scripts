@@ -1,0 +1,7 @@
+load_cent=`upsc myups ups.load`
+echo "Load (%) = " $load_cent
+loadW=`echo "$load_cent*390/100"|bc`
+echo "Load (W) = " $loadW
+
+
+

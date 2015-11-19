@@ -1,0 +1,1 @@
+sudo /home/adrian/bin/ps_mem -p $(pgrep -d, -u $1)

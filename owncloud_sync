@@ -1,0 +1,2 @@
+owncloudcmd --confdir $HOME/.local/share/data/ownCloud/owncloud.cfg /home/adrian/ownCloud ownclouds://issaf.spacescience.ro/owncloud/remote.php/webdav
+

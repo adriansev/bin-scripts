@@ -1,0 +1,4 @@
+#!/bin/bash
+
+est=`sudo iptstate -1 | grep icmp | wc -l`
+echo $est

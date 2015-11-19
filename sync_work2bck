@@ -1,0 +1,4 @@
+##force="--delete"
+
+rsync -avzWhu --stats $force /home/adrian/work/ /home.hdd/adrian/BACKUP/work_backup_sync
+

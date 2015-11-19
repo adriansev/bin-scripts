@@ -1,0 +1,66 @@
+#!/bin/bash
+
+tmpf1=/tmp/sortf1.$$
+tmpf2=/tmp/sortf2.$$
+tmpf3=/tmp/sortf3.$$
+
+echoerr() { echo "$@" 1>&2; }
+
+dir_to_be_listed=$1
+
+prefix="file://"
+
+file2find="root_archive.zip"
+
+find $dir_to_be_listed -type f -name root_archive.zip -printf "%s   %p \n" | sort -n -r > $tmpf1
+find $dir_to_be_listed -type f -name AliAOD.root -printf "%s   %p \n" | sort -n -r > $tmpf2
+find $dir_to_be_listed -type f -name AliESD.root -printf "%s   %p \n" | sort -n -r > $tmpf3
+
+if [ -e $tmpf1 -a `stat -c %s $tmpf1` -ne 0  ] 
+then
+    # root_archive case
+    files=`awk '{print $2}' $tmpf1`
+
+    set -- $files
+    firstfile=$1
+
+    list_of_files=`unzip -qq -l $firstfile | awk '{print $4}'`
+
+    isAOD=`echo $list_of_files | grep -o AOD`
+    isESD=`echo $list_of_files | grep -o ESD`
+
+    if [ -n "$isAOD" ]
+        then
+        sufix="#AliAOD.root"
+    else
+        sufix="#AliESD.root"
+    fi
+
+elif [ -e $tmpf2 -a `stat -c %s $tmpf2` -ne 0  ]
+then
+    # AliAOD.root case
+    files=`awk '{print $2}' $tmpf2`
+
+elif [ -e $tmpf3 -a `stat -c %s $tmpf3` -ne 0  ]
+then
+    # AliESD.root case
+    files=`awk '{print $2}' $tmpf3`
+
+else
+    echo "Something is wrong"
+    exit
+fi
+
+for file in $files
+do
+    size=`stat -c %s $file`
+    [[ $size = "0" ]] && echoerr "File with size 0 .. will be deleted" && rm -rfv $file && continue
+    echo $prefix$file$sufix
+
+done
+
+rm -rf $tmpf1
+rm -rf $tmpf2
+rm -rf $tmpf3
+
+

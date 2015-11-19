@@ -1,0 +1,41 @@
+echo "This should be run in BUILD directory;"
+echo "the argument should be the path to the source"
+
+cmake -DCMAKE_INSTALL_PREFIX=$tools/FAIR/FairROOT \
+-DUSE_PATH_INFO="1" \
+-DCLHEP_BASE_DIR="$tools/heplibs/clhep" \
+-DCLHEP_CONFIG_EXE="$tools/heplibs/clhep/bin/clhep-config" \
+-DCLHEP_LIBRARY_DIR="$tools/heplibs/clhep/lib" \
+-DCLHEP_INCLUDE_DIR="$tools/heplibs/clhep/include" \
+-DPYTHIA6_LIBRARY_DIR="$tools/FAIR/fairsoft/lib" \
+-DVGM_LIBRARY_DIR="$tools/FAIR/fairsoft/lib" \
+-DPLUTO_LIBRARY_DIR="$tools/FAIR/fairsoft/lib" \
+-DPLUTO_INCLUDE_DIR="$tools/FAIR/fairsoft/include/pluto" \
+-DGEANT3_INCLUDE_DIR="$tools/FAIR/fairsoft/include/TGeant3" \
+-DGEANT3_LIBRARY_DIR="$tools/FAIR/fairsoft/lib" \
+-DGEANT3_SYSTEM_DIR="$tools/FAIR/fairsoft" \
+-DGEANT3_LIB="$tools/FAIR/fairsoft/lib/libgeant321.so" \
+-DGEANT4VMC_LIBRARY_DIR="$tools/FAIR/fairsoft/lib" \
+-DGEANT4VMC_INCLUDE_DIR="$tools/FAIR/fairsoft/include/geant4vmc" \
+-DGEANT4VMC_MACRO_DIR="$tools/FAIR/fairsoft/share/geant4_vmc/macro" \
+-DGEANT4_DIR="$tools/FAIR/fairsoft" \
+-DGEANT4_INCLUDE_DIR="$tools/FAIR/fairsoft/include/Geant4" \
+-DGEANT4_LIB_DIR="$tools/FAIR/fairsoft/lib" \
+-DGEANT4_MODULAR_PHYSICS_LIST="$tools/FAIR/fairsoft/lib" \
+-DBoost_LIBRARY_DIR="$tools/FAIR/fairsoft/lib" \
+-DBoost_INCLUDE_DIR="$tools/FAIR/fairsoft/include" \
+-DZMQ_LIBRARY_STATIC="$tools/FAIR/fairsoft/lib/libzmq.a" \
+-DZMQ_LIBRARY_SHARED="$tools/FAIR/fairsoft/lib/libzmq.so" \
+-DZMQ_INCLUDE_DIR="$tools/FAIR/fairsoft/include" \
+-DGEANT4_DATA="$tools/FAIR/fairsoft/share/Geant4/data" \
+-DG4NEUTRONXSDATA="$tools/FAIR/fairsoft/share/Geant4/data/G4NEUTRONXS" \
+-DG4LEDATA="$tools/FAIR/fairsoft/share/Geant4/data/G4EMLOW" \
+-DG4SAIDXSDATA="$tools/FAIR/fairsoft/share/Geant4/data/G4SAIDDATA" \
+-DG4LEVELGAMMADATA="$tools/FAIR/fairsoft/share/Geant4/data/PhotonEvaporation" \
+-DG4PIIDATA="$tools/FAIR/fairsoft/share/Geant4/data/G4PII" \
+-DG4NeutronHPCrossSections="$tools/FAIR/fairsoft/share/Geant4/data/G4NDL" \
+-DG4RADIOACTIVEDATA="$tools/FAIR/fairsoft/share/Geant4/data/RadioactiveDecay" \
+-DG4REALSURFACEDATA="$tools/FAIR/fairsoft/share/Geant4/data/RealSurface" \
+$1
+
+

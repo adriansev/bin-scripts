@@ -1,0 +1,11 @@
+DEV="vlan1"
+GW="89.34.200.1"
+ISS="85.120.46.62"
+GW_grep="'^$GW\>'"
+
+ssh_cmd="echo -ne \`date +%d.%m.%Y%t%T\` \"\b\t\"; ip neigh show dev $DEV | grep $GW_grep | awk '{print \$1,\$4}' ; ping -q -c1 $GW | tail -n +3 ; ping -q -c1 $ISS | tail -n +3; echo -e \"\n\n\""
+
+ssh -o SendEnv router $ssh_cmd >> ~/net_check.log
+
+
+

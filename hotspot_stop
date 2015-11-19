@@ -1,0 +1,5 @@
+CMD="/home/adrian/bin/hotspot"
+chmod +x $CMD
+sudo $CMD stop
+chmod -x $CMD
+

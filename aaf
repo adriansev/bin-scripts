@@ -1,0 +1,130 @@
+#!/home/physics-tools/root/root/bin/root.exe -l
+{
+printf ("First argument must be an PROOF system : lite (ProofLite - local), CAF, SKAF, JRAF, KIAF, SAF \n");
+printf ("Second argument is one of : reset, clear (ClearPackages), rootvers, datasets, logs \n");
+printf ("Third argument is needed only for datasets or logs options \n") ;
+printf ("a dataset argument looks like : \"/*/*\" (default) or like \"/alice/*\" \n");
+printf ("a logs argument is the output file (default proof.log) \n");
+
+Int_t argc        = gApplication->Argc();
+const char **argv = gApplication->Argv();
+
+//for (int i=0; i < argc; i++) 
+//    { printf("argument %d = %s\n", i, argv[i]); }
+
+TString workers = "workers=0";
+TString logfile = "proof.log"; 
+
+TString user = "asevcenc";
+TString caf  = "@alice-caf.cern.ch";
+TString skaf = "@skaf.saske.sk";
+TString jraf = "@jraf.jinr.ru" ;
+TString kiaf = "@kiaf.sdfarm.kr";
+TString saf  = "@nansafmaster.in2p3.fr";
+
+TString dataset = "/*/*"; 
+TString url = "";
+
+TString arg0 = "";
+TString arg1 = "";
+TString arg2 = "";
+TString arg3 = "";
+TString arg4 = "";
+TString arg5 = "";
+TString arg6 = "";
+TString arg7 = "";
+TString arg8 = "";
+
+
+if ( argc < 3 ) { printf ("ERROR \n") ; } 
+if ( argc > 3 )  { arg0 = argv[3]; }
+if ( argc > 4 )  { arg1 = argv[4]; }
+if ( argc > 5 )  { arg2 = argv[5]; }
+if ( argc > 6 )  { arg3 = argv[6]; }
+if ( argc > 7 )  { arg4 = argv[7]; }
+if ( argc > 8 )  { arg5 = argv[8]; }
+if ( argc > 9 )  { arg6 = argv[9]; }
+if ( argc > 10 ) { arg7 = argv[10]; }
+if ( argc > 11 ) { arg8 = argv[11]; }
+if ( argc > 12 ) { arg9 = argv[12]; }
+
+arg0.ToLower();
+arg1.ToLower();
+arg2.ToLower();
+arg3.ToLower();
+arg4.ToLower();
+arg5.ToLower();
+arg6.ToLower();
+arg7.ToLower();
+arg8.ToLower();
+
+if ( !arg0.CompareTo ( "lite" ) )
+  {  }
+else if ( !arg0.CompareTo ( "caf" ) )
+  { url = user + caf; }
+else if ( !arg0.CompareTo ( "skaf" ) )
+  { url = user + skaf; }
+else if ( !arg0.CompareTo ( "jraf" ) )
+  { url = user + jraf; }
+else if ( !arg0.CompareTo ( "kiaf" ) )
+  { url = user + kiaf; }
+else if ( !arg0.CompareTo ( "saf" ) )
+  { url = user + saf; }
+else
+  {
+  printf ("ERROR \n"); 
+  gSystem->Exit(1);
+  }
+
+//cout << "url : " << url.Data() << endl;
+
+gEnv->SetValue("XSec.GSI.DelegProxy", "2");
+TProof::Open( url, "masteronly"); 
+mgr = TProof::Mgr(url);
+
+if ( !arg1.CompareTo ( "clear" ) )
+  { gProof->ClearPackages(); } 
+else if ( !arg1.CompareTo ( "reset" ) )
+  { gProof->Reset(url); }
+else if ( !arg1.CompareTo ( "rootvers" ) )
+  { mgr->ShowROOTVersions(); }
+else if ( !arg1.CompareTo ( "datasets" ) )
+  {
+  if ( !arg2.CompareTo("show")  )
+    {
+    if ( arg3 != "" ) { dataset = arg2.Data();  }
+    gProof->ShowDataSets(dataset.Data());
+
+    }
+  if ( !arg2.CompareTo ("verify") )
+    {
+    if ( arg3 == "" ) { printf ("You must specify an dataset URI") ; gSystem->Exit(1); }
+    dataset = arg3.Data();
+    gProof->VerifyDataSet(dataset); 
+    }
+  }
+else if ( !arg1.CompareTo ( "logs" ) )
+  { 
+  logs = mgr->GetSessionLogs();
+  if ( arg2 != "" ) { logfile = arg2.Data(); }
+
+  Int_t state = logs->Save("*",logfile);
+  if (!state) 
+    { printf ("Succes ! \n");}
+  else
+    { printf ("Logs retreival failed! \n"); }   
+  }
+else
+  {
+  printf ("ERROR \n"); //help();
+  gSystem->Exit(1);
+  }
+
+
+
+gSystem->Exit(0);
+}
+
+
+
+

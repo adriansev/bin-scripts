@@ -1,0 +1,65 @@
+#!/bin/bash
+
+
+FJ06="fastjet-3.0.6"
+FJ12="fastjet-3.1.2"
+
+ALIROOT_R6="v5-AN-604"
+ALIROOT_R5="v5-AN-latest30_reldbg"
+ALIROOT_R5_08="v5-AN-latest_reldbg"
+
+ALIPHYS_R6="physics30_r6"
+ALIPHYS_R5="physics30_reldbg"
+ALIPHYS_R5_08="physics_reldbg"
+
+
+cd $tools/alice
+
+if [ "$1" = "r6" ]
+then
+  root_switch v6
+
+  unlink fastjet
+  ln -s $FJ12 fastjet
+
+  unlink aliroot
+  ln -s $ALIROOT_R6 aliroot
+
+  unlink physics
+  ln -s $ALIPHYS_R6 physics
+
+elif [ "$1" = "08" ]
+then
+
+  root_switch 08
+
+  unlink fastjet
+  ln -s $FJ06 fastjet
+
+  unlink aliroot
+  ln -s $ALIROOT_R5_08 aliroot
+
+  unlink physics
+  ln -s $ALIPHYS_R5_08 physics
+
+elif [ "$1" = "r5" ]
+then
+
+  root_switch latest
+
+  unlink fastjet
+  ln -s $FJ12 fastjet
+
+  unlink aliroot
+  ln -s $ALIROOT_R5 aliroot
+
+  unlink physics
+  ln -s $ALIPHYS_R5 physics
+
+else
+
+  echo "arguments are 08, r5, r6"
+
+fi
+
+

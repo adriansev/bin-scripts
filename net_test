@@ -1,0 +1,20 @@
+#!/bin/bash
+router_private_ip=192.168.1.1
+router_public_ip=89.34.202.28
+gateway_ip=89.34.200.1
+dns_list=`grep ^nameserver /etc/resolv.conf | awk '{print $2}'`
+
+echo "ping private iface ROUTER"
+ping -q -n -c 3 -i 0.3 $router_private_ip
+echo
+echo "ping public iface ROUTER"
+ping -q -n -c 3 -i 0.3 $router_public_ip
+echo
+echo "ping gateway"
+ping -q -n -c 3 -i 0.3 $gateway_ip
+echo
+for dns in $dns_list
+do 
+ping -q -n -c 3 -i 0.3 $dns
+done
+

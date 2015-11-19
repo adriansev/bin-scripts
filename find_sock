@@ -1,0 +1,7 @@
+#! /bin/bash
+read -ep "Enter the search term " garg
+while [ "$garg" != "exit" ]; do
+  netstat -pea | grep $garg
+  lsof | grep $garg
+  read -ep "Enter the search term " garg
+done

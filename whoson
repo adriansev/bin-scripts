@@ -1,0 +1,5 @@
+date
+echo "I am"
+whoami
+echo "Others logged on" 
+who -u | sort

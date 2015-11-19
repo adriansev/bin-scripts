@@ -1,0 +1,12 @@
+#! /bin/awk -f
+BEGIN { files=0 ; split (ARGV[1],a,".");  }
+{
+
+for (i=0;i<8;i++)
+  {
+  if ( NR%8 == i ) { print $0 > a[1]"_"i+1"."a[2] }
+  }
+
+files++
+}
+##END { print "Au fost citite " files " fisiere" }

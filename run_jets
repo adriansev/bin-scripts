@@ -1,0 +1,97 @@
+help ()
+{
+echo "Signature of the macro function :"
+echo "void EmcalJetCDF ( const char* analysis_mode="local", const char* plugin_mode="test", const char* input="data.txt" )"
+echo
+echo "Usage : run_jets <kAnalysisMode> <kPluginMode> <input>"
+echo "kAnalysisMode : local, grid, proof "
+echo "kPluginMode : test, offline, submit, terminate, full "
+echo "input : file with list of files for local anaysis, a label in InputData.C or a dataset"
+}
+
+escape_quotes ()
+{
+string=$1
+substring="\""
+replacement="\\\""
+
+echo ${string//"$substring"/"$replacement"}
+}
+
+
+quote_args()
+{
+arg=$1
+
+if [[ $arg == ${arg//[^0-9]/} ]]
+then
+  echo $arg
+else
+  echo "\""$arg"\""
+fi
+
+}
+
+
+if [ "$1" = "help" ]
+then
+  help ; exit
+elif [ "$1" = "memstat" ]
+then
+  MEMSTAT=" -memstat "
+  shift
+elif [ "$1" = "massif" ]
+then
+  VALGRIND="valgrind --tool=massif "
+  shift
+elif [ "$1" = "valgrind" ]
+then
+  VALGRIND="valgrind --leak-check=full --suppressions=/home/physics-tools/alice/aliroot/etc/valgrind-aliroot.supp "
+  shift
+fi
+
+COMMAND="EmcalJetCDF.C"
+
+
+# parse arguments and quote them
+ARGS_CORE=""
+
+for token in $@
+do
+  token2=`quote_args $token`
+
+  if [ -n "$ARGS_CORE" ]
+  then
+    ARGS_CORE=$ARGS_CORE,$token2
+  else
+    ARGS_CORE=$token2
+  fi
+done
+
+ARGS_CORE=`escape_quotes $ARGS_CORE`
+
+ARGS_BEGIN="\("
+ARGS_END="\)"
+
+PLUGIN_ARGS=$ARGS_BEGIN$ARGS_CORE$ARGS_END
+
+# exec_begin="nohup root -l -b -q "
+
+# NOHUP="nohup"
+# REZ="&"
+# REDIR=" > >(tee out.log) 2> >(tee err.log >&2)"
+ROOT=" aliroot -l -b -q"
+
+
+exec_begin="$NOHUP $VALGRIND $ROOT $MEMSTAT"
+
+exec_end="$REDIR $REZ"
+
+full_command=$exec_begin" "$COMMAND$PLUGIN_ARGS" "$exec_end
+
+echo "Running command :"
+echo $full_command
+
+#eval $full_command
+
+

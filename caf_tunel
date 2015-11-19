@@ -1,0 +1,6 @@
+ssh -L 1093:alicecaf.cern.ch:1093 asevcenc@lxplus.cern.ch
+
+##ssh -f asevcenc@lxplus.cern.ch -N -L 1093:alicecaf.cern.ch:1093
+##ssh -f asevcenc@lxplus.cern.ch -N -L 1094:alicecaf.cern.ch:1094
+
+

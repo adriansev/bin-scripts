@@ -1,0 +1,64 @@
+if [ ! -n "${ROOTSYS}" ]
+then
+  echo "ROOTSYS is not set" && exit
+fi
+
+if [[ "$2" == "release" ]]
+then
+  BUILDTYPE="Release"
+else
+  BUILDTYPE="RelWithDebInfo"
+fi
+
+cmake \
+-DCMAKE_INSTALL_PREFIX=${tools}/root/v6-00 \
+-DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
+-DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+-Dbuiltin_llvm="1" -DLLVM_BUILD_TYPE="Release" -DLLVM_PARALLEL_COMPILE_JOBS="4" -DLLVM_ENABLE_CXX1Y="1" \
+-Dcxx11="1" -Dtbb="1" -Dbuiltin_tbb="0" -Droot7="0" -Dcxx14="0" \
+-Dbuiltin_ftgl="0" -Dbuiltin_glew="0" -Dbuiltin_gsl="0" -Dbuiltin_afterimage="0" -Dbuiltin_cfitsio="0" -Dbuiltin_freetype="0" \
+-Dbuiltin_lzma="0" -Dbuiltin_zlib="0" -Dbuiltin_xrootd="0" -Dbuiltin_pcre="0" -Dvc="1" -Dvdt="1" \
+-Dsoversion="1" -Dgsl_shared="1" -Droofit="1" -Dminuit2="1" -Dtable="1" -Dunuran="1" -Dgdml="1" -Dqt="1" -Dqtgsi="1" -Dglobus="0" -Dgfal="0" \
+-Dpythia6_nolink="1" -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
+-DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
+-DMONALISA_INCLUDE_DIR="${tools}/heplibs/ApMon/include" -DMONALISA_LIBRARY="${tools}/heplibs/ApMon/lib/libapmoncpp.so" \
+-DXROOTD_INCLUDE_DIR="${GSHELL_ROOT}/include/xrootd/" -DXROOTD_INC_PRIV_DIR="${GSHELL_ROOT}/include/xrootd/XrdClient/" \
+-DXROOTD_XrdMain_LIBRARY="${GSHELL_ROOT}/lib/libXrdMain.so" \
+-DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" \
+-DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so" \
+$1
+
+
+
+
+########-DXROOTD_XrdMain_LIBRARY="/usr/lib64/libXrdMain.so" \
+
+#-DXROOTD_INCLUDE_DIR="/usr/include/xrootd/" -DXROOTD_INC_PRIV_DIR="/usr/include/xrootd/private/XrdClient/" \
+#-DXROOTD_XrdUtils_LIBRARY="/usr/lib64/libXrdUtils.so" \
+#-DXROOTD_XrdClient_LIBRARY="/usr/lib64/libXrdClient.so" \
+
+
+
+
+
+
+
+## -DPYTHIA6_LIBRARY="${tools}/heplibs/pythia6/libPythia6.so" \
+
+## -Djemalloc="1" -Dtcmalloc="1"
+
+## | tee cmake_out.txt
+# -DLLVM_ENABLE_WERROR="1"  \
+# -Dbuiltin_llvm:BOOL="0"
+# -DLLVM_ENABLE_SPHINX="0"
+# -DLLVM_ENABLE_WERROR="1"
+# -DLLVM_BINUTILS_INCDIR="/usr/include"
+# -DLLVM_ENABLE_BACKTRACES="1"
+# -DLLVM_EXTERNAL_CLANG_BUILD="1"
+# -DLLVM_ENABLE_EH="1"
+# -DLLVM_ENABLE_FFI="1"
+# -DLLVM_ENABLE_RTTI="1"
+# -DLLVM_BUILD_TYPE="Release"
+# -DLLVM_ENABLE_LIBCXX="1"
+# -DLLVM_DIR="/usr"
+

@@ -1,0 +1,1 @@
+xargs -a $1 -n 50 yum -y install

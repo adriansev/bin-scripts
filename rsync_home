@@ -1,0 +1,157 @@
+debug=""
+trial=""
+
+# Where am i?
+myip=`ip addr show dev p20p1 | egrep -o '[1-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -n 1`
+
+ip_acasa="192.168.1.100"
+ip_acasa_public="89.34.202.28"
+ip_iss="85.120.46.62"
+
+whereami=""
+DEST_HOST=""
+LOG_FILE="/home/adrian/rsync_log"
+touch $LOG_FILE
+
+# Only run rsync if target responds.
+# PING_STATUS=`ping -s 1 -c 1  > /dev/null; echo $?`
+
+ping_status()
+{
+ping -s 1 -c 1 $1 > /dev/null; echo $?
+}
+
+case "$myip" in
+  "$ip_acasa") whereami=acasa && DEST_HOST=iss   && PING_STATUS=`ping_status $ip_iss`           ;;
+  "$ip_iss"  ) whereami=iss   && DEST_HOST=acasa && PING_STATUS=`ping_status $ip_acasa_public`  ;;
+esac
+
+# Directory to be sync on the source machine.
+
+COMMON_FILES=".bash_completion .bash_profile .bashrc .htoprc bin/ /home/physics-tools/env/ .purple/logs/"
+JETS="work/jets/"
+DOCUMENTS="Documents/"
+DOCS="Documentation/"
+PHYSISCS="Physics/"
+
+FILES=""
+
+cd ~
+if [ "$1" = "common" ]
+then                                                                                                                                                 
+   FILES=$COMMON_FILES
+elif [ "$1" = "jets" ]                                                                                                                                
+then                                                                                                                                                 
+    FILES=$JETS
+elif [ "$1" = "documents" ]                                                                                                                                
+then                                                                                                                                                 
+    FILES=$DOCUMENTS
+elif [ "$1" = "docs" ]                                                                                                                                
+then                                                                                                                                                 
+    FILES=$DOCS
+elif [ "$1" = "physics" ]                                                                                                                                
+then                                                                                                                                                 
+    FILES=$PHYSICS
+elif [ "$1" = "all" ]                                                                                                                                
+then                                                                                                                                                 
+    FILES="$COMMON_FILES $JETS $DOCUMENTS"
+else                                                                                                                                                 
+   echo "Accepted arguments are : "                                                                                                                  
+   echo "common, jets, documents, docs, physics, all"
+   exit                                                                                                                     
+fi          
+
+
+if [ "$2" = "up" ]
+then                                                                                                                                                 
+  from=
+  to=$DEST_HOST:
+elif [ "$2" = "down" ]                                                                                                                                
+then                                                                                                                                                 
+  from=$DEST_HOST:
+  to=
+elif [ "$2" = "both" ]                                                                                                                                
+then                                                                                                                                                 
+  both=1
+  from=
+  to=$DEST_HOST:
+else                                                                                                                                                 
+   echo "Accepted 2nd arguments are : "                                                                                                                  
+   echo "up, down, both"
+   exit                                                                                                                     
+fi          
+
+
+OPTS="-avzWhu --log-file=$LOG_FILE --stats"
+
+if [ "$3" = "force" ]
+then                                                                                                                                                 
+  OPTS="$OPTS --delete --force" 
+fi          
+
+# -a, --archive               archive mode; equals -rlptgoD (no -H,-A,-X)
+#   -r, --recursive             recurse into directories
+#   -l, --links                 copy symlinks as symlinks
+#   -p, --perms                 preserve permissions
+#   -t, --times                 preserve modification times
+#   -g, --group                 preserve group
+#   -o, --owner                 preserve owner (super-user only)
+#   -D                          same as --devices --specials
+#         --devices             preserve device files (super-user only)
+#         --specials            preserve special files
+# -v, --verbose               increase verbosity
+# -z, --compress              compress file data during the transfer
+# --compress-level=NUM    explicitly set compression level
+# -W, --whole-file            copy files whole (w/o delta-xfer algorithm)
+
+# --delete                delete extraneous files from dest dirs
+# --force                 force deletion of dirs even if not empty
+# -m, --prune-empty-dirs      prune empty directory chains from file-list
+# --stats                 give some file-transfer stats
+# -u, --update                skip files that are newer on the receiver
+
+
+
+[ -n "$debug" ] && echo $OPTS
+[ -n "$debug" ] && echo -ne "Ping status --> "$PING_STATUS
+[ $PING_STATUS -eq 0 ] && [ -n "$debug" ] && echo " --> We have ping!"
+
+transfer()
+{
+if [ $PING_STATUS -eq 0 ]; then
+   
+   [ -n "$debug" ] && echo "Location : $whereami  ;  DEST_HOST = $to"
+   [ -n "$debug" ] && echo $FILES
+
+   for file in $FILES
+      do
+      echo "Send HERE --> DEST"
+      a=$from$file
+      b=$to$file
+      
+      [ -n "$debug" ] && echo $from "  -->  " $to
+      [ -n "$debug" ] && echo $a "  -->  " $b
+      [ -z "$trial" ] && rsync $OPTS $a $b
+
+      done
+
+
+else
+    echo "Cannot connect to $DEST."
+fi
+}
+
+if [ "$both" = "1" ]
+then                                                                                                                                                 
+   transfer
+
+   temp=$to
+   to=$from
+   from=$temp
+   
+   transfer
+else                                                                                                                                                 
+   transfer
+fi          
+
+

@@ -1,0 +1,11 @@
+echo "config VGM"
+
+cmake \
+-DCMAKE_INSTALL_PREFIX="${tools}/heplibs/vgm" \
+-DGEANT4_CONFIG_EXECUTABLE="$tools/geant4/bin/geant4-config" \
+-DCLHEP_DIR="$tools/heplibs/clhep" \
+-DWITH_G4ROOT="1" -DWITH_EXAMPLES="0" -DINSTALL_EXAMPLES="0" \
+$1
+
+
+

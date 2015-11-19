@@ -1,0 +1,8 @@
+cdir=`pwd`
+mkdir build
+rm -rf build/*
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=$cdir -DCMAKE_BUILD_TYPE=RelWithDebInfo $cdir
+make -j4 && make install
+cd $cdir
+

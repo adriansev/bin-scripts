@@ -1,0 +1,94 @@
+:
+##########################################################################
+# Shellscript:	targets - show targets in a makefile
+# Author     :	Heiner Steven <heiner.steven@odn.de>
+# Date       :	1995-07-17
+# Category   :	Programming
+# SCCS-Id.   :	@(#) targets	1.4 04/02/18
+##########################################################################
+# Description
+#
+##########################################################################
+
+PN=`basename "$0"`			# Program name
+VER='1.4'
+
+# Search a "new" awk (nawk) or GNU awk
+for path in . `echo "$PATH" | tr : ' '`
+do
+    for awk in nawk gawk
+    do
+        [ -x "$path/$awk" ] || continue
+        NAWK=$path/$awk
+        break 2
+    done
+done
+: ${NAWK:=awk}
+
+FmtLine="cut -d: -f1"			# Extract target
+
+Usage () {
+    echo >&2 "$PN - extract targets from makefile, $VER (stv '95)
+usage: $PN [-v] [-f makefile]
+    -v:  show dependencies 
+    -f:  use specified makefile instead of \"makefile\" or \"Makefile\""
+    exit 1
+}
+
+Msg () {
+    for i
+    do echo "$PN: $i" >&2
+    done
+}
+
+Fatal () { Msg "$@"; exit 1; }
+
+# Check arguments before setting them
+getopt hf:v "$@" > /dev/null 2>&1	|| Usage
+set -- `getopt hf:v "$@"`
+while [ $# -gt 0 ]
+do
+    case "$1" in
+	-f)	Makefile="$2";;
+	-v)	FmtLine= ;;
+	--)	shift; break;;
+	-h)	Usage;;
+	-*)	Usage;;
+	*)	break;;			# first file name
+    esac
+    shift
+done
+
+if [ -z "$Makefile" ]
+then
+    for Makefile in makefile Makefile
+    do
+	[ -f "$Makefile" ] && {
+	    Msg "searching $Makefile"
+	    break
+	}
+    done
+fi
+
+[ -n "$Makefile" ] || Fatal "No makefile found"
+[ -f "$Makefile" ] || Fatal "File $Makefile does not exist"
+
+# Search word starting at first character of the line, terminated with
+# ":". Ignore comments.
+$NAWK '
+	$1 ~ /^#/ { next }			# Ignore comments
+	$1 ~ /^[^: 	][^: 	]*:$/ { 
+	    if ( $0 ~ /\\$/ ) {			# continued line?
+		while ( $0 ~ /\\$/ ) {
+		    sub (/\\$/, "", $0)
+		    for ( i=1; i<=NF; i++ )
+			printf "%s ", $i	# continuation
+		    if ( getline <= 0 ) break
+		}
+		printf "\n"
+	    } else {
+		print $0 			# Print target line
+	    }
+	}
+    ' $Makefile |
+    eval ${FmtLine:-cat}

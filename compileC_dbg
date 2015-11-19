@@ -1,0 +1,19 @@
+#!/home/physics-tools/root/root/bin/root.exe -l -q
+{
+Int_t argc        = gApplication->Argc();
+const char **argv = gApplication->Argv();
+TString input = "" ;
+
+if ( argc <= 3 ) { printf ("ERROR :: no argument \n") ; gSystem->Exit(1);  }
+
+input = argv[3];
+
+//for (int i=0; i < argc; i++)
+//    { printf("argument %d = %s\n", i, argv[i]); }
+
+input = input + "++g" ;
+
+gROOT->LoadMacro(input);
+
+gSystem->Exit(0);
+}

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ ! -n "$1" ] ; then
+  echo "Usage: `basename $0` remote_ip:port"
+  exit
+fi
+
+CMD="ssh -f -N -L "
+LOCAL_PORT="33333"
+REMOTE_ADRESS=$1
+REMOTE_SERVER=" monitor_root"
+
+EXISTENT=`ps -C ssh -o pid=,args= | grep "$CMD$LOCAL_PORT"`
+
+if [ -n "$EXISTENT" ]
+then
+  PREV_PID=`echo $EXISTENT | awk '{print $1}'`
+  kill -9 $PREV_PID
+fi
+
+$CMD$LOCAL_PORT":"$1$REMOTE_SERVER
+
+

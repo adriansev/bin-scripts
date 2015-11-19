@@ -1,0 +1,1 @@
+perl -MFile::Find -le 'find(sub { -l && !-e && print $File::Find::name }, ".")';

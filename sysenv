@@ -1,0 +1,28 @@
+#!/bin/bash
+echo "Curent Directory"
+echo $PWD
+echo "Old Directory"
+echo $OLDPWD
+echo
+echo "Curent Time & Date"
+date
+echo " Machine specs"
+uname -mnrsp
+echo $MACHTYPE
+echo " * ROOTSYS * "
+echo $ROOTSYS
+echo
+echo " * ALICE_ROOT * "
+echo $ALICE_ROOT
+echo
+echo " * ALICE_TARGET * "
+echo $ALICE_TARGET
+echo
+echo " * LD_LIBRARY_PATH * "
+echo $LD_LIBRARY_PATH
+echo 
+echo " * PATH * "
+echo $PATH
+echo 
+echo
+

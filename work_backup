@@ -1,0 +1,2 @@
+rsync -avhuHAX /home.hdd/adrian/work /home.hdd/adrian/BACKUP/work_archive
+

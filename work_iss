@@ -1,0 +1,44 @@
+#!/bin/sh
+exec &>> ~/loginout.sshfs
+
+dir_remote="/home.hdd/adrian/work"
+dir_local="/home/adrian/work-iss"
+
+mount_iss ()
+{
+mount_ok=`cat /proc/mounts  | grep iss:`
+
+
+if [ -z "$mount_ok" ] 
+then
+   echo -e "\t mount sshfs"
+   sshfs iss:$dir_remote $dir_local -o compression=no,sshfs_sync,noatime,reconnect
+   mount -t fuse.sshfs
+   echo
+else
+   echo -e "\t" "[ OK ]" "sshfs mounted"
+fi
+}
+
+
+umount_iss ()
+{
+fusermount -u $dir_local && echo -e "\t" "sshfs umounted"
+}
+
+
+if [ "$1" = "mount" ]
+then
+   echo -ne `date +%d.%m.%Y%t%k:%M:%S`
+   mount_iss
+elif [ "$1" = "umount" ]
+then
+   echo -ne `date +%d.%m.%Y%t%k:%M:%S`
+   umount_iss
+else
+   echo "Accepted arguments are : "
+   echo " mount  : mount work dir from iss"
+   echo " umount : umount work-iss dir"
+fi
+
+

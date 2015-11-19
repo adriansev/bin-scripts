@@ -1,0 +1,7 @@
+#!/bin/bash
+for jdl in `ls -1 *_merge*.jdl` ; do
+  sed -i "s/.*TTL.*/TTL = $1;/" $jdl
+done
+
+grep TTL *_merge*.jdl
+

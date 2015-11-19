@@ -1,0 +1,1 @@
+multitail -s 2 -i $1.out -i $1.err

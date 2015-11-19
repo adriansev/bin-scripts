@@ -1,0 +1,92 @@
+cdir=`pwd`
+workdir="$HOME/work/jets/jetfinder/pars"
+
+pars_framework="STEERBase ESD AOD ANALYSIS OADB ANALYSISalice EventMixing CORRFW"
+
+pars_jetan="JETAN FASTJETAN JETANdev FASTJETANdev PWGTools PWGJEEMCALJetTasks"
+
+pars_jets="PWGJE"
+
+
+clean_pars_arr ()
+{
+echo "cleaning pars : " $@
+for par in $@
+do
+  rm -rvf $ALICE_BUILD/$par.par $workdir/$par.par ~/.proof/packages/$par 
+done
+}
+
+make_lib_arr ()
+{
+echo "making lib(s) : " $@
+cd $ALICE_BUILD
+for par in $@
+do
+  echo "making lib : " $par
+  make $par
+done
+}
+
+make_pars_arr ()
+{
+cd $ALICE_BUILD
+
+for par in $@
+do
+  echo "making par : " $par.par
+  make $par.par && cp -vu $par.par $workdir && echo "Operation succesful"
+done
+}
+
+if [ "$1" = "frameworkpar" ]
+then
+  clean_pars_arr $pars_framework
+  make_pars_arr  $pars_framework
+elif [ "$1" = "frameworklib" ]
+then
+  make_lib_arr $pars_framework
+elif [ "$1" = "jetanpar" ]
+then
+  clean_pars_arr $pars_jetan
+  make_pars_arr  $pars_jetan
+
+elif [ "$1" = "jetanlib" ]
+then
+  make_lib_arr $pars_jetan
+
+elif [ "$1" = "jetspar" ]
+then
+  clean_pars_arr $pars_jets
+  make_pars_arr  $pars_jets
+
+elif [ "$1" = "jetslib" ]
+then
+  make_lib_arr $pars_jets
+
+elif [ "$1" = "allpars" ]
+then
+  clean_pars_arr $pars_framework
+  clean_pars_arr $pars_jetan
+  clean_pars_arr $pars_jets
+
+  make_pars_arr  $pars_framework
+  make_pars_arr  $pars_jetan
+  make_pars_arr  $pars_jets
+elif [ "$1" = "cleanpars" ]
+then
+  clean_pars_arr $pars_framework
+  clean_pars_arr $pars_jetan
+  clean_pars_arr $pars_jets
+else
+   echo "Accepted arguments are : "
+   echo " framework{par,lib} : build par/lib of framework libraries"
+   echo " jetan{par,lib} : build par/lib of jetan libraries"
+   echo " jets{par,lib} : build par/lib of jets libraries"
+   echo " allpars : re-build of ALL pars"
+   echo " cleanpars : cleaning of ALL pars"
+fi
+
+cd $cdir
+
+

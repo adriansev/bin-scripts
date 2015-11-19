@@ -1,0 +1,34 @@
+exec &> mail_update.log
+
+host=`hostname -f`
+home="adrian.home"
+
+if [[ "$host" = "$home" ]]
+then
+echo "You are home! Dont update your main database" 
+exit
+fi
+
+
+cdir=`pwd`
+
+cur_date=`date +%s`
+mail_acces_date=`stat -c %Z ~/MyMail`
+
+if [ -e /usr/bin/pbzip2 ]
+then
+decompres="/usr/bin/pbzip2"
+else
+decompres="/usr/bin/bzip2"
+fi
+
+
+if [ -e MyMail.tar.bz2 ]
+then
+cd ~
+time -p rm -rf ~/MyMail
+time -p $decompres -d MyMail.tar.bz2
+echo $cur_date
+fi
+
+cd $cdir

@@ -1,0 +1,6 @@
+for keyword in baseboard-manufacturer baseboard-product-name baseboard-version system-manufacturer system-product-name system-version bios-vendor bios-version bios-release-date
+do
+    printf "%-22s: " "$keyword";
+    sudo dmidecode -s "$keyword";
+done
+

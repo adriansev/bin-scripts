@@ -1,0 +1,2 @@
+/usr/bin/rsync -avhuHAXW -z --delete /home.hdd/adrian/physics/ issaf_root:/export/physics/
+

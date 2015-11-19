@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+#A script to produce a sorted du list; give a directory as argument or no argument works on current dir
+# M. Granado
+use Getopt::Std;
+#use strict;
+my %Opts;
+getopt('', \%Opts);
+
+$ORIGPWD = $ENV{PWD};
+($dir) = @ARGV;
+$extdir = 1;
+if ($dir eq "" )
+  {
+  $dir = ".";
+  $extdir = 0;
+  }
+elsif ( ! -d $dir )
+  {
+  print "$dir is not a valid directory\n";
+  exit;
+  }
+chomp($iso8601    = `date -I`);
+$nfile = "dulist-$iso8601";
+if (($dir eq "." ) or ($dir eq "" ))
+   {
+   $cmd = "du -ah $ORIGPWD > $nfile";
+   }
+else
+   {
+   $nfile = "$dir/dulist-$iso8601";
+   $cmd = "du -ah $dir > $nfile";
+   }
+system($cmd);
+
+open(LOG,"+<$nfile") || die "Can't open $nfile\n";
+@lines1 = <LOG>;
+close(LOG);
+$newfile="$nfile";
+open(NEWLIST,">$newfile") || die "Can't open file $newfile" ;
+print "list written in $newfile\n";
+
+$D=chomp(@lines1);
+@y=();
+@sizes=();
+for $i (0..@lines1-1) {
+     $lines1[$i] =~ s/"//g;
+     @y = split(/\s+/,$lines1[$i]);
+     @sizes[$i]=[@y];
+}
+@A = ();
+@B = ();
+@C = ();
+@D = ();
+for $i (0..@lines1-1) {
+$t = ${$sizes[$i]}[0];
+$tn = $t;
+if ($t =~ /K/)
+  {
+  $A[$i][2]="K";
+  $A[$i][3]=1;
+  $tn =~ s/K//g;
+  }
+elsif($t =~ /M/)
+  {
+  $A[$i][2]="M";
+  $A[$i][3]=2;
+  $tn =~ s/M//g;
+  }
+elsif($t =~ /G/)
+  {
+  $A[$i][2]="G";
+  $A[$i][3]=3;
+  $tn =~ s/G//g;
+  }
+else
+  {
+  $A[$i][2]="";
+  $A[$i][3]=0;
+  }
+$A[$i][0] = $tn;
+$A[$i][1] = $i;
+}
+@B = sort {$a->[0] <=> $b->[0]} @A;
+@C = sort {$a->[3] <=> $b->[3]} @B;
+@D = reverse(@C);
+print "\n";
+for $i (0..@D-1) {
+$j= ${$D[$i]}[1];
+#print "${$D[$i]}[0]${$D[$i]}[2] ${$sizes[$j]}[1]\n";
+print NEWLIST "${$D[$i]}[0]${$D[$i]}[2] ${$sizes[$j]}[1]\n";
+}

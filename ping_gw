@@ -1,0 +1,4 @@
+packet_count=$1
+[ "$packet_count" == "" ] && packet_count=10 
+ping -q -c $packet_count `ip route show scope global | awk '{print $3}'`
+

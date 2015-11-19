@@ -1,0 +1,103 @@
+#!/bin/bash
+
+[ ! -n "${ALICE_ROOT}" ] && { echo "ALICE_ROOT is not set" && exit }
+
+[ ! -n "${ROOTSYS}" ] && { echo "ROOTSYS is not set" && exit }
+
+libs_path="$ALICE_PHYSICS/lib $ALICE_ROOT/lib $ROOTSYS/lib $FASTJET_ROOT/lib $ALICE/geant3/lib64 $ALIEN_ROOT/api/lib $G4LIB $CGAL_DIR/lib"
+
+for libdir in $libs_path
+do
+  cd $libdir
+    for file in `ls *.so`
+    do
+    symbol=`nm -A -a -s --defined-only "$file" | grep $1`
+
+      if [ "$symbol" != "" ]
+      then
+      echo $libdir
+      sym_type=$(echo $symbol | awk '{print $2}')
+      entry=$(echo $symbol | awk '{print $1}' | awk -F: '{print $2}')
+      demangled_name=`nm -C -A -a -s --defined-only "$file" | grep $entry | cut -d' ' -f3-`
+
+        case $sym_type in
+        A)
+          desc="The symbol's value is absolute, and will not be changed by further linking."
+          ;;
+        B|b)
+          desc="The symbol is in the uninitialized data section (known as BSS)."
+          ;;
+        C)
+          desc="The symbol is common. Common symbols are uninitialized data. \
+                When linking, multiple common symbols may appear with the same name. \
+                If the symbol is defined anywhere, the common symbols are treated as undefined references."
+          ;;
+        D|d)
+          desc="The symbol is in the initialized data section"
+          ;;
+
+        G|g)
+          desc="The symbol is in an initialized data section for small objects. \
+                Some object file formats permit more efficient access to small data objects, such as a global int variable as opposed to a large global array."
+          ;;
+        i)
+          desc="For PE format files this indicates that the symbol is in a section specific to the implementation of DLLs.
+                For ELF format files this indicates that the symbol is an indirect function. This is a GNU extension to the standard set of ELF symbol types. \
+                It indicates a symbol which if referenced by a relocation does not evaluate to its address, but instead must be invoked at runtime. \
+                The runtime execution will then return the value to be used in the relocation."
+          ;;
+        N)
+          desc="The symbol is a debugging symbol."
+          ;;
+        p)
+          desc="The symbols is in a stack unwind section."
+          ;;
+        R|r)
+          desc="The symbol is in a read only data section."
+          ;;
+        S|s)
+          desc="The symbol is in an uninitialized data section for small objects."
+          ;;
+        T|t)
+          desc="The symbol is in the text (code) section."
+          ;;
+        U)
+          desc="The symbol is undefined."
+          ;;
+        u)
+          desc="The symbol is a unique global symbol. This is a GNU extension to the standard set of ELF symbol bindings.\
+                For such a symbol the dynamic linker will make sure that in the entire process there is just one symbol with this name and type in use."
+          ;;
+        V|v)
+          desc="The symbol is a weak object.  When a weak defined symbol is linked with a normal defined symbol, the normal defined symbol is used with no error.\
+                When a weak undefined symbol is linked and the symbol is not defined, the value of the weak symbol becomes zero with no error. \
+                On some systems, uppercase indicates that a default value has been specified."
+          ;;
+        W|w)
+          desc="The symbol is a weak symbol that has not been specifically tagged as a weak object symbol. \
+                When a weak defined symbol is linked with a normal defined symbol, the normal defined symbol is used with no error. \
+                When a weak undefined symbol is linked and the symbol is not defined, the value of the symbol is determined in a system-specific manner without error. \
+                On some systems, uppercase indicates that a default value has been specified."
+          ;;
+        -)
+          desc="The symbol is a stabs symbol in an a.out object file.\
+                In this case, the next values printed are the stabs other field, the stabs desc field, and the stab type.\
+                Stabs symbols are used to hold debugging information."
+          ;;
+        ?)
+          desc="The symbol type is unknown, or object file format specific."
+          ;;
+        *)
+          desc="Unknow symbol type"
+        ;;
+        esac
+
+      echo -e $symbol " ; Function name : " $demangled_name " ; Description : " $desc
+      fi
+
+    done
+    echo
+done
+
+
+

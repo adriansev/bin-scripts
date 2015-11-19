@@ -1,0 +1,2 @@
+#!/home/physics-tools/alice/aliroot/bin/aliroot -l
+{ TBrowser asd ;}

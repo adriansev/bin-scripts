@@ -1,0 +1,26 @@
+#!/home/physics-tools/root/root/bin/root.exe -l
+
+void tbrowser2 ( int argc, char* argv[] )
+{
+TString arg0 = argv[0];
+TString arg1 = argv[1];
+TString arg2 = argv[2];
+
+cout << arg0 << endl;
+cout << arg1 << endl;
+cout << arg2 << endl;
+
+
+#gApplication->Terminate();
+
+main (input);
+}
+
+
+void main (TString file)
+{
+
+TFile* f = new TFile (file.Data());
+
+TBrowser ( "asd", f);
+}

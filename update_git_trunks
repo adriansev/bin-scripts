@@ -1,0 +1,23 @@
+echo "Updating ROOT head"
+cd $tools/root/trunk-src
+git pull
+
+rm -rf $tools/root/v5-34-src
+rm -rf $tools/root/v6-00-src
+
+git clone -l $tools/root/trunk-src $tools/root/v5-34-src
+git clone -l $tools/root/trunk-src $tools/root/v6-00-src
+
+echo
+echo
+echo "Updating ALIROOT head"
+cd $tools/alice/trunk-src
+git pull
+
+echo
+echo
+echo "Updating PHYSICS head"
+cd $tools/alice/physics-src
+git pull
+
+

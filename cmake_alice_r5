@@ -1,0 +1,31 @@
+DEFAULT_BUILD_TYPE="RelWithDebInfo"
+
+BUILDTYPE==${2:-$DEFAULT_BUILD_TYPE}
+
+cmake \
+-DCMAKE_INSTALL_PREFIX=$tools/alice/v5-AN \
+-DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
+-DCMAKE_BUILD_TYPE=$BUILDTYPE \
+-DROOTSYS=$tools/root/v5-34_reldbg \
+-DALIEN=$ALIEN_ROOT \
+-DTARGET_ARCHITECTURE="auto" \
+-DVC_IMPL="auto" \
+$1 | tee cmake_out.txt
+
+
+
+##-DFASTJET=$FASTJET_ROOT \
+
+
+###-DZEROMQ_INCLUDE_DIR="/usr/include" \
+
+#-DFACTEXTRACTOR_JAR=$ALICE/aliroot-src/RuleChecker/FactExtractor.jar \
+#-DSMELLDETECTOR_JAR=$ALICE/aliroot-src/RuleChecker/SmellDetector.jar \
+#-DRULECHECKER_JAR=$ALICE/aliroot-src/RuleChecker/NewRuleChecker.jar \
+#-DRULECHECKER_RULES=$ALICE/aliroot-src/RuleChecker/CodingConventions.xml \
+#-DRULECHECKER_SRCML=$tools/heplibs/srcML \
+
+#-DGEANT3_SYSTEM_DIR="${ALICE}/geant3" \
+#-DGEANT3_INCLUDE_DIR="${ALICE}/geant3/include" \
+#-DGEANT3_LIBRARY_DIR="${ALICE}/geant3/lib64" \
+#-DGEANT3_LIB="${ALICE}/geant3/lib64/libgeant321.so" \
