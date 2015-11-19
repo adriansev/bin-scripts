@@ -1,0 +1,242 @@
+#! /bin/sh
+##########################################################################
+# Title      :	urlgetopt - decode "urlencoded" forms data (RFC 1866)
+# Author     :	Heiner Steven <heiner.steven@odn.de>
+# Date       :	1999-06-27
+# Category   :  CGI, File Conversion
+# Requires   :	-
+# SCCS-Id.   :	@(#) urlgetopt	1.6 05/04/20
+##########################################################################
+# usage
+#    urlgetopt [-l] [-p prefix] [urlencoded-data]
+#        -l: print fields on a separate line
+#
+# Description
+#    Data entered within a HTML-FORM is transfered to the HTTP-Server
+#    using the "application/x-www-form-urlencoded" encoding type
+#    This script decodes "form-urlencoded" data in a form
+#    suitable to be used within shell scripts
+#
+#    Example:
+#     The form-urlencoded string
+#	  name=Heiner+Steven&org=Heiner%27s+SHELLdorado
+#
+#     will be decoded to
+#	  name='Heiner Steven'
+#	  org='Heiner'"'"'s SHELLdorado'
+#
+#    usage example (i.e. from within a CGI script):
+#
+#	eval `urlgetopt -p FORM_ -l "$QUERY_STRING"`
+#
+#    Without "eval":
+#
+#	OIFS=$IFS
+#	IFS="\n"
+#	set -- `urlgetopt -l "$QUERY_STRING"`
+#	IFS=$OIFS
+#	echo $# arguments:
+#	for arg
+#	do
+#	    echo "<$arg>"
+#	done
+#
+# Notes
+#    o	Assumes form-data in the format "name=value", but should
+#	handle other values as well
+#    o	An apostrophe ' within apostrophes cannot be written as '\'' (in sh,
+#	bash, ksh88), so we use the work around ' "'" '. Using ksh93,
+#	we could just use $'\''.
+#    o	If the last character of a value in an assignment is an
+#	apostrophe ('), the printed assignment will contain two
+#	superfluous apostrophes ('').
+#
+# Portability
+#	Solaris 9 "nawk"
+#	Linux 2.4 "awk" (= GNU awk) 3.1.0
+#
+# Changes:
+# 2005-04-20 claudio	allow values with leading whitespace (thanks to
+#			Claudio Jolowicz <claudio@jolowicz.com>) (1.6)
+# 2002-03-26 heiner	Handle a "-n" argument correctly (1.4)
+#			Thanks to Brian Hiles <bsh@rawbw.com> for
+#			pointing this out.
+##########################################################################
+
+PN=`basename "$0"`			# Program name
+VER="1.6"
+
+# Set the following variable to shorten startup time. Otherwise the
+# directories from the PATH variable will be searched for a suitable AWK
+# implementation
+#: ${NAWK=nawk}			# Set this variable to speed up startup
+
+usage () {
+    echo >&2 "$PN - decode \"urlencoded\" CGI form data, $VER
+usage: $PN [-lF] [-p prefix] [urlencoded-string]
+    -l:	print fields on a separate line
+    -p: prefix for generated environment variable names
+    -F: force output of invalid assignments
+
+Example:
+    eval \`urlgetopt -l \"\$QUERY_STRING\"\`"
+    exit 1
+}
+
+# We use "getopts" instead of "getopt" to preserve whitespace within
+# arguments.
+
+VarPrefix=
+LongFormat=no
+EvalCheck=true
+while getopts :hFlp: opt
+do
+    case "$opt" in
+    	F)	EvalCheck=false;;
+	h)	usage;;
+	l)	LongFormat=yes;;
+	p)	VarPrefix=$OPTARG;;
+	?)	usage;;
+    esac
+done
+shift `expr $OPTIND - 1`
+
+# We need a new AWK program supporting the "gsub()" function.
+# Most AWKs (i.e. "gawk") do support it, but some older NAWKs do not.
+# Search for a "gsub" capable NAWK using the current PATH.
+if [ X"$NAWK" = X ]
+then
+    for path in `echo "$PATH" | sed 's|^:|./ |;s|:$| ./|;s|:| |g'`
+    do
+	for awk in $path/*awk
+	do
+	    [ -f "$awk" -a -x "$awk" ] || continue
+	    case "$awk" in
+		*.*) continue;		# ignore "script.awk"
+	    esac
+	    # Now check for the "gsub()" function
+	    result=`echo "UU" | $awk '{ gsub (/U/, "X"); print }' 2>/dev/null`
+	    [ X"$result" = X"XX" ] || continue
+	    NAWK=$awk; break 2		# Found!
+	done
+    done
+    : ${NAWK:=awk}
+fi
+
+if [ $# -gt 0 ]
+then			# Process arguments, if specified...
+    # Special handling: BSD derived "echo" implementations
+    # will not echo "-n", but omit the trailing newline. "echo --"
+    # doesn't work as expected, too, so we add a non-dash character
+    # as the first character to the "echo", and remove it later on.
+
+    echo X"$@" |
+	sed "s/^X//"
+else			# ...otherwise read standard input
+    cat
+fi |
+    $NAWK -F'[&]' '
+	BEGIN {
+	    FieldSep = ("'"$LongFormat"'" == "yes") ? "\n" : " "
+	    VarPrefix = "'"$VarPrefix"'"
+	    evalcheck = ("'"$EvalCheck"'" == "true")
+
+	    Hex ["0"] =  0; Hex ["1"] =  1; Hex ["2"] =  2; Hex ["3"] =  3;
+	    Hex ["4"] =  4; Hex ["5"] =  5; Hex ["6"] =  6; Hex ["7"] =  7;
+	    Hex ["8"] =  8; Hex ["9"] =  9; Hex ["A"] = 10; Hex ["B"] = 11;
+	    Hex ["C"] = 12; Hex ["D"] = 13; Hex ["E"] = 14; Hex ["F"] = 15;
+	    squote = sprintf ("%c", 39)
+	    exitcode = 0
+	}
+	{
+	    gsub (/\+/, " ");
+
+	    # Parse assignment separated by "&", e.g. "a=b&c=d&..."
+
+	    for ( field=1; field<=NF; ++field ) {
+		# Substitute %HH with the "real" character
+		if ( $field ~ /%[0-9A-F][0-9A-F]/ ) {
+		    newfield = ""
+		    for ( i=1; i<=length ($field); i++ ) {
+			if ( substr ($field, i, 1) == "%" ) {
+			    dec = Hex [substr ($field, i+1, 1)] * 16 + \
+				    Hex [substr ($field, i+2, 1)]
+			    newfield = sprintf ("%s%c", newfield, dec)
+			    i += 2;
+			} else {
+			    newfield = newfield substr ($field, i, 1);
+			}
+		    }
+		    $field = newfield
+		}
+		#print "after % processing " $0
+
+		# Decode "var=value" pairs.
+		#
+		# If "evalcheck" is true, we ensure that the result is a
+		# valid variable assignment:
+		#   1.	it has the form varname=value
+		#   2.	the variable name must be a valid shell
+		#   	identifier: start with letter or underscore, followed
+		#	only be letters, underscores or digits
+
+		if (evalcheck && !match ($field, /^[a-zA-Z_][a-zA-Z_0-9]*=/)) {
+		    print "invalid assignment: " $field | "cat >&2"
+		    exit (exitcode=1);
+		}
+
+		# Now parse assignments of the form "a=b".
+
+		if ( $field ~ /\=/ ) {
+		    newfield  = ""
+		    equalseen = 0
+		    fieldlength = length ($field)
+		    for ( i=1; i<=fieldlength; i++ ) {
+			s = substr ($field, i, 1)
+			if ( s == "=" ) {
+			    if ( !equalseen ) s = s squote
+			    equalseen = 1
+			} else if ( equalseen ) {	# value
+			    if ( s == squote ) {
+				# Special handling: since an apostrophe
+				# (in this example represented by a dot
+				# .) cannot be quoted using a backslash,
+				# we use the following work around: we
+				# replace it with "."
+
+				if ( i<fieldlength ) {
+				    s = squote "\"" squote "\"" squote
+				} else {
+				    # Special handling: if the last character
+				    # is a single quote, we do not want to add
+				    # "squote" to the end, because this would
+				    # result in two trailing superfluous
+				    # apostrophes.
+				}
+			    }
+			}
+			newfield = newfield s
+		    }
+		    if ( s != squote ) {
+			$field = newfield squote
+		    } else {
+			# Special handling: last character was an apostrophe:
+			$field = newfield "\"" squote "\""
+		    }
+		} else if ( evalcheck ) {
+		    # We cannot get here...
+		    print "invalid assignment: " $field | "cat >&2"
+		    exit (exitcode=1)
+		}
+		#print "after = processing " $0
+	    }
+
+	    for ( i=1; i<=NF; ++i ) {
+		printf ("%s%s", VarPrefix, $i)
+		if ( i<NF ) printf (FieldSep); else printf ("\n");
+	    }
+	}
+	END {
+	    exit (exitcode)
+	}
+    '

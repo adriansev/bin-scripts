@@ -1,0 +1,1 @@
+find $1 -type d -perm -002

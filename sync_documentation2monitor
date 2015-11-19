@@ -1,0 +1,1 @@
+/usr/bin/rsync -avhuHAXW -z --delete --exclude 'hardware' /home.hdd/adrian/Documentation/ monitor_root:/export/documentation/

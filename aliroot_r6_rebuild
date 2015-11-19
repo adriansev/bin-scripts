@@ -1,0 +1,13 @@
+cd $tools/alice/BUILD
+rm -rf $tools/alice/BUILD/*
+
+cmake_alice_r6 $tools/alice/v5-AN-latest-src
+make -j8
+
+rm -rf $tools/alice/v5-AN-v6/*
+make install
+
+rm -rf $tools/alice/BUILD/*
+
+
+

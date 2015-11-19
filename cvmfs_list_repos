@@ -1,0 +1,1 @@
+cvmfs_config probe | awk '{ print substr($2,0,length($2)-3)}'

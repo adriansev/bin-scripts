@@ -1,0 +1,2 @@
+rm -Rf *.[e,o]*
+rm -Rf *hist.root

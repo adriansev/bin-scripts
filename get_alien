@@ -1,0 +1,1 @@
+wget http://alien.cern.ch/alien-installer -O alien-installer && chmod +x alien-installer

@@ -1,0 +1,45 @@
+echo "This should be run in BUILD directory;"
+echo "the argument should be the path to the source"
+
+#--debug-output 
+cmake -Wno-dev -DCMAKE_INSTALL_PREFIX=/home/physics-tools/AUGER_Offline_trunk \
+-DAUGER_SQLITE_ENABLED="1" \
+-DAUGER_RADIO_ENABLED="1" \
+-DAUGER_EINSPLINE_ENABLED="1" \
+-DAUGER_FIND_QUIETLY="0" \
+-DG2C_LIBRARY="/usr/lib64/libg2c.so.0" \
+-DFFTW3_INCLUDE_DIR="/home/physics-tools/APE/External/fftw/3.3.4/include" \
+-DFFTW3_LIBRARIES="/home/physics-tools/APE/External/fftw/3.3.4/lib/libfftw3.so" \
+-DCLHEP_LIBRARIES="/home/physics-tools/APE/External/clhep/2.1.2.3/lib/libCLHEP.so" \
+-DCLHEP_V2_0="/home/physics-tools/APE/External/clhep/2.1.2.3/include/CLHEP/Evaluator/defs.h" \
+-DCLHEP_INCLUDE_DIR="/home/physics-tools/APE/External/clhep/2.1.2.3/include" \
+-DEIGEN_INCLUDE_DIR="/home/physics-tools/APE/External/eigen/3.1.4" \
+-DFDEVENTLIB_HOME="/home/physics-tools/APE/fdeventlib/4.1.6" \
+-DEINSPLINE_LIBRARY="/home/physics-tools/APE/External/einspline/0.9.2/lib/libeinspline.so" \
+-DEINSPLINE_INCLUDE_DIR="/home/physics-tools/APE/External/einspline/0.9.2/include" \
+-DCDAS_LIBRARIES="/home/physics-tools/APE/cdas/v5r0/lib" \
+-DGEANT4_INCLUDE_DIR="/home/physics-tools/geant4.9.4p04/include" \
+-DGEANT4_LIB_DIR="/home/physics-tools/geant4.9.4p04/lib" \
+$1
+
+
+#-DCDASECHOME="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASEC_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASER_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASES_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASIOSD_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASIOSDHOME="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASSTCOORDINATES_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASIOAUGER_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDAS_SdRecLpnhe_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDAS_SdRecCdf_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DFDEVENTLIB_LIBRARIES="/home/physics-tools/APE/fdeventlib/4.1.6/lib" \
+#-D_FDEVENTLIB_BIN_DIR="/home/physics-tools/APE/fdeventlib/4.1.6/bin" \
+#-DCDAS_SdRecHor_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASERHOME="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASUTILSHOME="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDAS_SdRecPB_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASIOAUGERHOME="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DCDASUTILS_LIBRARY="/home/physics-tools/APE/cdas/v5r0/lib" \
+#-DFDEventLib_Utillib_LIBRARY="/home/physics-tools/APE/fdeventlib/4.1.6/lib" \
+

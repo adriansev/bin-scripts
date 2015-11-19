@@ -1,0 +1,2 @@
+#!/bin/bash
+wget -O - --post-data="type=room&numChambre=${1}&nom=${2}&submit=auth.jsp" http://192.168.252.20/wifi/auth.jsp &> /dev/null

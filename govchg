@@ -1,0 +1,43 @@
+#!/bin/bash
+
+SYSPATH=/sys/devices/system/cpu/cpu0/cpufreq
+AVAL_GOV=$(cat $SYSPATH/scaling_available_governors)
+
+if [ -z $1 ]; then
+    echo "Current governor:    "$(cat $SYSPATH/scaling_governor)
+    echo "Current frequency:   "$(expr $(cat $SYSPATH/scaling_cur_freq) / 1000)" MHz"
+    echo
+    echo "Available governors: "$AVAL_GOV
+else
+    if [ $1 = "--help" ]; then 
+        echo "Usage: $0 [ set [governor] | stats [times|trans] ]"
+    elif [ $1 = "set" ]; then
+        if [ -z $2 ]; then
+            echo "Specify the new governor."
+            echo "Available governors: "$AVAL_GOV
+        else
+            VALID=0
+            for i in $AVAL_GOV; do
+                if [ $2 = $i ]; then
+                    sudo echo $i > $SYSPATH/scaling_governor
+                    echo "Set governor \"$i\"."
+                    VALID=1
+                    break
+                fi
+            done
+            if [ $VALID = 0 ]; then
+                echo "Governor unavailable."
+            fi
+        fi
+    elif [ $1 = "stats" ]; then
+        if [ -z $2 ]; then
+            echo "Command \"stats\" requires an argument."
+        elif [ $2 = "time" ]; then
+            echo "Freq.   Time"
+            cat $SYSPATH/time_in_state
+        elif [ $2 = "trans" ]; then
+            echo "Transitions: "$(cat $SYSPATH/stats/total_trans)
+        fi
+    fi
+fi
+

@@ -1,0 +1,4 @@
+sudo kill -15 `ps fax -o pid,args | grep monitor_root | grep -v grep | awk '{print $1}'`
+
+sudo sh -c "ssh -f -N -L 443:$1:443 monitor_root ; ssh -f -N -L 80:$1:80 monitor_root"
+

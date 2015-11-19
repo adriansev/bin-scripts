@@ -1,0 +1,12 @@
+#!/bin/sh
+for file in `ls -1`; do
+  ## UPPER CASE to lower case
+  new_file="`echo $file | tr A-Z a-z`"
+
+  ## lower case to UPPER CASE
+  ## new_file="`echo $file | tr a-z A-Z`"
+
+  echo Renaming \"$file\" to \"$new_file\"
+  mv "$file" "$new_file"
+done
+

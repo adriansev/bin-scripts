@@ -1,0 +1,5 @@
+exec 1>&2
+echo "$0: $# parameters:"
+
+for i ; do echo "<$i>" ; done
+exit 0

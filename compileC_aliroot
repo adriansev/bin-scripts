@@ -1,0 +1,50 @@
+#!/home/physics-tools/alice/aliroot/bin/aliroot -l -q -b
+{
+  // include paths
+  gSystem->AddIncludePath("-Wno-deprecated");
+  gSystem->AddIncludePath(" -I$. -I$ROOTSYS/include -I$CGAL_DIR/include -I$FASTJET/include -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
+
+  gSystem->Load("libCGAL");
+  gSystem->Load("libfastjet");
+  gSystem->Load("libsiscone");
+  gSystem->Load("libsiscone_spherical");
+  gSystem->Load("libfastjettools");
+  gSystem->Load("libfastjetplugins");
+  gSystem->Load("libfastjetcontribfragile");
+
+
+  gSystem->Load("libEMCALraw");
+  gSystem->Load("libEMCALbase");
+  gSystem->Load("libEMCALrec");
+
+  gSystem->Load("libEMCALUtils");
+
+  gSystem->Load("libPWGEMCAL");
+  gSystem->Load("libPWGTools");
+
+//  gSystem->Load("libEventMixing");
+
+  gSystem->Load("libPWGJE");
+
+  gSystem->Load("libJETAN");
+  gSystem->Load("libFASTJETAN");
+  gSystem->Load("libPWGJEEMCALJetTasks");
+
+
+Int_t argc        = gApplication->Argc();
+const char **argv = gApplication->Argv();
+TString input = "" ;
+
+if ( argc <= 3 ) { printf ("ERROR :: no argument \n") ; gSystem->Exit(1);  }
+
+input = argv[3];
+
+//for (int i=0; i < argc; i++)
+//    { printf("argument %d = %s\n", i, argv[i]); }
+
+input = input + "++" ;
+
+gROOT->LoadMacro(input);
+
+gSystem->Exit(0);
+}

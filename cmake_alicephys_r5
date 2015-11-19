@@ -1,0 +1,11 @@
+cmake \
+-DCMAKE_INSTALL_PREFIX=$ALICE/physics \
+-DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
+-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+-DALIEN="$ALIEN_ROOT" \
+-DROOTSYS=$tools/root/root \
+-DALIROOT="$ALICE/aliroot" \
+-DCGAL_LIB="$tools/heplibs/CGAL/lib" \
+-DFASTJET="$ALICE/fastjet" \
+$1 | tee cmake_out.txt
+

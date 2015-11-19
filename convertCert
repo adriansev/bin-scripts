@@ -1,0 +1,34 @@
+#!/bin/bash
+
+now=`date +%d%m%Y_%H%M%S`
+
+if [ $# -ne 1 ] ;then
+  echo "Usage: $0 MyCert.p12" ; exit
+fi
+
+if ! [[ "$1" =~ ".*\.p12$" ]] ; then
+  echo "Error: Cert not in p12 format!" ; exit
+fi
+
+CERT=$HOME/$1
+GLOBDIR=$HOME/.globus
+
+if [ ! -e $GLOBDIR ] ; then
+  mkdir $GLOBDIR
+  chmod 700 $GLOBDIR
+else
+  if [ -e $GLOBDIR/usercert.pem ]; then
+    mv -f $GLOBDIR/usercert.pem $GLOBDIR/usercert_old_${now}.pem
+  fi
+
+  if [ -e $GLOBDIR/userkey.pem ] ; then
+    mv -f $GLOBDIR/userkey.pem $GLOBDIR/userkey_old_${now}.pem
+  fi
+fi
+
+cd $GLOBDIR
+openssl pkcs12 -in $CERT -out usercert.pem -nokeys -clcerts || exit
+openssl pkcs12 -in $CERT -out userkey.pem -nocerts || exit
+chmod 444 usercert.pem
+chmod 400 userkey.pem
+

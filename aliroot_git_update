@@ -1,0 +1,13 @@
+cd $tools/alice/trunk-src
+git pull
+
+cd $tools/alice/v5-AN-latest-src
+git checkout master
+git pull
+
+echo
+echo "--> listing latest tags :"
+git tag -l "v5-06*"
+echo
+echo "cd \$tools/alice/v5-AN-latest-src"
+echo "git checkout last_tag"

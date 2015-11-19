@@ -1,0 +1,22 @@
+## complete names of source files
+cxx=$1.cxx
+h=$1.h
+
+## Finding cxx file and coresponding directory
+A=`locate -b '\'$cxx''`
+
+dirA=`dirname $A`
+
+echo $A
+echo $dirA
+
+## Finding the .h location relative to the cxx one
+if [ -e $dirA/$h ]
+then
+B=$dirA/$h
+else
+B=`dirname $A | rev | cut -c 4- | rev`inc/$h
+fi
+
+## Edit files
+kate $A $B &

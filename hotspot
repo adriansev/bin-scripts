@@ -1,0 +1,45 @@
+#!/bin/bash
+
+WAN_IF="em1"
+WIFI_IF="wlp3s0"
+
+if [ "$1" == "start" ]
+then
+
+sysctl net.ipv4.ip_forward=1
+
+nmcli connection up hotspot
+sleep 3
+
+systemctl start dhcpd.service
+systemctl start hostapd.service
+
+iptables -t nat -F
+iptables -t filter -F FORWARD
+
+iptables -t nat -A POSTROUTING -o $WAN_IF -j MASQUERADE
+
+iptables -t filter -P FORWARD ACCEPT
+iptables -t filter -A FORWARD -i $WIFI_IF -o $WAN_IF -j ACCEPT
+iptables -t filter -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -t filter -A FORWARD -p icmp -o $WAN_IF -j ACCEPT
+
+fi
+
+
+if [ "$1" == "stop" ]
+then
+
+nmcli connection down hotspot
+sleep 3
+
+sysctl net.ipv4.ip_forward=0
+
+systemctl stop dhcpd.service
+systemctl stop hostapd.service
+
+iptables -t nat -F
+iptables -t filter -F FORWARD
+
+fi
+

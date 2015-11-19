@@ -1,0 +1,9 @@
+for each in `ps jauxww | grep Z | grep -v PID | awk \u2018{print $3}\u2019`
+do
+   for every in `ps auxw | grep $each | grep cron | awk \u2018{print $2}\u2019`
+   do
+      kill -9 $every
+   done
+done
+
+

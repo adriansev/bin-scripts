@@ -1,0 +1,4 @@
+rsync -avWhuHAX --progress $HOME/work/jets/ issaf:/export/home/adrian/work/jets/
+
+
+

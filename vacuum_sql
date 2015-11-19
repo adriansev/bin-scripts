@@ -1,0 +1,7 @@
+pwd
+for i in *.sqlite
+do
+echo -ne $i ": ...  "
+echo "VACUUM;" | sqlite3 $i 
+echo "done!"
+done

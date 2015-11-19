@@ -1,0 +1,3 @@
+find $1 -name $2 -exec grep -H -n $3 {} \;
+
+

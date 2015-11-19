@@ -1,0 +1,35 @@
+echo "This should be run in BUILD directory;"
+echo "the argument should be the path to the source"
+
+cmake -DCMAKE_INSTALL_PREFIX=${tools}/r3broot \
+-DUSE_PATH_INFO="1" \
+-DCLHEP_BASE_DIR="/home/physics-tools/clhep" \
+-DCLHEP_CONFIG_EXE="/home/physics-tools/clhep/bin/clhep-config" \
+-DCLHEP_LIBRARY_DIR="/home/physics-tools/clhep/lib" \
+-DCLHEP_INCLUDE_DIR="/home/physics-tools/clhep/include" \
+-DPYTHIA6_LIBRARY_DIR="/home/physics-tools/fairsoft/lib" \
+-DVGM_LIBRARY_DIR="/home/physics-tools/fairsoft/lib" \
+-DPLUTO_LIBRARY_DIR="/home/physics-tools/fairsoft/lib" \
+-DPLUTO_INCLUDE_DIR="/home/physics-tools/fairsoft/include/pluto" \
+-DGEANT3_INCLUDE_DIR="/home/physics-tools/fairsoft/include/TGeant3" \
+-DGEANT3_LIBRARY_DIR="/home/physics-tools/fairsoft/lib" \
+-DGEANT3_SYSTEM_DIR="/home/physics-tools/fairsoft" \
+-DGEANT3_LIB="/home/physics-tools/fairsoft/lib/libgeant321.so" \
+-DGEANT4VMC_LIBRARY_DIR="/home/physics-tools/fairsoft/lib" \
+-DGEANT4VMC_INCLUDE_DIR="/home/physics-tools/fairsoft/include/geant4vmc" \
+-DGEANT4VMC_MACRO_DIR="/home/physics-tools/fairsoft/share/geant4_vmc/macro" \
+-DGEANT4_DIR="/home/physics-tools/fairsoft" \
+-DGEANT4_INCLUDE_DIR="/home/physics-tools/fairsoft/include/Geant4" \
+-DGEANT4_LIB_DIR="/home/physics-tools/fairsoft/lib" \
+-DGEANT4_MODULAR_PHYSICS_LIST="/home/physics-tools/fairsoft/lib" \
+-DGEANT4_DATA="/home/physics-tools/fairsoft/share/Geant4/data" \
+-DG4NEUTRONXSDATA="/home/physics-tools/fairsoft/share/Geant4/data/G4NEUTRONXS" \
+-DG4LEDATA="/home/physics-tools/fairsoft/share/Geant4/data/G4EMLOW" \
+-DG4SAIDXSDATA="/home/physics-tools/fairsoft/share/Geant4/data/G4SAIDDATA" \
+-DG4LEVELGAMMADATA="/home/physics-tools/fairsoft/share/Geant4/data/PhotonEvaporation" \
+-DG4PIIDATA="/home/physics-tools/fairsoft/share/Geant4/data/G4PII" \
+-DG4NeutronHPCrossSections="/home/physics-tools/fairsoft/share/Geant4/data/G4NDL" \
+-DG4RADIOACTIVEDATA="/home/physics-tools/fairsoft/share/Geant4/data/RadioactiveDecay" \
+-DG4REALSURFACEDATA="/home/physics-tools/fairsoft/share/Geant4/data/RealSurface" \
+$1
+

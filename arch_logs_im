@@ -1,0 +1,2 @@
+cd ~/.purple
+tar -cf ~/logs.tar logs && pbzip2 -b20f ~/logs.tar

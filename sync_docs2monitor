@@ -1,0 +1,1 @@
+/usr/bin/rsync -avhuHAXW -z --delete /home/physics-tools/docs/ monitor_root_gsi:/export/tools-docs/

@@ -1,0 +1,3 @@
+name=`basename $1`
+tar -I pbzip2 -cf $name.tar.bz2 $1 
+

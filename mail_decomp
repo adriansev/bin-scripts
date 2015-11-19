@@ -1,0 +1,11 @@
+fqdn=`hostname -f`
+
+[ "$fqdn" == "adrian.home" ] &&  echo "ACASA" && exit
+
+cd /home.hdd/adrian
+if [ -e MyMail.tar.bz2 -a -f MyMail.tar.bz2 ]
+then
+rm -rf MyMail && pbzip2 -df MyMail.tar.bz2 && tar -xvf MyMail.tar 
+fi
+
+

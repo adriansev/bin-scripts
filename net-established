@@ -1,0 +1,4 @@
+#!/bin/bash
+
+est=`sudo iptstate -1 | grep ESTABLISHED | wc -l`
+echo $est

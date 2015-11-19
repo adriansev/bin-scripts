@@ -1,0 +1,61 @@
+#!/bin/bash
+cd $HOME
+dir_name=`date +%d%m%Y`
+
+backup_dev=$1
+backup_dir=BACKUP
+
+DIR_FOUND=0
+BACKUP_FOUND=0
+
+##files_list=".bash_completion .bash_history .bash_profile .bash_scripts .bashrc .gnupg .ssh .gkrellm2 .globus .mc .nedit"
+##dir_list="Documentation ahome kits physics physics-tools data"
+##compressed_files="MyMail Documents programming work .purple .dc .Skype .fonts .alien .mozilla .thunderbird"
+
+files_list=""
+dir_list=""
+compressed_files="MyMail .mozilla .thunderbird .purple"
+
+
+
+if [ -e $backup_dev/$backup_dir ] && [ -d $backup_dev/$backup_dir ]
+then
+  echo "Backup directory is found on usb device" ; DIR_FOUND=1
+else
+  echo "Directory not found! Mount the corect disk and check for BACKUP"
+  exit 1 
+fi       
+
+
+  
+if [ ! -e $backup_dev/$backup_dir/$dir_name ]
+then
+  mkdir $backup_dev/$backup_dir/$dir_name
+  echo "The directory for backup is created "
+  ls $backup_dev/$backup_dir/$dir_name
+  BACKUP_FOUND=1
+else
+  echo "Directory is alredy there"
+  ls --color=auto -l $backup_dev/$backup_dir/$dir_name
+  BACKUP_FOUND=1
+##  exit 1
+fi
+
+
+if [[ "$BACKUP_FOUND" -eq "1" ]]
+then
+
+#   tar -jcvf $backup_dev/$backup_dir/$dir_name/files.tar.bz2 $files_list
+
+#   for bziped_dir in $compressed_files  
+#   do
+#   tar -jcvf $backup_dev/$backup_dir/$dir_name/$bziped_dir.tar.bz2 $bziped_dir
+#   done
+
+   for dir4backup in $dir_list  
+   do
+   tar -cvf $backup_dev/$backup_dir/$dir_name/$dir4backup.tar $dir4backup && pbzip2 -b20f backup_dev/$backup_dir/$dir_name/$dir4backup.tar
+   done
+
+fi
+

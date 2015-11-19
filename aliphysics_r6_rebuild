@@ -1,0 +1,11 @@
+cd $tools/alice/BUILDPHYS
+rm -rf $tools/alice/BUILDPHYS/*
+
+cmake_alicephys_r6 $tools/alice/physics-src
+make -j8
+
+rm -rf $tools/alice/physics_r6/*
+make install
+
+rm -rf $tools/alice/BUILDPHYS/*
+
