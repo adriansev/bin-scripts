@@ -1,0 +1,232 @@
+#!/bin/bash
+
+CMD=$( basename $0 )
+VERSION="0.4"
+USAGE="Usage: $CMD [-h | OPTIONS ] inputfiles ..."
+
+# ---------------------------------------------------------
+function printusage () {
+  test "$1" && echo -e >&2 "$CMD: $1"
+  echo >&2 "$USAGE"
+  exit 2
+}
+# ---------------------------------------------------------
+function printhelp () {
+  cat << EOF
+ogg2mp3 version $VERSION 
+Bulk transcoding of OGG Vorbis to MP3. 
+
+(c) 2008 by Christoph Souris
+Released without warranty under the terms of the BSD license.
+
+$USAGE
+
+Options:
+  -h, --help            Print help
+  -m, --mode=MODE       Define stereo mode where MODE may be (j)oint,
+                        (s)imple, (f)orce, (d)dual-mono, (m)ono
+  -a, --abr=BITRATE     Use ABR encoding method with specified average
+                        bit rate. See LAME man page for details.
+  -v, --vbr=QUALITY     Use VBR encoding method with specified quality
+                        setting. Default is 4, use 0 for high or 9 for
+                        low quality. See LAME man page for details.
+  -q, --quality=QUALITY Define LAME algorithm quality. Default is 5, use
+                        2 for high or 7 for reasonable low quality. See
+                        LAME page for details.
+      --verbose         Print verbose information.
+      --quiet           Suppress all status information.
+  -d, --delete          Delete transcoded input files.
+EOF
+  exit 0
+}
+# ---------------------------------------------------------
+function print () {
+   C=$1
+   shift
+   for MSG in "$@"; do
+      echo -e >&$C "$MSG"
+   done
+}
+# ---------------------------------------------------------
+function info () {
+  test "$QUIET" || print 1 "$@"
+}
+function verbose () {
+  test "$VERBOSE" && print 1 "$@"
+}
+function printsetting () {
+  test "$2" && verbose "$1: $2"
+}
+function warn () {
+  print 2 "$@"
+}
+function fail () {
+  print 2 "$@"
+  exit 1
+}
+# ---------------------------------------------------------
+function printMode () {
+  case "${MODE:3:3}" in
+    j|J) echo "Joint Stereo";;
+    s|S) echo "Simple Stereo";;
+    f|F) echo "Force Stereo";;
+    d|D) echo "Dual Mono";;
+    m|M) echo "Mono";;
+    *) echo "Undefined";;
+  esac
+}
+function printMethod () {
+  case "${METHOD:2:3}" in
+     abr) echo "ABR, ${METHOD:6} kb/s";;
+     vbr) echo "VBR, Quality ${METHOD:13}";;
+     *) echo "Undefined";;
+  esac 
+}
+
+# ---------------------------------------------------------
+# parse command line options
+# ---------------------------------------------------------
+
+OPTS=$( getopt -n $CMD -o hdq:m:a:v: --long help,verbose,quiet,delete,progress,mode:,quality:,abr:,vbr: -- "$@" )
+eval set -- "$OPTS"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -h|--help)      printhelp;;
+    --verbose)      VERBOSE="TRUE";;
+    --quiet)        QUIET="TRUE";;
+    -d|--delete)    DELETE="TRUE";;
+    -m|--mode)      MODE="${2:0:1}"; shift;;
+    -q|--quality)   QUALITY="$2"; shift;;
+    -a|--abr)       ABR="$2"; shift;;
+    -v|--vbr)       VBR="$2"; shift;;
+    --)             shift; break;; # $@ is used below
+    *)              printusage "Invalid option '$1'!";;
+  esac
+  shift
+done
+
+[[ "$ABR" && "$VBR" ]] && printusage "Only either ABR or VBR is allowed!"
+[[ "$1" ]] || printusage "No input files defined!"
+[[ "$ABR" || "$VBR" ]] || AUTOABR="TRUE"
+
+# define encoding options
+test "$MODE" && MODE="-m $MODE"
+test "$QUALITY" && QUALITY="-q $QUALITY"
+test "$ABR" && METHOD="--abr $ABR"
+test "$VBR" && METHOD="--vbr-new -V $VBR"
+test "$VERBOSE" || DECODESILENT="-Q" ENCODESILENT="-S"
+
+printsetting "Encoding mode" "$( printMode '$MODE' )"
+printsetting "Encoding quality" "${QUALITY:3:3}"
+printsetting "Encoding method" "$( printMethod '$METHOD' )"
+
+# ---------------------------------------------------------
+# check dependencies
+# ---------------------------------------------------------
+
+OGGINFO=$( which ogginfo )
+OGGDEC=$( which oggdec )
+LAME=$( which lame )
+
+MSG="Unable to locate '@' command line utility!"
+test "$OGGINFO" || FAIL="${MSG/@/ogginfo}\n"
+test "$OGGDEC" || FAIL="$FAIL${MSG/@/oggdec}\n"
+test "$LAME" || FAIL="$FAIL${MSG/@/lame}\n"
+test "$FAIL" && fail "${FAIL%%\\n}"
+
+# ---------------------------------------------------------
+# transcode 
+# ---------------------------------------------------------
+
+function transcode () {
+
+   function parsetag () {
+      echo "$1" | grep -i "$2=" | cut -d= -f2
+   }
+
+   # read ogginfo output
+   OGGINFO=$( LANG=C ogginfo "$1" )
+   test "$?" != "0" && fail "ogginfo failed!" "$OGGINFO"
+
+   # determine nominal bitrate of source file
+   BITRATE=$( echo "$OGGINFO" | grep "Nominal bitrate:" | cut -d' ' -f3 )
+   test "$BITRATE" || fail "Unable to parse bitrate!"
+ 
+   # use automatic ABR if neither ABR nor VBR is specified by the user;
+   # therefore parse the nominal bitrate and use it for this file
+   if [ "$AUTOABR" ]; then
+      METHOD="--abr $BITRATE"
+      printsetting "Bitrate" "$BITRATE"
+   fi
+
+   # parse id3 tags
+   ARTIST=$( parsetag "$OGGINFO" "artist" )
+   printsetting Artist "$ARTIST"
+   ALBUM=$( parsetag "$OGGINFO" "album" )
+   printsetting Album "$ALBUM"
+   TITLE=$( parsetag "$OGGINFO" "title" )
+   printsetting Title "$TITLE"
+   TRACKNUMBER=$( parsetag "$OGGINFO" "tracknumber" )
+   printsetting "Track number" "$TRACKNUMBER"
+   YEAR=$( parsetag "$OGGINFO" "date" )
+   printsetting Year "$YEAR"
+   GENRE=$( parsetag "$OGGINFO" "genre" )
+   printsetting Genre "$GENRE"
+   COMMENT=$( parsetag "$OGGINFO" "comment" )
+   printsetting Comment "$COMMENT"
+  
+   # decode | encode
+   oggdec $DECODESILENT -o- "$1" | lame $ENCODESILENT $MODE $METHOD $QUALITY \
+      --ta "$ARTIST" --tt "$TITLE" --tl "$ALBUM" --ty "$YEAR" --tn "$TRACKNUMBER" --tg "$GENRE" --tc "$COMMENT" \
+	  - "${1/.ogg/.mp3}"
+}
+
+# ---------------------------------------------------------
+#  process recursion
+# ---------------------------------------------------------
+
+function isogg () {
+   # grep will have an error exit status if nothing was matched
+   file "$1" | grep "Ogg data" | grep "Vorbis audio" > /dev/null
+}
+
+function processfile () {
+   FILE="$@"
+   
+   # fail if invalid file
+   test -r "$FILE" || fail "Unable to read file '$FILE'!"
+   
+   # if directory, process content
+   if [ -d "$FILE" ]; then
+      info "Processing directory '$FILE' ..."
+      for SUBFILE in "$FILE"/*; do
+         processfile "$SUBFILE"
+      done
+
+   # else: transcode file if ogg
+   else
+      info "Processing file '$FILE' ..."
+      if isogg "$FILE"; then 
+      	 if transcode "$FILE"; then
+      	 	if [ "$DELETE" ]; then
+      	 	   verbose "Done. Removing ...";
+               rm "$FILE"
+            else
+               verbose "Done."
+            fi   
+         fi
+      else
+         warn "Not an Ogg Vorbis file: '$FILE'"
+      fi
+   fi
+}
+
+# ---------------------------------------------------------
+#  main (recursion start)
+# ---------------------------------------------------------
+
+for FILE in "$@"; do
+   processfile "$FILE"
+done
+
