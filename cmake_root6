@@ -10,6 +10,13 @@ else
   BUILDTYPE="RelWithDebInfo"
 fi
 
+
+XRD_ALIEN="-DXROOTD_XrdMain_LIBRARY="${GSHELL_ROOT}/lib/libXrdMain.so" -DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" -DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so""
+XRD_SYS="-DXROOTD_INCLUDE_DIR="/usr/include/xrootd/" -DXROOTD_INC_PRIV_DIR="/usr/include/xrootd/private/XrdClient/" -DXROOTD_XrdUtils_LIBRARY="/usr/lib64/libXrdUtils.so" -DXROOTD_XrdClient_LIBRARY="/usr/lib64/libXrdClient.so""
+
+
+
+
 cmake \
 -DCMAKE_INSTALL_PREFIX=${tools}/root/v6-00 \
 -DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
@@ -23,10 +30,10 @@ cmake \
 -DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
 -DMONALISA_INCLUDE_DIR="${tools}/heplibs/ApMon/include" -DMONALISA_LIBRARY="${tools}/heplibs/ApMon/lib/libapmoncpp.so" \
 -DXROOTD_INCLUDE_DIR="${GSHELL_ROOT}/include/xrootd/" -DXROOTD_INC_PRIV_DIR="${GSHELL_ROOT}/include/xrootd/XrdClient/" \
--DXROOTD_XrdMain_LIBRARY="${GSHELL_ROOT}/lib/libXrdMain.so" \
--DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" \
--DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so" \
+${XRD_ALIEN} \
 $1
+
+
 
 
 
@@ -37,6 +44,9 @@ $1
 #-DXROOTD_XrdUtils_LIBRARY="/usr/lib64/libXrdUtils.so" \
 #-DXROOTD_XrdClient_LIBRARY="/usr/lib64/libXrdClient.so" \
 
+#-DXROOTD_XrdMain_LIBRARY="${GSHELL_ROOT}/lib/libXrdMain.so" \
+#-DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" \
+#-DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so" \
 
 
 
