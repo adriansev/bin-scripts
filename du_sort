@@ -1,2 +1,1 @@
-
 du -b --max-depth=$1 | sort -gr -k 1 | awk -F " " '{ size = $1/(1024 * 1024) ; print size,"MiB",$2 }'
