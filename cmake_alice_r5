@@ -6,8 +6,9 @@ cmake \
 -DCMAKE_INSTALL_PREFIX=$tools/alice/v5-AN \
 -DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
 -DCMAKE_BUILD_TYPE=$BUILDTYPE \
--DROOTSYS=$tools/root/v5-34_reldbg \
--DALIEN=$ALIEN_ROOT \
+-DROOTSYS=${tools}/root/v5-34_reldbg \
+-DALIEN=${ALIEN_ROOT} \
+-DFASTJET=${FASTJET_ROOT} \
 -DTARGET_ARCHITECTURE="auto" \
 -DVC_IMPL="auto" \
 $1 | tee cmake_out.txt
@@ -15,6 +16,8 @@ $1 | tee cmake_out.txt
 
 
 ##-DFASTJET=$FASTJET_ROOT \
+##-DApMon=${tools}/heplibs/ApMon \
+###-DGEANT3_SYSTEM_DIR=${GEANT3DIR} \
 
 
 ###-DZEROMQ_INCLUDE_DIR="/usr/include" \

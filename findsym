@@ -1,8 +1,7 @@
 #!/bin/bash
 
-[ ! -n "${ALICE_ROOT}" ] && { echo "ALICE_ROOT is not set" && exit }
-
-[ ! -n "${ROOTSYS}" ] && { echo "ROOTSYS is not set" && exit }
+##[ ! -n "${ALICE_ROOT}" ] && { echo "ALICE_ROOT is not set" && exit }
+##[ ! -n "${ROOTSYS}" ] && { echo "ROOTSYS is not set" && exit }
 
 libs_path="$ALICE_PHYSICS/lib $ALICE_ROOT/lib $ROOTSYS/lib $FASTJET_ROOT/lib $ALICE/geant3/lib64 $ALIEN_ROOT/api/lib $G4LIB $CGAL_DIR/lib"
 
