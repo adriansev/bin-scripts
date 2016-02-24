@@ -1,0 +1,25 @@
+From 9e4228607032e33170b1f9a11d92c812e115bfb7 Mon Sep 17 00:00:00 2001
+From: asevcenc <adrian.sevcenco@cern.ch>
+Date: Fri, 19 Feb 2016 23:40:07 +0200
+Subject: [PATCH 2/2] EMCALJetTasks/CMakeLists.txt - add CGAL rootmap dep
+
+Signed-off-by: asevcenc <adrian.sevcenco@cern.ch>
+---
+ PWGJE/EMCALJetTasks/CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/PWGJE/EMCALJetTasks/CMakeLists.txt b/PWGJE/EMCALJetTasks/CMakeLists.txt
+index 11ef4ec..592a47d 100644
+--- a/PWGJE/EMCALJetTasks/CMakeLists.txt
++++ b/PWGJE/EMCALJetTasks/CMakeLists.txt
+@@ -220,6 +220,7 @@ if(FASTJET_FOUND)
+     siscone
+     fastjettools
+     fastjet
++    CGAL
+     )
+ endif(FASTJET_FOUND)
+ generate_rootmap("${MODULE}" "${LIBDEPS}" "${CMAKE_CURRENT_SOURCE_DIR}/${MODULE}LinkDef.h")
+-- 
+2.1.0
+
