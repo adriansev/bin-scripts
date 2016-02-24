@@ -4,7 +4,7 @@ rm -rf $tools/alice/BUILD/*
 cmake_alice_r5 $tools/alice/v5-AN-latest-src
 make -j8
 
-rm -rf $tools/alice/v5-AN-latest30_reldbg/*
+rm -rf $tools/alice/v5-AN/*
 make install
 
 rm -rf $tools/alice/BUILD/*
