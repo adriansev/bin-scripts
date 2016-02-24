@@ -1,11 +1,22 @@
-cd $tools/alice/BUILDPHYS
-rm -rf $tools/alice/BUILDPHYS/*
+#!/bin/bash
 
-cmake_alicephys_r5 $tools/alice/physics-src
+PHYSICS_SRC="$tools/alice/physics-src"
+PHYS_BUILDDIR="$tools/alice/BUILDPHYS"
+PHYS_INSTALLDIR="$tools/alice/physics"
+
+cd ${PHYSICS_SRC}
+git apply ~/bin/CGAL-rootmap-dep.patch
+
+cd ${PHYS_BUILDDIR}
+rm -rf ${PHYS_BUILDDIR}/*
+
+cmake_alicephys_r5 ${PHYSICS_SRC}
 make -j8
 
-rm -rf $tools/alice/physics/*
+rm -rf ${PHYS_INSTALLDIR}/*
 make install
 
-rm -rf $tools/alice/BUILDPHYS/*
+
+rm -rf ${PHYS_BUILDDIR}/*
+
 
