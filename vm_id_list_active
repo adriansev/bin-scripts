@@ -1,0 +1,1 @@
+VBoxManage list runningvms | awk -F"\" " '{ gsub("{|}","",$2); print $2}'
