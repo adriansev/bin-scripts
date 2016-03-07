@@ -1,0 +1,1 @@
+for vm in `vm_id_list`; do VBoxManage modifyvm ${vm} "$@" ; done
