@@ -7,7 +7,7 @@ BUILDTYPE==${2:-$DEFAULT_BUILD_TYPE}
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
 
-CXXFLAGS="${PEDANTIC} -march=native -fpermissive"
+CXXFLAGS="${PEDANTIC} -march=native"
 
 # Build with C++11?
 root_cxx11=`root-config --has-cxx11`
