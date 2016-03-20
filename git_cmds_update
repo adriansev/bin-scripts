@@ -1,0 +1,7 @@
+wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O ~/bin/git-completion.bash
+wget https://raw.githubusercontent.com/git/git/master/contrib/workdir/git-new-workdir -O ~/bin/git-new-workdir && chmod +x ~/bin/git-new-workdir
+wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O ~/bin/git-prompt.sh && chmod +x ~/bin/git-prompt.sh
+wget https://raw.githubusercontent.com/git/git/master/contrib/git-resurrect.sh -O ~/bin/git-resurrect && chmod +x ~/bin/git-resurrect
+wget https://raw.githubusercontent.com/git/git/master/contrib/remotes2config.sh -O ~/bin/git-remotes2cfg && chmod +x ~/bin/git-remotes2cfg
+wget https://raw.githubusercontent.com/git/git/master/contrib/git-jump/git-jump -O ~/bin/git-jump && chmod +x ~/bin/git-jump
+
