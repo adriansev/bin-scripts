@@ -1,0 +1,25 @@
+#####################
+##    FAIR SOFT    ##
+#####################
+
+export Linux_Flavour_="CentOS release 6.5 (Final)"
+export System_="x86_64"
+
+export FAIRDIR=$tools/FAIR
+
+export SIMPATH=$FAIRDIR/fairsoft_latest-src
+export SIMPATH_INSTALL=$FAIRDIR/fairsoft
+
+export FAIRROOTPATH=$FAIRDIR/fairroot
+export FAIRLIBDIR=$FAIRROOTPATH/lib
+
+##  FAIR SOFT PATHS
+export PATH=$PATH:$SIMPATH_INSTALL/bin
+
+##     FAIR SOFT LIBS
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$SIMPATH_INSTALL/lib
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:$SIMPATH_INSTALL/include
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$SIMPATH_INSTALL/include
+
+

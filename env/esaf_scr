@@ -1,0 +1,3 @@
+export ARCH=`uname -m`
+export ESAFHOME=$tools/esaf/current
+export LD_LIBRARY_PATH=$ESAFHOME/lib/${ARCH}/:${LD_LIBRARY_PATH}

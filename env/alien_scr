@@ -1,0 +1,58 @@
+#################
+###   ALIEN   ###
+#################
+
+export ALIEN_INSTALLER_PREFIX=${tools}/alien
+export ALIEN_ROOT=${ALIEN_INSTALLER_PREFIX}
+export ALIEN=${ALIEN_INSTALLER_PREFIX}
+#export ZLIB=${ALIEN_ROOT}
+
+export GSHELL_ROOT=${ALIEN_ROOT}/api/
+export GAPI_LOCATION=${ALIEN_ROOT}/api/
+export GLOBUS_LOCATION=$ALIEN_ROOT/globus/
+export MYPROXY_LOCATION=$ALIEN_ROOT/globus/
+export X509_CERT_DIR=${ALIEN_ROOT}/globus/share/certificates
+
+export XrdSecSSLCADIR=${ALIEN_ROOT}/globus/share/certificates
+export XrdSecSSLSESSION=0
+export XRD_XRDCPSIZEHINT=0
+
+alias aliensh='bash --rcfile ${GSHELL_ROOT}/bin/alien_Shell'
+alias alien_cd='. ${GSHELL_ROOT}/bin/alien_cd dummy'
+alias alien_pwd=' ${GSHELL_ROOT}/bin/alien_pwd -1'
+
+export alien_API_SERVER_LIST="pcapiserv03.cern.ch:10000|"
+export alien_API_PORT="10000"
+export alien_API_USER="asevcenc"
+export alien_API_VO="alice"
+export alien_CLOSEST_SITE="ISS"
+
+export APMON_CONFIG=aliendb5.cern.ch
+export alien_SITE=""
+export alien_HOME=""
+
+
+export GCLIENT_SERVER_LIST="pcapiserv03.cern.ch:10000|pcapiserv08.cern.ch:10000|"
+export GCLIENT_RETRY_SLEEPTIME=2
+export GCLIENT_COMMAND_MAXWAIT=300
+export GCLIENT_COMMAND_RETRY=20
+export GCLIENT_SERVER_RESELECT=4
+export GCLIENT_SERVER_RECONNECT=2
+export GCLIENT_RETRY_DAMPING=1.2
+
+
+#export GSHELL_NO_GCC=1
+
+export MANPATH=$MANPATH:$ALIEN_ROOT/api/share/man
+
+export PATH=$PATH:$ALIEN_ROOT/api/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$ALIEN_ROOT/api/lib
+
+
+## ALIEN Settings
+# source $ALIEN_ROOT/api/etc/env_gbbox.sh
+# export GBBOX_ENVFILE=/tmp/gbbox_1000_25134
+
+## export C_INCLUDE_PATH=$C_INCLUDE_PATH:${ALIEN_ROOT}/api/include
+## export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${ALIEN_ROOT}/api/include
+

@@ -1,0 +1,14 @@
+#####################
+##     CRPropa3    ##
+#####################
+export CRPROPA3=$tools/CRPropa3_trunk
+
+##     CRPROPA PATHS
+export PATH=$PATH:$CRPROPA3/bin
+
+##     FASTJET LIBS
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CRPROPA3/lib
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:$CRPROPA3/include
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$CRPROPA3/include
+

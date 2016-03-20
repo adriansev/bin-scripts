@@ -1,0 +1,222 @@
+###################
+###   ALIASES   ###
+###################
+
+## ALICE aliases
+alias alicesw-installer='bash <(curl -fsSL http://alien.cern.ch/alice-installer)'
+alias alicesw-install-all='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --all'
+alias alicesw-clean-all='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --clean-all'
+alias alicesw-bugreport='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --bugreport'
+
+## GIT
+alias g='git'
+
+alias git_master_pull='git checkout master && git pull'
+
+alias git_log_nice='git log --graph --decorate --pretty=oneline --abbrev-commit --all'
+
+## SYSTEM ALIASES
+alias mc='. /usr/libexec/mc/mc-wrapper.sh'
+alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
+
+##alias sudo='sudo -i'
+alias fuck='sudo $(history -p \!\!)'
+
+# reboot / halt / poweroff
+alias reboot='sudo /usr/sbin/reboot'
+alias poweroff='sudo /usr/sbin/poweroff'
+
+# long math support
+alias bc='bc -l'
+
+alias mkdir='mkdir -pv'
+
+alias diff='colordiff'
+
+alias mount_list='mount |column -t'
+
+alias path='echo -e ${PATH//:/\\n}'
+alias now='date +"%T'
+alias nowtime=now
+alias nowdate='date +"%d.%m.%Y"'
+
+# Stop after sending count ECHO_REQUEST packets #
+alias ping10='ping -c 10'
+# Do not wait interval 1 second, go fast #
+alias pingfast='ping -c 100 -s.2'
+
+# list open ports
+alias ports='netstat -tulanp'
+
+alias mynetcon='sudo lsof -n -P -i +c 15'
+
+## GREP
+alias egrep='egrep --color=auto'
+alias fgrep='fgrep --color=auto'
+alias grep='grep --color=auto'
+
+## shortcut  for iptables and pass it via sudo#
+alias ipt='sudo /usr/sbin/iptables'
+
+# display all rules #
+alias iplist='sudo /usr/sbin/iptables -L -n -v --line-numbers'
+alias iplistin='sudo /usr/sbin/iptables -L INPUT -n -v --line-numbers'
+alias iplistout='sudo /usr/sbin/iptables -L OUTPUT -n -v --line-numbers'
+alias iplistfw='sudo /usr/sbin/iptables -L FORWARD -n -v --line-numbers'
+alias firewall=iplist
+
+
+# Parenting changing perms on / #
+alias chown='chown --preserve-root'
+alias chmod='chmod --preserve-root'
+alias chgrp='chgrp --preserve-root'
+
+## Hardware INFO
+
+## pass options to free ##
+alias meminfo='free -m -l -t'
+
+## get top process eating memory
+alias psmem='ps auxf | sort -nr -k 4'
+alias psmem10='ps auxf | sort -nr -k 4 | head -10'
+
+## get top process eating cpu ##
+alias pscpu='ps auxf | sort -nr -k 3'
+alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
+
+## Get server cpu info ##
+alias cpuinfo='lscpu'
+
+## get GPU ram on desktop / laptop##
+alias gpumeminfo='grep -i --color memory /var/log/Xorg.0.log'
+
+## resume by default ##
+alias wget='wget -c'
+
+alias btar='tar --use-compress-program /usr/bin/bzip2'
+
+## ls aliases
+# -F : append indicator (one of */=>@|) to entries
+# -p : append / indicator to directories
+
+alias ls='ls --show-control-chars --color=auto'
+
+## Use a long listing format ##
+alias ll='ls -l'
+alias la='ls -A'
+alias l='ls -CF'
+
+## Show hidden files ##
+alias l.='ls -d .*'
+
+## List only subdirectories
+alias lsd='ls -al -d * | egrep "^d"'
+## List the most recently modified files and directories
+alias lt='ls -alt'
+
+## more compact than ls -l
+alias ls1='ls -oh'
+## even more compact ;-)
+alias ls2='ls -1sh'
+## all in one column
+alias lscol='ls -1'
+
+## Show the inode number for files in the current directory
+alias li='ls -ai1 | sort'
+
+alias +='pushd .'
+alias _='popd'
+
+
+## get rid of command not found ##
+alias cd..='cd ..'
+
+# handy cd aliases
+alias upd="cd .." # go up
+alias bckd="cd -" # go back
+
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias .....="cd ../../../.."
+
+alias .4='cd ../../../../'
+alias .5='cd ../../../../..'
+
+## safety aliases (ask for confirmation) ##already defined
+alias cp="cp -i"
+alias mv="mv -i"
+alias rm="rm -i"
+
+alias df='df -h'
+alias du='du -ch'
+
+## rot13 and rot47 conversion:
+alias rot13='tr A-Za-z N-ZA-Mn-za-m'
+alias rot47='tr '\''!-~'\'' '\''P-~!-O'\'''
+
+##
+alias px='ps faxu '
+alias pg='ps faxu | grep '
+
+alias my_procs="ps -F --forest -u $USER -U $USER"
+alias my_connections="netstat --inet -p"
+
+## find in a file and expression
+alias ff="find . -name \!:1 -exec fgrep -Hn \!:2 '{}' \;"
+
+## search in hystory
+alias h='history | grep '
+
+alias j='jobs -l'
+
+
+# other aliases to save some typing
+alias du='du -h' # human-readable sizes
+alias du0='du -c --max-depth=0'
+alias du1='du -c --max-depth=1'
+alias du2='du -c --max-depth=2'
+alias du3='du -c --max-depth=3'
+
+
+alias fstab='cat /etc/fstab'
+alias mtab='cat /etc/mtab'
+
+alias ytb="youtube-dl --no-check-certificate"
+alias ytb_mp3="ytb -x --audio-format mp3"
+
+alias rsync="rsync -avhuHAX -e ssh"
+alias rsync_gsi="rsync -avhuHAX -e gsissh"
+
+## ROOT ALIASES
+alias root='root.exe -l'
+alias rq='root.exe -l -b -q'
+
+alias aliroot='aliroot -l'
+alias alirq='aliroot -l -b -q'
+
+alias tutorials='cd $ROOTSYS/tutorials'
+
+alias makej8='nohup time -p make -j8 >`basename $PWD`.out 2>`basename $PWD`.err &'
+
+alias watch_file="watch -n 1 tail -n 30"
+
+
+alias work='cd $HOME/work'
+alias latest='cd $HOME/work/latest'
+alias docs='cd $HOME/docs'
+alias documents='cd $HOME/Documents'
+alias jets='cd $work/jets'
+alias jetfinder='cd $work/jets/jetfinder'
+alias jets_test='cd $work/jets/test'
+alias jetan='cd $ALICE_ROOT/JETAN'
+alias aliceroot='cd $ALICE_ROOT'
+
+
+## GEANT4 aliases
+alias g4work='export G4WORKDIR=`pwd`'
+alias scoala='ssh iwsgc15@glite-tutor.ct.infn.it'
+
+
+alias load_nvidia='LD_LIBRARY_PATH=/usr/lib64/nvidia '
+

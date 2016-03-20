@@ -1,0 +1,73 @@
+export APE=${tools}/APE
+export APE_EXTERNALS=${APE}/External
+
+export AUGEROFFLINEROOT=/cvmfs/auger.egi.eu/Auger_ape_SL6/offline/v2r9p3-icrc13-final
+
+#TOOLS 
+#########################################################
+export CPPUNITROOT=${APE_EXTERNALS}/cppunit/1.12.1
+
+export FFTW3ROOT=${APE_EXTERNALS}/fftw/3.3.4
+
+export BOOSTROOT=${APE_EXTERNALS}/boost/1_55_0
+
+export XERCESCROOT=${APE_EXTERNALS}/xerces-c/3.1.1
+
+export EIGENROOT=${APE_EXTERNALS}/eigen/3.1.4
+export EIGEN_INCLUDE_DIR=$EIGENROOT/include
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:${EIGEN_INCLUDE_DIR}
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${EIGEN_INCLUDE_DIR}
+
+export EINSPLINEROOT=${APE_EXTERNALS}/einspline/0.9.2
+
+export CLHEPHOME=${APE_EXTERNALS}/clhep/2.1.2.3
+# export CLHEPHOME=$CLHEP_BASE_DIR
+
+##########################################################
+## AUGER SOFTWARE
+
+export FD_ROOT=${APE}/fdeventlib/4.1.6
+
+export CDASHOME=${APE}/cdas/v5r0
+
+export AERAROOTIO=${APE_EXTERNALS}/aerarootio/v00r05
+
+export AERAROOT=${APE_EXTERNALS}/aevread/aevread_v02r00p04
+
+export AIRESHOME=${APE_EXTERNALS}/aires/2-8-4a
+export AIRES_FORTRAN_LIB_PATH=$AIRESHOME/lib
+export AIRES_DEMO=$AIRESHOME/demos
+
+## GEANT4
+export G4SYSTEM=Linux-g++
+export G4INSTALL=${APE_EXTERNALS}/geant4/4.9.4p04
+export G4INCLUDE=${G4INSTALL}/include
+export G4LIB=${G4INSTALL}/lib/${G4SYSTEM}
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:${G4INCLUDE}
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${G4INCLUDE}
+
+export PKG_CONFIG_PATH=$EIGENROOT/lib/pkgconfig:$EINSPLINEROOT/lib/pkgconfig
+
+export PATH=$PATH:${APE_EXTERNALS}/pkg-config/0.27.1/bin:${AIRESHOME}/bin:${CDASHOME}/bin
+
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CDASHOME}/lib:${FD_ROOT}/lib:${AERAROOTIO}/lib:${AERAROOT}/lib:${EINSPLINEROOT}/lib:$G4LIB:$CLHEPHOME/lib:$CPPUNITROOT/lib:$FFTW3ROOT/lib
+#export LD_LIBRARY_PATH=$XERCESCROOT/lib:$BOOSTROOT/lib
+
+##############################
+###   ADST   ###
+##############################
+export ADSTHOME=$tools/ADST
+export ADSTROOT=$ADSTHOME
+
+export PATH=$PATH:${ADSTHOME}/bin
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ADSTHOME}/lib
+
+##     INCLUDES
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:${ADSTHOME}/include
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${ADSTHOME}/include
+
+##############################################################
+
+
+
