@@ -5,7 +5,7 @@ PHYS_BUILDDIR="$tools/alice/BUILDPHYS"
 PHYS_INSTALLDIR="$tools/alice/physics"
 
 cd ${PHYSICS_SRC}
-git apply ~/bin/CGAL-rootmap-dep.patch
+#git apply ~/bin/CGAL-rootmap-dep.patch
 
 cd ${PHYS_BUILDDIR}
 rm -rf ${PHYS_BUILDDIR}/*
