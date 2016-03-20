@@ -1,10 +1,26 @@
+#!/bin/bash
+
 DEFAULT_BUILD_TYPE="RelWithDebInfo"
 
 BUILDTYPE==${2:-$DEFAULT_BUILD_TYPE}
 
+#PEDANTIC="-Wall -Wextra"
+PEDANTIC=""
+
+CXXFLAGS="${PEDANTIC} -march=native"
+
+# Build with C++11?
+root_cxx11=`root-config --has-cxx11`
+[[ "$root_cxx11" == "yes" ]] && CXXFLAGS="${CXXFLAGS} -std=c++11"
+
+# AVX
+avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
+[[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+
 cmake \
+-DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` -DCMAKE_Fortran_COMPILER=`root-config --f77` \
 -DCMAKE_INSTALL_PREFIX=$tools/alice/v5-AN \
--DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
+-DCMAKE_CXX_FLAGS=${CXXFLAGS} \
 -DCMAKE_BUILD_TYPE=$BUILDTYPE \
 -DROOTSYS=${tools}/root/v5-34_reldbg \
 -DALIEN=${ALIEN_ROOT} \
