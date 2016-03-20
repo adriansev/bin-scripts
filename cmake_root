@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [ ! -n "${ROOTSYS}" ]
 then
   echo "ROOTSYS is not set" && exit
@@ -10,13 +12,58 @@ else
   BUILDTYPE="RelWithDebInfo"
 fi
 
+
+# Enable C++11 if possible
+function TestCxx11() {
+  TCXX11="/tmp/test_cxx11"
+  touch ${TCXX11}.cxx
+
+  cat > ${TCXX11}.cxx <<\EOF
+// Use Clang (any version) or GCC v4.8.2
+#if defined __clang__ || ((__GNUC__ << 32)+(__GNUC_MINOR__ << 16)+(__GNUC_PATCHLEVEL__) >= (4 << 32)+(8 << 16)+(2))
+#include <iostream>
+using namespace std;
+int main() {
+  int arr[] = {1, 2, 3, 4, 5};
+  for(auto i : arr) {
+    cout << arr[i] <<endl;
+  }
+  return 0;
+}
+#else
+#error "C++11 is not supported by your compiler."
+#endif
+EOF
+
+  g++ -std=c++11 -o ${TCXX11}.out ${TCXX11}.cxx
+  RV=$?
+  rm -f ${TCXX11}.cxx ${TCXX11}.out
+  unset GXX TCXX11
+  return $RV
+}
+
+CXX11="0"
+[[ TestCxx11 ]] && CXX11="1"
+
+
+#PEDANTIC="-Wall -Wextra"
+PEDANTIC=""
+
+CXXFLAGS="${PEDANTIC} -march=native"
+
+# AVX
+avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
+[[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+
 cmake \
 -DCMAKE_INSTALL_PREFIX=$tools/root/v5-34_reldbg \
--DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse" \
+-Dcxx14="0" -Dcxx11=${CXX11} \
+-DCMAKE_CXX_FLAGS=${CXXFLAGS} \
 -DCMAKE_BUILD_TYPE=${BUILDTYPE} \
--Dbuiltin_ftgl="0" -Dbuiltin_glew="0" -Dbuiltin_gsl="0" -Dbuiltin_afterimage="0" -Dbuiltin_cfitsio="0" -Dbuiltin_freetype="0" \
--Dbuiltin_lzma="0" -Dbuiltin_zlib="0" -Dbuiltin_xrootd="0" -Dbuiltin_pcre="0" -Dvc="1" -Dvdt="1" \
--Dsoversion="1" -Dgsl_shared="1" -Droofit="1" -Dminuit2="1" -Dtable="1" -Dunuran="1" -Dgdml="1" -Dqt="1" -Dqtgsi="1" -Dglobus="0" -Dgfal="0" \
+-Dbuiltin_ftgl="0" -Dbuiltin_glew="0" -Dbuiltin_gsl="0" -Dbuiltin_afterimage="0" -Dbuiltin_cfitsio="0" -Dbuiltin_davix="0" \
+-Dbuiltin_freetype="0" -Dbuiltin_lzma="0" -Dbuiltin_zlib="0" -Dbuiltin_xrootd="0" -Dbuiltin_pcre="0" \
+-Dvc="1" -Dvdt="1" -Dsoversion="1" -Dgsl_shared="1" -Droofit="1" -Dminuit2="1" -Dtable="1" -Dunuran="1" -Dgdml="1" -Dqt="1" -Dqtgsi="1" \
+-Dbonjour="0" -Drfio="0" -Dcastor="0" -Dglobus="0" -Dgfal="0" \
 -Dpythia6_nolink="1" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
 -DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
@@ -26,8 +73,6 @@ cmake \
 -DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" \
 -DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so" \
 $1
-
-
 
 ## | tee cmake_out.txt
 
