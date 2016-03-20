@@ -1,0 +1,8 @@
+#####################
+###   LIBRARIES   ###
+#####################
+export LD_LIBRARY_PATH=/usr/lib64/nvidia:/usr/lib:/usr/lib64:/usr/local/lib:/usr/local/lib64:$JAVA_HOME/lib
+
+
+# :/usr/lib:/usr/local/lib:/usr/lib64:/usr/local/lib64
+##/usr/lib64/qt-3.3/lib

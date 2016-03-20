@@ -1,0 +1,17 @@
+##############################
+###   ADST   ###
+##############################
+export ADSTHOME=$tools/AUGER/ADST
+export ADSTROOT=$ADSTHOME
+
+export PATH=$PATH:${ADSTHOME}/bin
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ADSTHOME}/lib
+
+##     INCLUDES
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:${ADSTHOME}/include
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${ADSTHOME}/include
+
+##############################################################
+
+
+

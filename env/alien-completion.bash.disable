@@ -1,0 +1,153 @@
+########################################
+# alien bash shell completion functions
+#
+# Author: Andreas Peters + Derek Feichtinger CERN 2004
+# <andreas.joachim.peters@cern.ch>, <derek.feichtinger@cern.ch>
+########################################
+
+
+_alienfile ()
+{
+local cur gdir
+
+COMPREPLY=()
+cur=${COMP_WORDS[COMP_CWORD]}
+
+case x"$cur" in
+    x)
+	gdir=""
+	;;
+    xalien\:)
+	gdir="alien:$alien_HOME"
+	cur=""
+	;;	
+    xalien\:~/)
+	gdir="alien:$alien_HOME"
+	cur=""
+	;;	
+    xalien\:~)
+	gdir="alien:$alien_HOME"
+	cur=""
+	;;	
+    xfile\:)
+	gdir="file:$PWD/"
+	cur=""
+	;;
+    xfile\:\~/)	
+	gdir="file:$HOME/"
+	cur=""		
+	;;
+    xfile\:\~)	
+	gdir="file:$HOME/"
+	cur=""		
+	;;
+    x\~/) 
+	gdir="alien:$alien_HOME/"
+	cur=""
+	;;		
+    x\~)
+	gdir="~/"
+	cur="";
+	;;	 	
+    */)
+	gdir="$cur"
+	cur=""
+	;;
+    *)
+	gdir=${cur%$( basename $cur )}
+	cur=$( basename $cur )
+	;;
+esac
+
+if [ `expr "x$gdir" : "xfile:"` = "6" ]; then
+	gpath=${gdir:5}
+	COMPREPLY=( $( compgen -P$gpath -W '$( /bin/ls -F $gpath )' -- "$cur" ) );
+else 
+	if [ `expr "x$gdir" : "xalien:"` = "7" ]; then
+		gpath=${gdir:6}
+	else 
+		gpath=$gdir
+	fi
+	if [[ x"$gdir" == x ]]; then
+	    COMPREPLY=( $( compgen -W '$( gbbox -o name ls -F $gpath 2>/dev/null ) file: alien: ' -- "$cur" ) )
+	else
+	    COMPREPLY=( $( compgen -P$gpath -W '$( gbbox -o name ls -F $gpath 2>/dev/null ) ' -- "$cur" ) )	
+	fi
+fi
+
+}
+
+_aliendir ()
+{
+local cur gdir
+
+COMPREPLY=()
+cur=${COMP_WORDS[COMP_CWORD]}
+
+case x"$cur" in
+    x)
+	gdir=""
+	;;
+    xalien\:)
+	gdir="alien:$alien_HOME"
+	cur=""
+	;;	
+    xalien\:~/)
+	gdir="alien:$alien_HOME"
+	cur=""
+	;;	
+    xalien\:~)
+	gdir="alien:$alien_HOME"
+	cur=""
+	;;	
+    xfile\:)
+	gdir="file:$PWD/"
+	cur=""
+	;;
+    xfile\:\~/)	
+	gdir="file:$HOME/"
+	cur=""		
+	;;
+    xfile\:\~)	
+	gdir="file:$HOME/"
+	cur=""		
+	;;
+    x\~/) 
+	gdir="alien:$alien_HOME/"
+	cur=""
+	;;		
+    x\~)
+	gdir="~/"
+	cur="";
+	;;	 	
+    */)
+	gdir="$cur"
+	cur=""
+	;;
+    *)
+	gdir=${cur%$( basename $cur )}
+	cur=$( basename $cur )
+	;;
+esac
+
+if [ `expr "x$gdir" : "xfile:"` = "6" ]; then
+	gpath=${gdir:5}
+	COMPREPLY=( $( compgen -P$gpath -W '$( /bin/ls -F $gpath )' -- "$cur" ) );
+else 
+	if [ `expr "x$gdir" : "xalien:"` = "7" ]; then
+		gpath=${gdir:6}
+	else 
+		gpath=$gdir
+	fi
+	if [[ x"$gdir" == x ]]; then
+	    COMPREPLY=( $( compgen -W '$( gbbox -o name ls -F $gpath 2>/dev/null | grep / ) file: alien: ' -- "$cur" ) )
+	else
+	    COMPREPLY=( $( compgen -P$gpath -W '$( gbbox -o name ls -F $gpath 2>/dev/null | grep / ) ' -- "$cur" ) )	
+	fi
+fi
+
+}
+
+complete -o nospace -F _alienfile ls cp cat more less edit find rm mv whereis mkdir erase purge submit run addTagValue showTagValue removeTagValue isonline prepare
+complete -o nospace -F _aliendir cd rmdir addTag showTags removeTag
+

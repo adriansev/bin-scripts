@@ -1,0 +1,241 @@
+#####################
+###   FUNCTIONS   ###
+#####################
+
+function DateTime() {
+  date +%Y%m%d_%H%M%S
+}
+
+# Prints the time given in seconds in hours, minutes, seconds
+function NiceTime() {
+  local SS HH MM STR
+  SS="$1"
+
+  let "HH=SS / 3600"
+  let "SS=SS % 3600"
+  [ $HH -gt 0 ] && STR=" ${HH}h"
+
+  let "MM=SS / 60"
+  let "SS=SS % 60"
+  [ $MM -gt 0 ] && STR="${STR} ${MM}m"
+
+  [ $SS -gt 0 ] && STR="${STR} ${SS}s"
+  [ "$STR" == "" ] && STR="0s"
+
+  echo $STR
+
+  #printf "%02dh %02dm %02ds" $HH $MM $SS
+}
+
+
+whereami ()
+{
+host=`hostname -s`
+fullhost=`hostname -f`
+[[ "$fullhost" = "sev.spacescience.ro" ]] && host="ISS"
+echo $host
+}
+
+
+mymake() 
+{
+nohup time -p make -j$1 >`basename $PWD`.out 2>`basename $PWD`.err  & 
+}
+
+eth_irq () 
+{ 
+    base_str=`expr match "$1" '\(eth\)'`;
+    if [ "$base_str" = "eth" ]; then
+        grep --color $1 /proc/interrupts | cut -d \: -f 1 | awk '{print $1}';
+    else
+        if [ "$1" = "all" ]; then
+            list_of_eth=`ip link | grep -E -o "eth[0-99]"`;
+            for eth in $list_of_eth;
+            do
+               grep --color $eth /proc/interrupts | cut -d \: -f 1 | awk '{print $1}'
+            done;
+        else
+            echo "Accepted arguments are : ";
+            echo " all     : print IRQ's for all eth's";
+            echo " ethX    : print IRQ for ethX";
+        fi;
+    fi
+}
+
+
+
+ex () 
+{ 
+    if [ -f $1 ]; then
+        case $1 in 
+            *.tar.bz2)
+                tar xjf $1
+            ;;
+            *.tar.gz)
+                tar xzf $1
+            ;;
+            *.bz2)
+                bunzip2 $1
+            ;;
+            *.rar)
+                unrar x $1
+            ;;
+            *.gz)
+                gunzip $1
+            ;;
+            *.tar)
+                tar xf $1
+            ;;
+            *.tbz2)
+                tar xjf $1
+            ;;
+            *.tgz)
+                tar xzf $1
+            ;;
+            *.zip)
+                unzip $1
+            ;;
+            *.Z)
+                uncompress $1
+            ;;
+            *.7z)
+                7z x $1
+            ;;
+            *)
+                echo "'$1' cannot be extracted via extract()"
+            ;;
+        esac;
+    else
+        echo "'$1' is not a valid file";
+    fi
+}
+
+
+files2Lower () 
+{ 
+    for file in *;
+    do
+        lc=$(echo "$file" | tr "[A-Z]" "[a-z]");
+        [[ $lc != $file ]] && mv -i "$file" "$lc";
+    done
+}
+
+mkcd ()
+{
+mkdir $1 && cd $1
+}
+
+quote () 
+{
+echo \'${1//\'/\'\\\'\'}\'
+}
+
+
+toLower () 
+{
+echo $1 | tr "[:upper:]" "[:lower:]"
+}
+
+toUpper () 
+{
+echo $1 | tr "[:lower:]" "[:upper:]"
+}
+
+tarxz ()
+{
+XZ_OPT="--check=sha256 -T0" tar cJ --acls --xattrs --selinux -f ${1}.tar.xz ${1}
+}
+
+
+function diff-short() 
+{
+diff --suppress-common-lines $1 $2
+}
+
+function diff-long() 
+{
+diff $1 $2
+}
+
+function root-module
+{
+  if [ $# -lt 1 ] ; then
+    echo "root-module need exactly one argument"
+    return 1
+  fi
+
+  name=`basename $1 .cxx`
+  g++ -fPIC -Wall -g -c $name.cxx -o $name.o `root-config --cflags`
+  rootcint -f ${name}Cint.cxx -c ${name}.h
+  g++ -fPIC -Wall -g -c ${name}Cint.cxx -o ${name}Cint.o `root-config --cflags`
+  g++ -fPIC -shared -Wl,-soname,${name}.so -o ${name}.so ${name}Cint.o ${name}.o
+  rm -f ${name}Cint.cxx ${name}Cint.h ${name}Cint.o ${name}.o
+}
+
+
+transfer() {
+    # check arguments
+    if [ $# -eq 0 ];
+    then
+        echo "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"
+        return 1
+    fi
+
+    curl --version 2>&1 > /dev/null
+    if [ $? -ne 0 ]; then
+      echo "Could not find curl."; exit
+    fi
+
+
+    # get temporarily filename, output is written to this file show progress can be showed
+    tmpfile=$( mktemp -t transferXXX )
+
+    # upload stdin or file
+    file=$1
+
+    if tty -s;
+    then
+        basefile=$(basename "$file" | sed -e 's/[^a-zA-Z0-9._-]/-/g')
+
+        if [ ! -e $file ];
+        then
+            echo "File $file doesn't exists."
+            return 1
+        fi
+
+        if [ -d $file ];
+        then
+            # zip directory and transfer
+            zipfile=$( mktemp -t transferXXX.zip )
+            cd $(dirname $file) && zip -r -q - $(basename $file) >> $zipfile
+            curl --progress-bar --upload-file "$zipfile" "https://transfer.sh/$basefile.zip" >> $tmpfile
+            rm -f $zipfile
+        else
+            # transfer file
+            curl --progress-bar --upload-file "$file" "https://transfer.sh/$basefile" >> $tmpfile
+        fi
+    else
+        # transfer pipe
+        curl --progress-bar --upload-file "-" "https://transfer.sh/$file" >> $tmpfile
+    fi
+
+    # cat output link
+    cat $tmpfile
+
+    # cleanup
+    rm -f $tmpfile
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
