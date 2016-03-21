@@ -1,14 +1,14 @@
 
 ## DATA exports
-export G4NEUTRONHPDATA=/home/physics-tools/geant4-data/G4NDL
-export G4LEDATA=/home/physics-tools/geant4-data/G4EMLOW
-export G4LEVELGAMMADATA=/home/physics-tools/geant4-data/PhotonEvaporation
-export G4RADIOACTIVEDATA=/home/physics-tools/geant4-data/RadioactiveDecay
-export G4NEUTRONXSDATA=/home/physics-tools/geant4-data/G4NEUTRONXS
-export G4PIIDATA=/home/physics-tools/geant4-data/G4PII
-export G4REALSURFACEDATA=/home/physics-tools/geant4-data/RealSurface
-export G4SAIDXSDATA=/home/physics-tools/geant4-data/G4SAIDDATA
-export G4ABLADATA=/home/physics-tools/geant4-data/G4ABLA
+export G4NEUTRONHPDATA=${tools}/geant4-data/G4NDL
+export G4LEDATA=${tools}/geant4-data/G4EMLOW
+export G4LEVELGAMMADATA=${tools}/geant4-data/PhotonEvaporation
+export G4RADIOACTIVEDATA=${tools}/geant4-data/RadioactiveDecay
+export G4NEUTRONXSDATA=${tools}/geant4-data/G4NEUTRONXS
+export G4PIIDATA=${tools}/geant4-data/G4PII
+export G4REALSURFACEDATA=${tools}/geant4-data/RealSurface
+export G4SAIDXSDATA=${tools}/geant4-data/G4SAIDDATA
+export G4ABLADATA=${tools}/geant4-data/G4ABLA
 
 
 #################################################################

@@ -45,18 +45,20 @@ EOF
 CXX11="0"
 [[ TestCxx11 ]] && CXX11="1"
 
-
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
-
 CXXFLAGS="${PEDANTIC} -march=native"
 
 # AVX
-avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
-[[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+FQDN=`hostname -f`
+if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
+  CXXFLAGS="${PEDANTIC}"
+  avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
+  [[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+fi
 
 cmake \
--DCMAKE_INSTALL_PREFIX=$tools/root/v5-34_reldbg \
+-DCMAKE_INSTALL_PREFIX=$tools/root/root \
 -Dcxx14="0" -Dcxx11=${CXX11} \
 -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
 -DCMAKE_BUILD_TYPE=${BUILDTYPE} \

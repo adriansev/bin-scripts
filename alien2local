@@ -1,3 +1,4 @@
+#!/bin/bash
 
 dir_location=$1
 
@@ -8,9 +9,10 @@ file_name=$2
 BASE_CMD="alien_cp -v alien://"
 END_CMD=" ."
 
-CMD=$BASE_CMD" "$dir_location/$file_name" "$END_CMD"
+CMD="${BASE_CMD} ${dir_location}/${file_name} ${END_CMD}"
 
 echo $CMD
 eval $CMD
 
-mv $file_name $run_nr$file_name
+mv ${file_name} ${run_nr}${file_name}
+

@@ -1,6 +1,7 @@
-export CXXFLAGS='-march=native -O2'
+CXXFLAGS='-march=native -O2'
 
 avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
 [[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
 
-export   CFLAGS=${CXXFLAGS}
+export CXXFLAGS
+export CFLAGS=${CXXFLAGS}

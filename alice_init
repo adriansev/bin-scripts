@@ -1,8 +1,8 @@
-#! /bin/bash
+#!/bin/bash
 rm -rf /tmp/gbbox_`id -u`_*
 rm -rf /tmp/gclient_env_`id -u`
 rm -rf /tmp/gclient_token_`id -u`
 rm -rf /tmp/x509up_u`id -u`
 
-/home/physics-tools/alien/api/bin/alien-token-init asevcenc 
+${ALIEN_ROOT}/api/bin/alien-token-init asevcenc
 

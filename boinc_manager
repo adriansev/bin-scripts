@@ -1,1 +1,1 @@
-cd $BOINCDIR && /home.hdd/adrian/boincexe/boincmgr $@
+cd $BOINCDIR && $BOINCDIR/boincmgr $@

@@ -1,12 +1,25 @@
-cd $tools/alice/BUILD
-rm -rf $tools/alice/BUILD/*
+#!/bin/bash
 
-cmake_alice_r5 $tools/alice/v5-AN-latest-src
-make -j8
+CMAKECMD="cmake_alice_r5"
 
-rm -rf $tools/alice/v5-AN/*
+ALIROOT_SRC="$tools/alice/v5-AN-latest-src"
+ALIROOT_BUILDDIR="$tools/alice/BUILD"
+ALIROOT_INSTALLDIR="$tools/alice/v5-AN"
+
+mkdir -p ${ALIROOT_BUILDDIR}
+cd ${ALIROOT_SRC}
+
+cd ${ALIROOT_BUILDDIR}
+rm -rf ${ALIROOT_BUILDDIR}/*
+
+${CMAKECMD} ${ALIROOT_SRC}
+make -j`root-config --ncpu`
+RV=$?
+(("$RV" != "0")) && echo "Compilation not succesful; see ${ALIROOT_BUILDDIR}" && exit $RV
+
+rm -rf ${ALIROOT_INSTALLDIR}/*
 make install
+(("$RV" != "0")) && echo "Instalation not succesful; see ${ALIROOT_BUILDDIR}" && exit $RV
 
-rm -rf $tools/alice/BUILD/*
-
+rm -rf ${ALIROOT_BUILDDIR}/*
 

@@ -1,2 +1,2 @@
-cd $BOINCDIR && /home.hdd/adrian/boincexe/boinccmd --quit
+cd $BOINCDIR && $BOINCDIR/boinccmd --quit
 

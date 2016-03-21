@@ -1,1 +1,1 @@
-nedit $HOME/.bash_profile &
+${EDITOR} $HOME/.bash_profile 
