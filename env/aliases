@@ -2,6 +2,50 @@
 ###   ALIASES   ###
 ###################
 
+## GLITE
+alias job.cancel='glite-ce-job-cancel'
+alias job.list='glite-ce-job-list'
+alias job.purge='glite-ce-job-purge'
+alias job.status='glite-ce-job-status'
+alias job.suspend='glite-ce-job-suspend'
+alias job.lease='glite-ce-job-lease'
+alias job.output='glite-ce-job-output'
+alias job.resume='glite-ce-job-resume'
+alias job.submit='glite-ce-job-submit'
+
+alias proxy.delegate='glite-ce-delegate-proxy'
+alias proxy.renew='glite-ce-proxy-renew'
+alias service-info='glite-ce-service-info'
+alias event-query='glite-ce-event-query'
+
+alias delegate.destroy='glite-delegation-destroy'
+alias delegate.info='glite-delegation-info'
+alias delegate.init='glite-delegation-init'
+
+alias wms.cancel='glite-wms-job-cancel'
+alias wms.info='glite-wms-job-info'
+alias wms.loginfo='glite-wms-job-logging-info'
+alias wms.perusal='glite-wms-job-perusal'
+alias wms.submit='glite-wms-job-submit'
+alias wms.delegate='glite-wms-job-delegate-proxy'
+alias wms.list-match='glite-wms-job-list-match'
+alias wms.output='glite-wms-job-output'
+alias wms.status='glite-wms-job-status'
+
+alias job.output_c='glite-ce-job-output -s 8 -l job_output.log -i jobid'
+alias job.status_c='glite-ce-job-status -l job_status.log -i jobid'
+alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
+
+# DIRAC
+
+alias dirac_enable='source $HOME/adrian/DIRAC/bashrc'
+alias dirac_proxy_init='dirac-proxy-init -g auger_user -M'
+
+## ALIEN
+alias aliensh='bash --rcfile ${GSHELL_ROOT}/bin/alien_Shell'
+alias alien_cd='. ${GSHELL_ROOT}/bin/alien_cd dummy'
+alias alien_pwd=' ${GSHELL_ROOT}/bin/alien_pwd -1'
+
 ## ALICE aliases
 alias alicesw-installer='bash <(curl -fsSL http://alien.cern.ch/alice-installer)'
 alias alicesw-install-all='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --all'
@@ -10,16 +54,15 @@ alias alicesw-bugreport='bash <(curl -fsSL http://alien.cern.ch/alice-installer)
 
 ## GIT
 alias g='git'
-
-alias git_master_pull='git checkout master && git pull'
-
+alias git_master_pull='git checkout master && git fetch origin && git pull'
 alias git_log_nice='git log --graph --decorate --pretty=oneline --abbrev-commit --all'
 
 ## SYSTEM ALIASES
+alias devtoolset='source scl_source enable devtoolset-3'
+
 alias mc='. /usr/libexec/mc/mc-wrapper.sh'
 alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
 
-##alias sudo='sudo -i'
 alias fuck='sudo $(history -p \!\!)'
 
 # reboot / halt / poweroff
@@ -59,11 +102,11 @@ alias grep='grep --color=auto'
 alias ipt='sudo /usr/sbin/iptables'
 
 # display all rules #
-alias iplist='sudo /usr/sbin/iptables -L -n -v --line-numbers'
-alias iplistin='sudo /usr/sbin/iptables -L INPUT -n -v --line-numbers'
-alias iplistout='sudo /usr/sbin/iptables -L OUTPUT -n -v --line-numbers'
-alias iplistfw='sudo /usr/sbin/iptables -L FORWARD -n -v --line-numbers'
-alias firewall=iplist
+alias iptlist='sudo /usr/sbin/iptables -L -n -v --line-numbers'
+alias iptlistin='sudo /usr/sbin/iptables -L INPUT -n -v --line-numbers'
+alias iptlistout='sudo /usr/sbin/iptables -L OUTPUT -n -v --line-numbers'
+alias iptlistfw='sudo /usr/sbin/iptables -L FORWARD -n -v --line-numbers'
+alias firewall=iptlist
 
 
 # Parenting changing perms on / #
@@ -127,7 +170,6 @@ alias li='ls -ai1 | sort'
 alias +='pushd .'
 alias _='popd'
 
-
 ## get rid of command not found ##
 alias cd..='cd ..'
 
@@ -170,7 +212,6 @@ alias h='history | grep '
 
 alias j='jobs -l'
 
-
 # other aliases to save some typing
 alias du='du -h' # human-readable sizes
 alias du0='du -c --max-depth=0'
@@ -178,22 +219,21 @@ alias du1='du -c --max-depth=1'
 alias du2='du -c --max-depth=2'
 alias du3='du -c --max-depth=3'
 
-
 alias fstab='cat /etc/fstab'
 alias mtab='cat /etc/mtab'
 
 alias ytb="youtube-dl --no-check-certificate"
 alias ytb_mp3="ytb -x --audio-format mp3"
 
-alias rsync="rsync -avhuHAX -e ssh"
-alias rsync_gsi="rsync -avhuHAX -e gsissh"
+alias rsync="rsync -ahuHAXW -e ssh"
+alias rsync_gsi="rsync -ahuHAXW -e gsissh"
 
 ## ROOT ALIASES
 alias root='root.exe -l'
-alias rq='root.exe -l -b -q'
+alias rq='root.exe -l -b -x -q'
 
 alias aliroot='aliroot -l'
-alias alirq='aliroot -l -b -q'
+alias alirq='aliroot -l -b -x -q'
 
 alias tutorials='cd $ROOTSYS/tutorials'
 
@@ -201,17 +241,10 @@ alias makej8='nohup time -p make -j8 >`basename $PWD`.out 2>`basename $PWD`.err 
 
 alias watch_file="watch -n 1 tail -n 30"
 
-
 alias work='cd $HOME/work'
-alias latest='cd $HOME/work/latest'
-alias docs='cd $HOME/docs'
 alias documents='cd $HOME/Documents'
 alias jets='cd $work/jets'
 alias jetfinder='cd $work/jets/jetfinder'
-alias jets_test='cd $work/jets/test'
-alias jetan='cd $ALICE_ROOT/JETAN'
-alias aliceroot='cd $ALICE_ROOT'
-
 
 ## GEANT4 aliases
 alias g4work='export G4WORKDIR=`pwd`'

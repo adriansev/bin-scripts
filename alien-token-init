@@ -1,2 +1,2 @@
 #! /bin/bash
-(cd /home/physics-tools/alien/api/bin && ./alien-token-init $@)
+(cd ${ALIEN_ROOT}/api/bin && ./alien-token-init $@)

@@ -12,12 +12,9 @@
 
 ROOTMAINDIR=${tools}/root
 
-
 ROOTVER="root"
-#ROOTVER="v5-34-08"
 
 ROOTSYS=${ROOTMAINDIR}/${ROOTVER}
-
 export ROOTSYS
 
 export MANPATH=$MANPATH:${ROOTSYS}/man
@@ -30,15 +27,4 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${ROOTSYS}/lib
 
 export C_INCLUDE_PATH=$C_INCLUDE_PATH:${ROOTSYS}/include
 export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${ROOTSYS}/include
-
-## VGM
-##export VGM_INSTALL=${tools}/vgm
-##export VGM_SYSTEM=Linux-g++
-##export USE_VGM=1
-##export VGM_NO_AGDD=1
-## $VGM_INSTALL/lib/$VGM_SYSTEM:
-## G4VMC
-## :${tools}/geant4_vmc/lib/tgt_linux
-## :${GDML_INSTALL}/bin
-
 

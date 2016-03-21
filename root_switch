@@ -1,26 +1,19 @@
 #!/bin/bash
 
-ROOT5_08="v5-34-08"
 ROOT5="v5-34_reldbg"
 ROOT6="v6-00"
 
 cd $tools/root
 
-if [ "$1" = "latest" ]
+if [ "$1" = "r5" ]
 then
   unlink root
   ln -s ${ROOT5} root
-elif [ "$1" = "08" ]
-then
-  unlink root
-  ln -s ${ROOT5_08} root
-elif [ "$1" = "v6" ]
+elif [ "$1" = "r6" ]
 then
   unlink root
   ln -s $ROOT6 root
 else
-  echo "latest, 08, v6"
+  echo "r5, r6"
 fi
-
-
 

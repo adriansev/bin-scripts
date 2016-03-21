@@ -1,1 +1,1 @@
-nedit $HOME/.bashrc &
+${EDITOR} $HOME/.bashrc
