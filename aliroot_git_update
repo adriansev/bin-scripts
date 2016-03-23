@@ -2,7 +2,6 @@
 
 cd $tools/alice/trunk-src
 git checkout master
-git fetch origin
+git fetch -t origin
 git pull
-
 
