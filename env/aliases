@@ -2,6 +2,21 @@
 ###   ALIASES   ###
 ###################
 
+## TORQUE
+alias qsub='qsub -V'
+alias qstat_me='qstat -u adrian'
+alias job_rel_pbs='qrls'
+alias job_hold_pbs='qhold'
+alias jobs_view='qstat -1na'
+
+## SLURM
+alias qsub_slr='sbatch --export=ALL'
+alias qstat_slr_me='squeue -u adrian'
+alias job_rel_slr='scontrol release'
+alias job_hold_slr='scontrol hold'
+alias jobs_view_slr='sinfo'
+
+
 ## GLITE
 alias job.cancel='glite-ce-job-cancel'
 alias job.list='glite-ce-job-list'
