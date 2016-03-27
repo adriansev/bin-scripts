@@ -8,14 +8,14 @@
 
 RSYNC="rsync -aqhuHAXWz --delete"
 
-ALIROOT-TRUNK="/home.hdd/physics-tools/alice/trunk-src/"
+ALIROOT_TRUNK="/home.hdd/physics-tools/alice/trunk-src/"
 ALIROOT="/home.hdd/physics-tools/alice/v5-AN/"
 ALIROOTSRC="/home.hdd/physics-tools/alice/v5-AN-latest-src/"
 ALIPHYS="/home.hdd/physics-tools/alice/physics-src/"
 ALIPHYSSRC="/home.hdd/physics-tools/alice/physics_r5/"
 
 
-${RSYNC} iss:${ALIROOT-TRUNK} ${ALIROOT-TRUNK}
+${RSYNC} iss:${ALIROOT_TRUNK} ${ALIROOT_TRUNK}
 ${RSYNC} iss:${ALIROOT} ${ALIROOT}
 ${RSYNC} iss:${ALIROOTSRC} ${ALIROOTSRC}
 ${RSYNC} iss:${ALIPHYS} ${ALIPHYS}
