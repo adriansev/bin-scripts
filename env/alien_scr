@@ -13,8 +13,18 @@ export GAPI_LOCATION=${ALIEN_ROOT}/api/
 export GLOBUS_LOCATION=$ALIEN_ROOT/globus/
 export MYPROXY_LOCATION=$ALIEN_ROOT/globus/
 
-export X509_CERT_DIR=${ALIEN_ROOT}/globus/share/certificates
-export XrdSecSSLCADIR=${ALIEN_ROOT}/globus/share/certificates
+
+sys_cert_location=`ls -1 /etc/grid-security/certificates/*.signing_policy`
+if [[ -z "$sys_cert_location" ]] ; then
+  X509_CERT_DIR=${ALIEN_ROOT}/globus/share/certificates
+  XrdSecSSLCADIR=${ALIEN_ROOT}/globus/share/certificates
+else
+  X509_CERT_DIR=/etc/grid-security/certificates
+  XrdSecSSLCADIR=/etc/grid-security/certificates
+fi
+
+export X509_CERT_DIR
+export XrdSecSSLCADIR
 
 #export GSHELL_NO_GCC=1
 export MANPATH=$MANPATH:$ALIEN_ROOT/api/share/man
