@@ -7,7 +7,7 @@ function DateTime() {
 }
 
 function proc_info {
-ps -eo pid,%cpu,rss,args | grep -i $1
+ps -eo pid,%cpu,rss,args | grep -i $1 | grep -v grep
 }
 
 # Prints the time given in seconds in hours, minutes, seconds
