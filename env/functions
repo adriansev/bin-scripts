@@ -6,6 +6,10 @@ function DateTime() {
   date +%Y%m%d_%H%M%S
 }
 
+function proc_info {
+ps -eo pid,%cpu,rss,args | grep -i $1
+}
+
 # Prints the time given in seconds in hours, minutes, seconds
 function NiceTime() {
   local SS HH MM STR
@@ -37,13 +41,13 @@ echo $host
 }
 
 
-mymake() 
+mymake()
 {
-nohup time -p make -j$1 >`basename $PWD`.out 2>`basename $PWD`.err  & 
+nohup time -p make -j$1 >`basename $PWD`.out 2>`basename $PWD`.err  &
 }
 
-eth_irq () 
-{ 
+eth_irq ()
+{
     base_str=`expr match "$1" '\(eth\)'`;
     if [ "$base_str" = "eth" ]; then
         grep --color $1 /proc/interrupts | cut -d \: -f 1 | awk '{print $1}';
