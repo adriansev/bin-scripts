@@ -1,0 +1,17 @@
+#!/bin/bash
+
+export PATH=/opt/torque/bin:$PATH
+
+free_nodes=`/opt/torque/bin/pbsnodes -l free`
+
+list_of_q_jobs=`/opt/torque/bin/qstat -u adrian | grep Q | tail -n +2 | awk '{ gsub(".issaf.spacescien","",$1); print $1}'`
+arr=( $list_of_q_jobs )
+
+
+if [ -n "$free_nodes" ]
+then
+  for ((x = 0 ; x < 48  ; x++)); do
+    /opt/torque/bin/qrun ${arr[$x]}
+  done
+fi
+
