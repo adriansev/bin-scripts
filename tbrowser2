@@ -1,4 +1,4 @@
-#!/home/physics-tools/root/root/bin/root.exe -l
+#!/usr/bin/root.exe -l
 
 void tbrowser2 ( int argc, char* argv[] )
 {
