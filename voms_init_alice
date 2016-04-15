@@ -1,0 +1,2 @@
+voms-proxy-init --voms alice:/alice/Role=lcgadmin -valid 48:00
+
