@@ -47,24 +47,32 @@ CXX11="0"
 
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
-CXXFLAGS="${PEDANTIC} -march=native"
 
 # AVX
 FQDN=`hostname -f`
 if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
-  CXXFLAGS="${PEDANTIC}"
+  GCCARCH="-march=native"
   avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
-  [[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+  [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
+  VC="1"
+  VDT="1"
+else
+  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
+  GCCARCH="-march=core2"
+  VC="0"
+  VDT="0"
 fi
+
+CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
 cmake \
 -DCMAKE_INSTALL_PREFIX=$tools/root/root \
 -Dcxx14="0" -Dcxx11=${CXX11} \
 -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
--DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+-DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} \
 -Dbuiltin_ftgl="0" -Dbuiltin_glew="0" -Dbuiltin_gsl="0" -Dbuiltin_afterimage="0" -Dbuiltin_cfitsio="0" -Dbuiltin_davix="0" \
 -Dbuiltin_freetype="0" -Dbuiltin_lzma="0" -Dbuiltin_zlib="0" -Dbuiltin_xrootd="0" -Dbuiltin_pcre="0" \
--Dvc="1" -Dvdt="1" -Dsoversion="1" -Dgsl_shared="1" -Droofit="1" -Dminuit2="1" -Dtable="1" -Dunuran="1" -Dgdml="1" -Dqt="1" -Dqtgsi="1" \
+-Dvc=${VC} -Dvdt=${VDT} -Dsoversion="1" -Dgsl_shared="1" -Droofit="1" -Dminuit2="1" -Dtable="1" -Dunuran="1" -Dgdml="1" -Dqt="1" -Dqtgsi="1" \
 -Dbonjour="0" -Drfio="0" -Dcastor="0" -Dglobus="0" -Dgfal="0" \
 -Dpythia6_nolink="1" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
