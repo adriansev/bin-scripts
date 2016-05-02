@@ -2,7 +2,7 @@
 
 DEFAULT_BUILD_TYPE="RELWITHDEBINFO"
 
-BUILDTYPE==${2:-$DEFAULT_BUILD_TYPE}
+BUILDTYPE=${2:-$DEFAULT_BUILD_TYPE}
 
 # Build with C++11?
 root_cxx11=`root-config --has-cxx11`
@@ -23,6 +23,8 @@ else
 fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
+
+echo ${BUILDTYPE}
 
 cmake \
 -DCMAKE_INSTALL_PREFIX=$ALICE/physics -DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` \
