@@ -1,28 +1,34 @@
 #!/bin/bash
 
-DEFAULT_BUILD_TYPE="RelWithDebInfo"
+DEFAULT_BUILD_TYPE="RELWITHDEBINFO"
 
 BUILDTYPE==${2:-$DEFAULT_BUILD_TYPE}
-
-#PEDANTIC="-Wall -Wextra"
-PEDANTIC=""
-
-CXXFLAGS="${PEDANTIC} -march=native"
 
 # Build with C++11?
 root_cxx11=`root-config --has-cxx11`
 [[ "$root_cxx11" == "yes" ]] && CXXFLAGS="${CXXFLAGS} -std=c++11"
 
-# AVX
-avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
-[[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+#PEDANTIC="-Wall -Wextra"
+PEDANTIC=""
 
+# AVX
+FQDN=`hostname -f`
+if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
+  GCCARCH="-march=native"
+  avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
+  [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
+else
+  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
+  GCCARCH="-march=core2"
+fi
+
+CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
 cmake \
 -DCMAKE_INSTALL_PREFIX=$ALICE/physics -DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` \
 -DCMAKE_Fortran_COMPILER=`root-config --f77` \
 -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
--DCMAKE_BUILD_TYPE=${BUILDTYPE} \
+-DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} \
 -DALIEN="$ALIEN_ROOT" \
 -DROOTSYS=$tools/root/root \
 -DALIROOT="$ALICE/aliroot" \
