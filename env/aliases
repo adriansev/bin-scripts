@@ -206,7 +206,6 @@ alias mv="mv -i"
 alias rm="rm -i"
 
 alias df='df -h'
-alias du='du -ch'
 
 ## rot13 and rot47 conversion:
 alias rot13='tr A-Za-z N-ZA-Mn-za-m'
