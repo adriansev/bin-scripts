@@ -228,7 +228,6 @@ alias h='history | grep '
 alias j='jobs -l'
 
 # other aliases to save some typing
-alias du='du -ck | sort -rn'
 alias du0='du -ck --max-depth=0 | sort -rn'
 alias du1='du -ck --max-depth=1 | sort -rn'
 alias du2='du -ck --max-depth=2 | sort -rn'
