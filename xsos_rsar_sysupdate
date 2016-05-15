@@ -1,8 +1,12 @@
+#!/bin/bash
+
 cd /home/adrian/work-GRID/rsar
 git checkout master && git pull
 sudo -- /usr/bin/bash -c 'cp /home/adrian/work-GRID/rsar/rsar /usr/local/bin/ ; cp /home/adrian/work-GRID/rsar/rsar-bash-completion.bash /etc/bash_completion.d/'
+cp /home/adrian/work-GRID/rsar/rsar ~/bin/ ; cp /home/adrian/work-GRID/rsar/rsar-bash-completion.bash ~/bin/
 
 cd /home/adrian/work-GRID/xsos
 git checkout master && git pull
 sudo -- /usr/bin/bash -c 'cp /home/adrian/work-GRID/xsos/xsos /usr/local/bin/ ; cp /home/adrian/work-GRID/xsos/xsos-bash-completion.bash /etc/bash_completion.d/'
+cp /home/adrian/work-GRID/xsos/xsos ~/bin/ ; cp /home/adrian/work-GRID/xsos/xsos-bash-completion.bash ~/bin/
 
