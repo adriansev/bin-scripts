@@ -58,6 +58,7 @@ alias dirac_proxy_init='dirac-proxy-init -g auger_user -M'
 
 #
 alias auger_lfc_enable='export LFC_HOST=`lcg-infosites --vo auger lfc`'
+alias se_auger_enable='source ~/bin/se_auger_vars'
 
 ## ALIEN
 alias aliensh='bash --rcfile ${GSHELL_ROOT}/bin/alien_Shell'
