@@ -1,0 +1,2 @@
+export LFC_HOST=lfc1.egee.cesnet.cz
+lfc-ls "$@"

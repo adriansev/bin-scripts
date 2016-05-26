@@ -56,6 +56,9 @@ alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
 alias dirac_enable='source $HOME/DIRAC/bashrc'
 alias dirac_proxy_init='dirac-proxy-init -g auger_user -M'
 
+#
+alias auger_lfc_enable='export LFC_HOST=`lcg-infosites --vo auger lfc`'
+
 ## ALIEN
 alias aliensh='bash --rcfile ${GSHELL_ROOT}/bin/alien_Shell'
 alias alien_cd='. ${GSHELL_ROOT}/bin/alien_cd dummy'
