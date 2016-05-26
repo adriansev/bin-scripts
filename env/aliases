@@ -53,7 +53,7 @@ alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
 
 # DIRAC
 
-alias dirac_enable='source $HOME/adrian/DIRAC/bashrc'
+alias dirac_enable='source $HOME/DIRAC/bashrc'
 alias dirac_proxy_init='dirac-proxy-init -g auger_user -M'
 
 ## ALIEN
