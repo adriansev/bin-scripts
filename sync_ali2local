@@ -2,7 +2,7 @@
 
 [[ -e ~/location ]] && location=`cat ~/location` || exit
 
-[[ "$location" != "acasa" ]] && exit
+[[ "$location" != "acasa" && "$location" != "t420" ]] && exit
 
 ##echo ${location}
 
