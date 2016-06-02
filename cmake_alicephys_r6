@@ -1,7 +1,9 @@
+#!/bin/bash
+
 cmake \
 -DCMAKE_INSTALL_PREFIX=$tools/alice/physics_r6 \
 -DCMAKE_C_FLAGS="-march=native -mtune=native -mfpmath=sse" -DCMAKE_CXX_FLAGS="-march=native -mtune=native -mfpmath=sse -std=c++11" \
--DCMAKE_BUILD_TYPE=RelWithDebInfo \
+-DCMAKE_BUILD_TYPE=RELWITHDEBINFO \
 -DALIEN="$ALIEN_ROOT" \
 -DROOTSYS=$tools/root/v6-00 \
 -DALIROOT="$ALICE/v5-AN-v6" \
