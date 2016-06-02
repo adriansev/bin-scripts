@@ -46,11 +46,14 @@ export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${VDT_DIR}/include
 ############
 ##  CGAL  ##
 ############
-export CGAL_DIR=$tools/heplibs/CGAL
-export CGAL_LIB=$CGAL_DIR/lib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CGAL_LIB
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:$CGAL_DIR/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$CGAL_DIR/include
+f23=`grep 23 /etc/fedora-release`
+if [[ -z "$f23" ]] ; then
+    export CGAL_DIR=$tools/heplibs/CGAL
+    export CGAL_LIB=$CGAL_DIR/lib
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CGAL_LIB
+    export C_INCLUDE_PATH=$C_INCLUDE_PATH:$CGAL_DIR/include
+    export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$CGAL_DIR/include
+fi
 
 
 ################
