@@ -24,8 +24,6 @@ fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
-echo ${BUILDTYPE}
-
 cmake \
 -DCMAKE_INSTALL_PREFIX=$ALICE/physics -DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` \
 -DCMAKE_Fortran_COMPILER=`root-config --f77` \
