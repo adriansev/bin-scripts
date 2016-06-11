@@ -2,6 +2,10 @@
 ###   FUNCTIONS   ###
 #####################
 
+function SourceIfValid() {
+[[ -f $1 ]] && source $1
+}
+
 function DateTime() {
   date +%Y%m%d_%H%M%S
 }
@@ -68,10 +72,10 @@ eth_irq ()
 
 
 
-ex () 
-{ 
+ex ()
+{
     if [ -f $1 ]; then
-        case $1 in 
+        case $1 in
             *.tar.bz2)
                 tar xjf $1
             ;;
@@ -115,8 +119,8 @@ ex ()
 }
 
 
-files2Lower () 
-{ 
+files2Lower ()
+{
     for file in *;
     do
         lc=$(echo "$file" | tr "[A-Z]" "[a-z]");
@@ -129,18 +133,18 @@ mkcd ()
 mkdir $1 && cd $1
 }
 
-quote () 
+quote ()
 {
 echo \'${1//\'/\'\\\'\'}\'
 }
 
 
-toLower () 
+toLower ()
 {
 echo $1 | tr "[:upper:]" "[:lower:]"
 }
 
-toUpper () 
+toUpper ()
 {
 echo $1 | tr "[:lower:]" "[:upper:]"
 }
@@ -151,12 +155,12 @@ XZ_OPT="--check=sha256 -T0" tar cJ --acls --xattrs --selinux -f ${1}.tar.xz ${1}
 }
 
 
-function diff-short() 
+function diff-short()
 {
 diff --suppress-common-lines $1 $2
 }
 
-function diff-long() 
+function diff-long()
 {
 diff $1 $2
 }
@@ -229,17 +233,5 @@ transfer() {
     # cleanup
     rm -f $tmpfile
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
