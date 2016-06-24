@@ -1,4 +1,4 @@
-#!/home/physics-tools/alice/aliroot/bin/aliroot -l -q -b
+#!/home/physics-tools/root/root/bin/root.exe -l -q
 {
   // include paths
   gSystem->AddIncludePath("-Wno-deprecated");
@@ -12,39 +12,36 @@
   gSystem->Load("libfastjetplugins");
   gSystem->Load("libfastjetcontribfragile");
 
-
+//###############################################################
   gSystem->Load("libEMCALraw");
   gSystem->Load("libEMCALbase");
   gSystem->Load("libEMCALrec");
 
   gSystem->Load("libEMCALUtils");
-
-  gSystem->Load("libPWGEMCAL");
   gSystem->Load("libPWGTools");
-
-//  gSystem->Load("libEventMixing");
 
   gSystem->Load("libPWGJE");
 
-  gSystem->Load("libJETAN");
   gSystem->Load("libFASTJETAN");
   gSystem->Load("libPWGJEEMCALJetTasks");
 
 
 Int_t argc        = gApplication->Argc();
 const char **argv = gApplication->Argv();
-TString input = "" ;
-
 if ( argc <= 3 ) { printf ("ERROR :: no argument \n") ; gSystem->Exit(1);  }
 
-input = argv[3];
+TString input = argv[3];
+TString arg4 = argv[4];
+
+TString dbg = "";
+if (arg4.EqualTo("debug")) { dbg = "g";}
 
 //for (int i=0; i < argc; i++)
 //    { printf("argument %d = %s\n", i, argv[i]); }
 
-input = input + "++" ;
+input = input + "++" + dbg;
 
-gROOT->LoadMacro(input);
+Int_t exit = gROOT->LoadMacro(input.Data());
 
-gSystem->Exit(0);
+gSystem->Exit(exit);
 }
