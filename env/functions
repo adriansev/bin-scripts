@@ -6,6 +6,26 @@ function git_push2master {
 git push origin $1:master
 }
 
+function git_branch_name {
+git symbolic-ref --short -q HEAD
+}
+
+function git_l {
+git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
+}
+
+function git_list {
+git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+}
+
+function git_whatis {
+git show -s --pretty='tformat:%h (%s, %ad)' --date=short
+}
+
+function git_pwhatis {
+git show -s --pretty='tformat:%h, %s, %ad' --date=short
+}
+
 function SourceIfValid() {
 [[ -f $1 ]] && source $1
 }
