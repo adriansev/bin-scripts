@@ -2,39 +2,58 @@
 ###   FUNCTIONS   ###
 #####################
 
-function git_push2master {
+git_push2master_current() {
+branch_name=$(git symbolic-ref --short -q HEAD)
+git push origin $branch_name:master
+}
+
+git_push2master_byname() {
+[[ -z $1 ]] && echo "An argument is needed : the branch name" && exit
+
+branch_list=$(git branch -l)
+[[ !( "$branch_list" =~ "$1" ) ]] && "The argument need to be a valid branch name" && exit
+
 git push origin $1:master
 }
 
-function git_branch_name {
+git_branch_name() {
 git symbolic-ref --short -q HEAD
 }
 
-function git_l {
+git_l() {
 git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
 }
 
-function git_list {
+git_list() {
 git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
 }
 
-function git_whatis {
+git_whatis() {
 git show -s --pretty='tformat:%h (%s, %ad)' --date=short
 }
 
-function git_pwhatis {
+git_pwhatis() {
 git show -s --pretty='tformat:%h, %s, %ad' --date=short
 }
 
-function SourceIfValid() {
+function git_sync_branch() {
+  branch_name=$(git symbolic-ref --short -q HEAD)
+  git checkout master
+  git pull --rebase
+  git fetch -t --all
+  git checkout $branch_name
+  git pull --rebase . master
+}
+
+SourceIfValid() {
 [[ -f $1 ]] && source $1
 }
 
-function DateTime() {
+DateTime() {
   date +%Y%m%d_%H%M%S
 }
 
-function proc_info {
+proc_info() {
 ps -eo pid,%cpu,rss,args | grep -i $1 | grep -v grep
 }
 
