@@ -73,8 +73,23 @@ alias alicesw-bugreport='bash <(curl -fsSL http://alien.cern.ch/alice-installer)
 
 ## GIT
 alias g='git'
-alias git_master_pull='git checkout master && git fetch origin && git pull'
-alias git_log_nice='git log --graph --decorate --pretty=oneline --abbrev-commit --all'
+alias git_cm='commit'
+alias git_co='checkout'
+alias git_st='status'
+alias git_sync_master='git checkout master && git fetch -t --all && git pull'
+alias git_l='log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset''
+alias git_ll='log --stat --abbrev-commit'
+alias git_list='log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short'
+alias git_lognice='git log --graph --decorate --pretty=oneline --abbrev-commit --all'
+
+alias git_sync_branch ='git pull --rebase . master'
+alias git_uncommit='git reset --soft HEAD^'
+
+alias git_changes='diff --name-status'
+alias git_diffstat='diff --stat'
+alias git_whatis='show -s --pretty='tformat:%h (%s, %ad)' --date=short'
+alias git_pwhatis='show -s --pretty='tformat:%h, %s, %ad' --date=short'
+
 
 ## SYSTEM ALIASES
 alias devtoolset='source scl_source enable devtoolset-3'
