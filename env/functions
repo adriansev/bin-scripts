@@ -2,6 +2,10 @@
 ###   FUNCTIONS   ###
 #####################
 
+function git_push2master {
+git push origin $1:master
+}
+
 function SourceIfValid() {
 [[ -f $1 ]] && source $1
 }
