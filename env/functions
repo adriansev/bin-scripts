@@ -11,7 +11,7 @@ git_push2master_byname() {
 [[ -z $1 ]] && echo "An argument is needed : the branch name" && exit
 
 branch_list=$(git branch -l)
-[[ !( "$branch_list" =~ "$1" ) ]] && "The argument need to be a valid branch name" && exit
+[[ !( "$branch_list" =~ "$1" ) ]] && echo "The argument need to be a valid branch name" && exit
 
 git push origin $1:master
 }
