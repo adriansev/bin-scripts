@@ -14,12 +14,20 @@ ALIROOTSRC="/home.hdd/physics-tools/alice/v5-AN-latest-src/"
 ALIPHYS="/home.hdd/physics-tools/alice/physics-src/"
 ALIPHYSSRC="/home.hdd/physics-tools/alice/physics_r5/"
 
+GEANT3="/home.hdd/physics-tools/alice/geant3/"
+GEANT3src="/home.hdd/physics-tools/alice/geant3-src/"
+FASTJET="/home.hdd/physics-tools/alice/fastjet-3.1.3/"
+FASTJETsrc="/home.hdd/physics-tools/alice/fastjet-3.1.3-src/"
+
 
 ${RSYNC} iss:${ALIROOT_TRUNK} ${ALIROOT_TRUNK}
-${RSYNC} iss:${ALIROOT} ${ALIROOT}
-${RSYNC} iss:${ALIROOTSRC} ${ALIROOTSRC}
-${RSYNC} iss:${ALIPHYS} ${ALIPHYS}
-${RSYNC} iss:${ALIPHYSSRC} ${ALIPHYSSRC}
-
+${RSYNC} iss:${ALIROOT}       ${ALIROOT}
+${RSYNC} iss:${ALIROOTSRC}    ${ALIROOTSRC}
+${RSYNC} iss:${ALIPHYS}       ${ALIPHYS}
+${RSYNC} iss:${ALIPHYSSRC}    ${ALIPHYSSRC}
+${RSYNC} iss:${GEANT3}        ${GEANT3}
+${RSYNC} iss:${GEANT3src}     ${GEANT3src}
+${RSYNC} iss:${FASTJET}       ${FASTJET}
+${RSYNC} iss:${FASTJETsrc}    ${FASTJETsrc}
 
 
