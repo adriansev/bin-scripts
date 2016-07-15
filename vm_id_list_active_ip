@@ -1,0 +1,25 @@
+#!/bin/bash
+
+uuid_list=`VBoxManage list runningvms | awk -F"\" " '{ gsub("{|}","",$2); print $2}'`
+
+for uuid in ${uuid_list} ; do
+  eval `VBoxManage showvminfo --machinereadable ${uuid} | grep ^name`
+  echo "UUID : " ${uuid} " ; VM Name : " ${name}
+
+  vm_network_info=$(VBoxManage guestproperty enumerate ad4d252b-226c-45a3-9c46-165f4ff8aa22 | grep "/VirtualBox/GuestInfo/Net/")
+  if_nr=$(echo "$vm_network_info" | awk -F"," '/Count/ {gsub (" value: ","",$2);print $2}')
+
+  for ((i = 0 ; i < if_nr ; i++)); do
+    ip=$(echo "$vm_network_info" | awk -F"," '/0\/V4\/IP/ {gsub (" value: ","",$2);print $2}')
+    netmask=$(echo "$vm_network_info" | awk -F"," '/0\/V4\/Netmask/ {gsub (" value: ","",$2);print $2}')
+    broadcast=$(echo "$vm_network_info" | awk -F"," '/0\/V4\/Broadcast/ {gsub (" value: ","",$2);print $2}')
+    mac=$(echo "$vm_network_info" | awk -F"," '/0\/MAC/ {gsub (" value: ","",$2);print $2}')
+    status=$(echo "$vm_network_info" | awk -F"," '/0\/Status/ {gsub (" value: ","",$2);print $2}')
+    name=$(echo "$vm_network_info" | awk -F"," '/0\/Name/ {gsub (" value: ","",$2);print $2}')
+
+    echo -ne "iface=${name}\nMAC=${mac}\nip=${ip}\nnetmask=${netmask}\nbrd=${broadcast}\nSTATUS=${status}\n"
+
+  done
+echo
+done
+
