@@ -6,7 +6,7 @@ for uuid in ${uuid_list} ; do
   eval `VBoxManage showvminfo --machinereadable ${uuid} | grep ^name`
   echo "UUID : " ${uuid} " ; VM Name : " ${name}
 
-  vm_network_info=$(VBoxManage guestproperty enumerate ad4d252b-226c-45a3-9c46-165f4ff8aa22 | grep "/VirtualBox/GuestInfo/Net/")
+  vm_network_info=$(VBoxManage guestproperty enumerate ${uuid} | grep "/VirtualBox/GuestInfo/Net/")
   if_nr=$(echo "$vm_network_info" | awk -F"," '/Count/ {gsub (" value: ","",$2);print $2}')
 
   for ((i = 0 ; i < if_nr ; i++)); do
