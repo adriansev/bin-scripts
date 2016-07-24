@@ -1,0 +1,13 @@
+#!/bin/bash
+
+LCGINFO="auger_se_list.txt"
+
+/bin/echo -e "Server TotalOnline UsedOnline FreeOnline ReservedOnline VOInfoTag" > /tmp/${LCGINFO}
+
+output="Server TotalOnline UsedOnline FreeOnline ReservedOnline VOInfoTag\n"
+
+output=${output}$(lcg-info --list-se --vo AUGER --sed --attrs TotalOnline,UsedOnline,FreeOnline,ReservedOnline,VOInfoTag | awk -F"%" ' { OFS="\t"; if ( index($2,"&") > 0 ) { C1=$1; size=split($2,fields,"&"); split($3,fields2,"&"); split($4,fields3,"&"); split($5,fields4,"&"); split($6,fields5,"&") ; for (i=1;i<=size;i++) { print C1,fields[i],fields2[i],fields3[i],fields4[i],fields5[i];} } else { print $1,$2,$3,$4,$5,$6;} }')"\n"
+
+echo -ne "${output}" | column -t
+
+
