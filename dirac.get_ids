@@ -1,0 +1,8 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && echo "need input file with dirac json" && exit 1
+
+file=$1
+
+cat ${file} | sed 's/{\|}//g' | awk -F", " '{ split($2,idstr,": "); print idstr[2] }'
+
