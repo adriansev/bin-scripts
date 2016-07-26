@@ -1,0 +1,1 @@
+wget -np -O ~/bin/dirac-install https://github.com/DIRACGrid/DIRAC/raw/integration/Core/scripts/dirac-install.py --no-check-certificate && chmod +x ~/bin/dirac-install
