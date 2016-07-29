@@ -45,6 +45,11 @@ XRD_SYS="-DXROOTD_INCLUDE_DIR="/usr/include/xrootd/" \
 -DXROOTD_XrdUtils_LIBRARY="/usr/lib64/libXrdUtils.so" \
 -DXROOTD_XrdClient_LIBRARY="/usr/lib64/libXrdClient.so" \
 "
+XRD=${XRD_ALIEN}
+
+ver=$(lsb_release -sr)
+(( ver == 24 )) && XRD=${XRD_SYS}
+
 
 cmake \
 -DCMAKE_INSTALL_PREFIX=$tools/root/root \
@@ -59,7 +64,7 @@ cmake \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
 -DMONALISA_INCLUDE_DIR="${tools}/heplibs/ApMon/include" -DMONALISA_LIBRARY="${tools}/heplibs/ApMon/lib/libapmoncpp.so" \
 -DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
-${XRD_ALIEN} \
+${XRD} \
 $1
 
 
