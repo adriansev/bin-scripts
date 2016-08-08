@@ -87,6 +87,8 @@ alias git_changes='git diff --name-status'
 alias git_diffstat='git diff --stat'
 
 
+alias uncrustify='uncrustify -c ~/bin/env/uncrustify.cfg'
+
 ## SYSTEM ALIASES
 alias devtoolset='source scl_source enable devtoolset-3'
 
