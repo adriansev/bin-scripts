@@ -1,1 +1,1 @@
-ssh -C2qTnNf -D 50000 lxplus
+ssh -C2qTnNf -D 50020 lxplus
