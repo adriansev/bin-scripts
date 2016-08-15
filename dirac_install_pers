@@ -1,0 +1,9 @@
+#!/bin/bash
+
+VER="v6r15p12"
+
+$HOME/bin/dirac-install_update
+
+$HOME/bin/dirac-install -r $VER -e COMDIRAC -V formation -installationPath=$HOME/DIRAC
+
+
