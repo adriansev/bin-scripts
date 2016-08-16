@@ -4,18 +4,25 @@
 
 ## TORQUE
 alias qsub='qsub -V'
-alias qstat_me='qstat -u adrian'
+alias qstat_me='qstat -u $(id -un)'
 alias job_rel_pbs='qrls'
 alias job_hold_pbs='qhold'
 alias jobs_view='qstat -1na'
 
 ## SLURM
 alias qsub_slr='sbatch --export=ALL'
-alias qstat_slr_me='squeue -u adrian'
+
+alias qstat_slr_me='squeue -u $(id -un)'
+alias qstat_slr_me_running='squeue -u $(id -un) -t RUNNING'
+alias qstat_slr_me_pending='squeue -u $(id -un) -t PENDING'
+
 alias job_rel_slr='scontrol release'
 alias job_hold_slr='scontrol hold'
 alias jobs_view_slr='sinfo'
 
+alias qdel_slr='scancel'
+alias qdel_slr_all='scancel -u $(id -un)'
+alias qdel_slr_pending='scancel -t PENDING -u $(id -un)'
 
 ## GLITE
 alias job.cancel='glite-ce-job-cancel'
