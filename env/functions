@@ -2,6 +2,22 @@
 ###   FUNCTIONS   ###
 #####################
 
+qstat_slr_f() {
+scontrol show jobid -dd $1
+}
+
+slr_job_r_stat() {
+sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j $1 --allsteps
+}
+
+slr_job_c_stat() {
+sacct -j $1 --format=JobID,JobName,MaxRSS,Elapsed
+}
+
+slr_joball_c_stat() {
+sacct -u $(id -un) --format=JobID,JobName,MaxRSS,Elapsed
+}
+
 git_push2master_current() {
 branch_name=$(git symbolic-ref --short -q HEAD)
 git push origin $branch_name:master
