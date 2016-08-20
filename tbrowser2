@@ -1,4 +1,4 @@
-#!/usr/bin/root.exe -l
+#!/bin/env root.exe
 
 void tbrowser2 ( int argc, char* argv[] )
 {

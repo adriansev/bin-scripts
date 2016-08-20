@@ -1,2 +1,2 @@
-#!/usr/bin/root.exe -l
+#!/bin/env root.exe
 { TBrowser asd ;}
