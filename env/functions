@@ -293,4 +293,7 @@ transfer() {
     rm -f $tmpfile
 }
 
+start_cdf() {
+cd $1 && (nohup ./cmd &>output.txt &) && cd ..
+}
 
