@@ -1,2 +1,2 @@
-#!/home/adrian/bin/aliroot -l
+#!/bin/env aliroot
 { TBrowser asd ;}

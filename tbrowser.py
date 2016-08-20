@@ -1,3 +1,4 @@
+#!/bin/env python
 
 import os, sys
 import ROOT
@@ -8,7 +9,5 @@ if workdir:
    os.chdir( workdir )
 
 br = ROOT.TBrowser()
-
-
 
 
