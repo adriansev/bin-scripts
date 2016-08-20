@@ -1,0 +1,22 @@
+#!/bin/bash
+
+list=$(find $1 -type f -name AnalysisResults.root -printf '%h \n')
+dir_list=($list)
+
+PREV_FILE="result.root"
+
+TARGET="AnalysisResults.root"
+
+rm -rf ${PREV_FILE}
+
+for dir in "${dir_list[@]}"; do
+  if [ ! -e "$PREV_FILE" ]; then 
+    cp "${dir}"/AnalysisResults.root ${PREV_FILE}
+    continue
+  fi
+
+  hadd -T -k result_new.root ${PREV_FILE} "${dir}"/${TARGET}
+  mv -f result_new.root ${PREV_FILE}
+done
+
+
