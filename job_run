@@ -1,0 +1,5 @@
+#!/bin/bash
+
+for i in "$@" ; do
+  cd "$i" && (nohup ./cmd &>output.txt &) && cd ..
+done
