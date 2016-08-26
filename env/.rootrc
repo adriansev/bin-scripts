@@ -327,14 +327,17 @@ ACLiC.IncludePaths:     -I$(FASTJET)/include -I$(ALICE_ROOT)/include -I$(ALICE_P
 #
 # To control the number of processes in PROOF-Lite (0 disables PROOF-Lite). This setting cannot be overwritten in the user rootrc files.
 # ProofLite.MaxWorkers: -1
-#
+
+## The sandbox location is controlled by the ROOT configuration variable 'ProofLite.Sandbox'; the default is '~/.proof'.
+ProofLite.Sandbox: /home.hdd/adrian/proofbox
+
 # On the master enable parallel startup of workers using threads
-# Proof.ParallelStartup: no
-#
-# Proof.StatsHist:       no
-# Proof.StatsTrace:      no
-# Proof.SlaveStatsTrace: no
-#
+Proof.ParallelStartup: no
+
+Proof.StatsHist:       yes
+Proof.StatsTrace:      yes
+Proof.SlaveStatsTrace: yes
+
 # Proof.CondorHome:     /opt/condor
 # Proof.CondorConfig:   /opt/condor/etc/condor_config
 
@@ -351,7 +354,7 @@ Proofd.Authentication:  0
 # Negotiation cannot be attempted at low level (i.e. inside TAuthenticate::Authenticate()) because of synchronization problems with the server.
 # At higher level, TAuthenticate::HasTimedOut() gives information about timeout:
 # 0 = no timeout; 1 = timeout, no methods left; 2 = timeout, still methods to be tried
-# Caller should decide about an additional attempt. Timeout disabled (< 0) by default. 
+# Caller should decide about an additional attempt. Timeout disabled (< 0) by default.
 # Can be changed on-the-fly with the static method TAuthenticate::SetTimeOut(to_value)
 # Auth.Timeout:        -1
 
@@ -451,13 +454,13 @@ SrvAuth.SshdPort:  60000
 
 # Control the action to be taken when opening an existing ROOT file which looks corrupted;
 # by default an attempt to recover the file is made; if this variable is set to no the file is just flagged as zombie.
-#TFile.Recover:      no
+TFile.Recover:      yes
 
 # Control the usage of asynchronous reading capabilities eventually supported by the underlying TFile implementation. Default is yes.
-#TFile.AsyncReading:     no
+TFile.AsyncReading:     yes
 
 # Control the usage of asynchronous prefetching capabilities irrespective of the TFile implementation. By default it is disabled.
-#TFile.AsyncPrefetching:   no
+TFile.AsyncPrefetching:   yes
 
 # Enable cross-protocol redirects
 TFile.CrossProtocolRedirects:  yes
