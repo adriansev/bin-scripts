@@ -1,0 +1,23 @@
+#!/bin/bash
+
+
+RSYNC="rsync -avWhuHAX"
+
+for file in `cat $1`
+do
+
+filename=`basename $file`
+dir=`dirname $file`
+dir_dest=`echo ${dir} | sed 's/\/data\/data\/data/\/data_fast\/data\/data/g'`
+
+mkdir -p ${dir_dest}
+
+echo $dir
+echo $dir_dest
+echo $filename
+$RSYNC ${dir}/$filename ${dir_dest}/$filename
+echo
+
+done
+
+
