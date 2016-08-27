@@ -1,4 +1,5 @@
-#!/bin/env root.exe
+#!/bin/sh
+":" //# comment; exec /usr/bin/env root.exe -l "$0" "$@"
 
 void tbrowser2 ( int argc, char* argv[] )
 {

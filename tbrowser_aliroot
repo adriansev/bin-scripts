@@ -1,2 +1,3 @@
-#!/bin/env aliroot
+#!/bin/sh
+":" //# comment; exec /usr/bin/env aliroot -l "$0" "$@"
 { TBrowser asd ;}

@@ -1,2 +1,3 @@
-#!/bin/env root.exe
+#!/bin/sh
+":" //# comment; exec /usr/bin/env root.exe -l "$0" "$@"
 { TBrowser asd ;}
