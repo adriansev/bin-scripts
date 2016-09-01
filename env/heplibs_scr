@@ -57,6 +57,20 @@ fi
 
 
 ################
+##   HepMC   ###
+################
+f23=`grep 23 /etc/fedora-release`
+if [[ -z "$f23" ]] ; then
+  export HEPMC_DIR=$tools/heplibs/HepMC
+  export HEPINSTALLDIR=${HEPMC_DIR}
+
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HEPMC_DIR}/lib
+
+  export C_INCLUDE_PATH=$C_INCLUDE_PATH:${HEPMC_DIR}/include
+  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${HEPMC_DIR}/include
+fi
+
+################
 ##   HepPDT  ###
 ################
 export HEPPDT_DIR=$tools/heplibs/HepPDT
@@ -65,19 +79,6 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HEPPDT_DIR}/lib
 
 export C_INCLUDE_PATH=$C_INCLUDE_PATH:${HEPPDT_DIR}/include
 export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${HEPPDT_DIR}/include
-
-################
-##   HepMC   ###
-################
-export HEPMC_DIR=$tools/heplibs/HepMC
-export HEPINSTALLDIR=${HEPMC_DIR}
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HEPMC_DIR}/lib
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:${HEPMC_DIR}/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${HEPMC_DIR}/include
-
-
 
 ################
 ##   Pluto   ###
@@ -117,45 +118,46 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CERN_ROOT/lib
 #####################
 ##     PYTHIA6     ##
 #####################
-export PYTHIA6=$tools/heplibs/pythia6
-export PYTHIA6_HOME=$PYTHIA6
+## export PYTHIA6=$tools/heplibs/pythia6
+## export PYTHIA6_HOME=$PYTHIA6
 
 ##     PYTHIA6 LIBS
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHIA6
+## export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHIA6
 
 #####################
 ##     PYTHIA8     ##
 #####################
-export PYTHIA8=$tools/heplibs/pythia8
-export PYTHIA8_HOME=$PYTHIA8
-export PYTHIA8DATA=$PYTHIA8/xmldoc
+##export PYTHIA8=$tools/heplibs/pythia8
+##export PYTHIA8_HOME=$PYTHIA8
+##export PYTHIA8DATA=$PYTHIA8/xmldoc
 export LHAPATH=$tools/lhapdf-data
 
-export PATH=$PATH:${PYTHIA8}/bin/
+##export PATH=$PATH:${PYTHIA8}/bin/
 
 ##     PYTHIA8 LIBS
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHIA8/lib
+##export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHIA8/lib
 
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:$PYTHIA8/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$PYTHIA8/include
+##export C_INCLUDE_PATH=$C_INCLUDE_PATH:$PYTHIA8/include
+##export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$PYTHIA8/include
 
 
 ###########
 ## CLHEP ##
 ###########
+##f23=`grep 23 /etc/fedora-release`
+##if [[ -z "$f23" ]] ; then
+  export CLHEP_BASE_DIR=${tools}/heplibs/clhep
+  export CLHEP_ROOT_DIR=$CLHEP_BASE_DIR
 
-export CLHEP_BASE_DIR=${tools}/heplibs/clhep
-export CLHEP_ROOT_DIR=$CLHEP_BASE_DIR
+  export CLHEP_INCLUDE_DIR=${CLHEP_BASE_DIR}/include
+  export CLHEP_LIB_DIR=${CLHEP_BASE_DIR}/lib
 
-export CLHEP_INCLUDE_DIR=${CLHEP_BASE_DIR}/include
-export CLHEP_LIB_DIR=${CLHEP_BASE_DIR}/lib
+  export PATH=$PATH:${CLHEP_BASE_DIR}/bin/
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CLHEP_LIB_DIR}
 
-export PATH=$PATH:${CLHEP_BASE_DIR}/bin/
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CLHEP_LIB_DIR}
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:${CLHEP_INCLUDE_DIR}
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${CLHEP_INCLUDE_DIR}
-
+  export C_INCLUDE_PATH=$C_INCLUDE_PATH:${CLHEP_INCLUDE_DIR}
+  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${CLHEP_INCLUDE_DIR}
+##fi
 
 
 #####################
