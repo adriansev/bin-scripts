@@ -1,0 +1,21 @@
+#!/bin/bash
+
+file=$1
+
+ARG_SPEC="-ba"
+ARG_SRPM="--rebuild"
+
+is_srpm=$(expr "$file" : '.*\(.src.rpm\)')
+is_spec=$(expr "$file" : '.*\(.spec\)')
+
+if [[ -n "$is_srpm" ]] ;then
+  ARG=${ARG_SRPM}
+elif [[ -n "$is_spec" ]] ;then
+  ARG=${ARG_SPEC}
+else
+  ARG=""
+fi
+
+[[ -z "$ARG" ]] && echo "The argument should be either a .spec or a .src.rpm" && exit 1
+
+rpmbuild $ARG $file
