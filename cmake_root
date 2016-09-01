@@ -1,9 +1,8 @@
 #!/bin/bash
 
-if [ ! -n "${ROOTSYS}" ]
-then
-  echo "ROOTSYS is not set" && exit
-fi
+ROOT_VER_FILE="$1/build/version_number"
+ROOT_VER=$(cat ${ROOT_VER_FILE})
+ROOT_VER_MAJOR=${ROOT_VER:0:1}
 
 if [[ "$2" == "release" ]]
 then
@@ -12,11 +11,32 @@ else
   BUILDTYPE="RelWithDebInfo"
 fi
 
+XRD_ALIEN="-DXROOTD_INCLUDE_DIR="${GSHELL_ROOT}/include/xrootd/" \
+-DXROOTD_INC_PRIV_DIR="${GSHELL_ROOT}/include/xrootd/XrdClient/" \
+-DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" \
+-DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so" \
+-DXROOTD_XrdMain_LIBRARY="${GSHELL_ROOT}/lib/libXrdMain.so" \
+"
+
+XRD_SYS="-DXROOTD_INCLUDE_DIR="/usr/include/xrootd/" \
+-DXROOTD_INC_PRIV_DIR="/usr/include/xrootd/private/XrdClient/" \
+-DXROOTD_XrdUtils_LIBRARY="/usr/lib64/libXrdUtils.so" \
+-DXROOTD_XrdClient_LIBRARY="/usr/lib64/libXrdClient.so" \
+"
+
+XRD=${XRD_ALIEN}
+
+ver=$(lsb_release -sr)
+(( ver == 24 )) && XRD=${XRD_SYS}
+
 ## GCC version
 GCCLINE=$(gcc --version|head -n1)
 arr=($GCCLINE)
 VER=${arr[2]}
 
+
+#PEDANTIC="-Wall -Wextra"
+PEDANTIC=""
 
 # AVX
 FQDN=`hostname -f`
@@ -24,51 +44,56 @@ if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
   GCCARCH="-march=native"
   avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
   [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
-  VC="1"
-  VDT="1"
 else
-  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
+  ISSAF_OPT="-DVC_IMPL=SSE -D_last_target_arch=generic -DTARGET_ARCHITECTURE=generic "
   GCCARCH="-march=core2"
-  VC="0"
-  VDT="0"
 fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
-XRD_ALIEN="-DXROOTD_INCLUDE_DIR="${GSHELL_ROOT}/include/xrootd/" -DXROOTD_INC_PRIV_DIR="${GSHELL_ROOT}/include/xrootd/XrdClient/" \
--DXROOTD_XrdUtils_LIBRARY="${GSHELL_ROOT}/lib/libXrdUtils.so" \
--DXROOTD_XrdClient_LIBRARY="${GSHELL_ROOT}/lib/libXrdClient.so" \
--DXROOTD_XrdMain_LIBRARY="${GSHELL_ROOT}/lib/libXrdMain.so" \
-"
-XRD_SYS="-DXROOTD_INCLUDE_DIR="/usr/include/xrootd/" \
--DXROOTD_INC_PRIV_DIR="/usr/include/xrootd/private/XrdClient/" \
--DXROOTD_XrdUtils_LIBRARY="/usr/lib64/libXrdUtils.so" \
--DXROOTD_XrdClient_LIBRARY="/usr/lib64/libXrdClient.so" \
-"
-XRD=${XRD_ALIEN}
+ROOT6_CMAKE_OPT="-Dcxx14=0 -Dcxx11=1 \
+-Dcxx11=1 -Dcxx14=0 -Droot7=0 -Dbuiltin_tbb=0 -Dtbb=1 \
+-Dbuiltin_llvm=1 -DLLVM_BUILD_TYPE=Release -DLLVM_ENABLE_THREADS=1 -DLLVM_PARALLEL_COMPILE_JOBS=4 -DLLVM_ENABLE_CXX1Y=1"
 
-ver=$(lsb_release -sr)
-(( ver == 24 )) && XRD=${XRD_SYS}
+ROOT_INSTALL=$tools/root/root
 
+# if ROOT 5 disable ROOT 6 options
+if (( ROOT_VER_MAJOR == 5 )) then
+  ROOT6_CMAKE_OPT=""
+  root_switch r5
+else
+  root_switch r6
+fi
 
 cmake \
--DCMAKE_INSTALL_PREFIX=$tools/root/root \
--Dcxx14="0" -Dcxx11="1" \
--DCMAKE_CXX_FLAGS=${CXXFLAGS} \
--DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} \
--Dbuiltin_ftgl="0" -Dbuiltin_glew="0" -Dbuiltin_gsl="0" -Dbuiltin_afterimage="0" -Dbuiltin_cfitsio="0" -Dbuiltin_davix="0" \
--Dbuiltin_freetype="0" -Dbuiltin_lzma="0" -Dbuiltin_zlib="0" -Dbuiltin_xrootd="0" -Dbuiltin_pcre="0" \
--Dvc=${VC} -Dvdt=${VDT} -Dsoversion="1" -Dgsl_shared="1" -Droofit="1" -Dminuit2="1" -Dtable="1" -Dunuran="1" -Dgdml="1" -Dqt="1" -Dqtgsi="1" \
--Dbonjour="0" -Drfio="0" -Dcastor="0" -Dglobus="0" -Dgfal="0" \
--Dpythia6_nolink="1" \
+-DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} ${ROOT6_CMAKE_OPT} \
+-DCMAKE_C_FLAGS=${CXXFLAGS} -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
+-Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_gsl=0 -Dbuiltin_afterimage=0 -Dbuiltin_cfitsio=0 -Dbuiltin_davix=0 \
+-Dbuiltin_freetype=0 -Dbuiltin_lzma=0 -Dbuiltin_zlib=0 -Dbuiltin_pcre=0 \
+-Dbuiltin_xrootd=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 \
+-Dbuiltin_vc=0 -Dvdt=1 -Dsoversion=1 -Dgsl_shared=1 -Droofit=1 -Dminuit2=1 -Dtable=1 -Dunuran=1 -Dgdml=1 -Dqt=1 -Dqtgsi=1 \
+-Dpythia6_nolink=1 \
+-DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
--DMONALISA_INCLUDE_DIR="${tools}/heplibs/ApMon/include" -DMONALISA_LIBRARY="${tools}/heplibs/ApMon/lib/libapmoncpp.so" \
 -DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
 ${XRD} \
-$1
+$1 | tee cmake_out.txt
 
 
-## | tee cmake_out.txt
 
-##-DPYTHIA6_LIBRARY="${tools}/heplibs/pythia6/libPythia6.so"
+# -DPYTHIA6_LIBRARY="${tools}/heplibs/pythia6/libPythia6.so" \
+# -DMONALISA_INCLUDE_DIR="${tools}/heplibs/ApMon/include" -DMONALISA_LIBRARY="${tools}/heplibs/ApMon/lib/libapmoncpp.so" \
+
+
+# -Djemalloc="1" -Dtcmalloc="1"
+
+# -DLLVM_ENABLE_WERROR="1"  \
+# -DLLVM_ENABLE_SPHINX="0"
+# -DLLVM_ENABLE_WERROR="1"
+# -DLLVM_BINUTILS_INCDIR="/usr/include"
+# -DLLVM_ENABLE_BACKTRACES="1"
+# -DLLVM_EXTERNAL_CLANG_BUILD="1"
+# -DLLVM_ENABLE_EH="1"
+# -DLLVM_ENABLE_FFI="1"
+# -DLLVM_ENABLE_RTTI="1"
 
