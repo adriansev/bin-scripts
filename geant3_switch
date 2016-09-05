@@ -1,0 +1,19 @@
+#!/bin/bash
+
+v5="geant3-r5"
+v6="geant3-r6"
+
+cd $tools/alice
+
+if [ "$1" = "r5" ]
+then
+  unlink geant3
+  ln -s ${v5} geant3
+elif [ "$1" = "r6" ]
+then
+  unlink geant3
+  ln -s ${v6} geant3
+else
+  echo "r5, r6"
+fi
+
