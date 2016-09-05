@@ -1,33 +1,34 @@
 #!/bin/bash
 
-ALIROOT_R6="v5-AN-v6"
 ALIROOT_R5="v5-AN"
+ALIROOT_R6="v5-AN-r6"
 
-ALIPHYS_R6="physics_r6"
-ALIPHYS_R5="physics_r5"
-
+ALIPHYS_R5="physics"
+ALIPHYS_R6="physics-r6"
 
 cd $tools/alice
 
 if [ "$1" = "r6" ]
 then
-  root_switch v6
+  root_switch r6
+  geant3_switch r6
 
   unlink aliroot
   ln -s $ALIROOT_R6 aliroot
 
   unlink physics
-  ln -s $ALIPHYS_R6 physics
+  ln -s $ALIPHYS_R6 aliphysics
 
 elif [ "$1" = "r5" ]
 then
   root_switch r5
+  geant3_switch r5
 
   unlink aliroot
   ln -s ${ALIROOT_R5} aliroot
 
   unlink physics
-  ln -s ${ALIPHYS_R5} physics
+  ln -s ${ALIPHYS_R5} aliphysics
 
 else
   echo "arguments are r5, r6"
