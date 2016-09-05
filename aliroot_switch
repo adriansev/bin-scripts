@@ -16,7 +16,7 @@ then
   unlink aliroot
   ln -s $ALIROOT_R6 aliroot
 
-  unlink physics
+  unlink aliphysics
   ln -s $ALIPHYS_R6 aliphysics
 
 elif [ "$1" = "r5" ]
@@ -27,7 +27,7 @@ then
   unlink aliroot
   ln -s ${ALIROOT_R5} aliroot
 
-  unlink physics
+  unlink aliphysics
   ln -s ${ALIPHYS_R5} aliphysics
 
 else
