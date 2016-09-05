@@ -10,7 +10,7 @@ export ALICE=${tools}/alice
 export GEANT3DIR=${ALICE}/geant3
 
 export ALICE_ROOT=${ALICE}/aliroot
-export ALICE_PHYSICS=${ALICE}/physics
+export ALICE_PHYSICS=${ALICE}/aliphysics
 
 ##     AliROOT PATHS
 export PATH=$PATH:${ALICE_ROOT}/bin:${ALICE_PHYSICS}/bin
