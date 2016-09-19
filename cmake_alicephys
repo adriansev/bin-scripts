@@ -4,17 +4,13 @@ DEFAULT_BUILD_TYPE="RELWITHDEBINFO"
 
 BUILDTYPE=${2:-$DEFAULT_BUILD_TYPE}
 
-# Build with C++11?
-root_cxx11=`root-config --has-cxx11`
-[[ "$root_cxx11" == "yes" ]] && CXXFLAGS="${CXXFLAGS} -std=c++11"
-
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
 
 # AVX
 FQDN=`hostname -f`
 if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
-  GCCARCH="-march=native"
+  GCCARCH="-march=native -mtune=native"
   avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
   [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
 else
@@ -24,15 +20,22 @@ fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
+# Build with C++11?
+root_cxx11=$(root-config --has-cxx11)
+[[ "$root_cxx11" == "yes" ]] && CXXFLAGS="${CXXFLAGS} -std=c++11"
+
+[[ -z $CGAL_LIB ]] && CGAL_LIB="/usr/lib64/"
+
+ROOT_DIR=$(root-config --prefix)
+
 cmake \
--DCMAKE_INSTALL_PREFIX=$ALICE/physics -DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` \
+-DCMAKE_INSTALL_PREFIX=$ALICE/aliphysics -DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` \
 -DCMAKE_Fortran_COMPILER=`root-config --f77` \
--DCMAKE_CXX_FLAGS=${CXXFLAGS} \
--DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} \
+-DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
 -DALIEN="$ALIEN_ROOT" \
--DROOTSYS=$tools/root/root \
--DALIROOT="$ALICE/aliroot" \
--DCGAL_LIB="$tools/heplibs/CGAL/lib" \
 -DFASTJET="$ALICE/fastjet" \
+-DROOTSYS=${ROOT_DIR} \
+-DCGAL_LIB="$CGAL_LIB" \
+-DALIROOT="$ALICE/aliroot" \
 $1 | tee cmake_out.txt
 
