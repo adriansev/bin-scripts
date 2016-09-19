@@ -24,15 +24,14 @@ rm -rf ${PHYS_BUILDDIR}/*
 ${CMAKECMD} ${PHYSICS_SRC}
 make -j $NCPU
 
-status=$?
-[[ $status -ne 0 ]] && echo "Compilation error" && exit 1
+RV=$?
+(("$RV" != "0")) && echo "Compilation not succesful; see ${PHYS_BUILDDIR}" && exit $RV
 
 rm -rf ${PHYS_INSTALLDIR}/*
 make install
 
-status=$?
-[[ $status -ne 0 ]] && echo "make install error" && exit 1
+RV=$?
+(("$RV" != "0")) && echo "Instalation not succesful; see ${PHYS_BUILDDIR}" && exit $RV
 
 rm -rf ${PHYS_BUILDDIR}/*
-
 
