@@ -1,0 +1,38 @@
+#!/bin/bash
+
+ROOT_VER=$(root-config --version)
+ROOT_VER_MAJOR=${ROOT_VER:0:1}
+NCPU=$(root-config --ncpu)
+
+if (( ROOT_VER_MAJOR == 5 )) ; then
+  aliroot_switch r5
+else
+  aliroot_switch r6
+fi
+
+echo -e "ROOT version is : $ROOT_VER\n"
+
+CMAKECMD="cmake_alicephys"
+PHYSICS_SRC="$tools/alice/physics-src"
+PHYS_BUILDDIR="$tools/alice/BUILDPHYS"
+PHYS_INSTALLDIR="$tools/alice/aliphysics"
+
+mkdir -p ${PHYS_BUILDDIR}
+cd ${PHYS_BUILDDIR}
+rm -rf ${PHYS_BUILDDIR}/*
+
+${CMAKECMD} ${PHYSICS_SRC}
+make -j $NCPU
+
+status=$?
+[[ $status -ne 0 ]] && echo "Compilation error" && exit 1
+
+rm -rf ${PHYS_INSTALLDIR}/*
+make install
+
+status=$?
+[[ $status -ne 0 ]] && echo "make install error" && exit 1
+
+rm -rf ${PHYS_BUILDDIR}/*
+
+
