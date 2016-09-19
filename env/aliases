@@ -273,8 +273,8 @@ alias rsync_gsi="rsync -ahuHAXW -e gsissh"
 ## ROOT ALIASES
 alias root.exe='root.exe -l'
 alias rootn.exe='rootn.exe -l'
-alias root='root -l'
-alias rootn='rootn -l'
+alias root='root.exe -l'
+alias rootn='rootn.exe -l'
 
 alias rq='root.exe -l -b -q -x'
 
