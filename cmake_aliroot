@@ -1,0 +1,49 @@
+#!/bin/bash
+
+DEFAULT_BUILD_TYPE="RELWITHDEBINFO"
+
+BUILDTYPE=${2:-$DEFAULT_BUILD_TYPE}
+
+#PEDANTIC="-Wall -Wextra"
+PEDANTIC=""
+
+ROOT_DIR=$(root-config --prefix)
+
+# AVX
+FQDN=`hostname -f`
+if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
+  GCCARCH="-march=native -mtune=native"
+  avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
+  [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
+else
+  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
+  GCCARCH="-march=core2"
+fi
+
+CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
+
+cmake \
+-DCMAKE_INSTALL_PREFIX=$tools/alice/aliroot \
+-DCMAKE_BUILD_TYPE=$BUILDTYPE \
+-DCMAKE_CXX_FLAGS=${CXXFLAGS} \
+-DROOTSYS=${ROOT_DIR} \
+-DALIEN=${ALIEN_ROOT} \
+-DFASTJET=${FASTJET_ROOT} \
+$1 | tee cmake_out.txt
+
+
+
+
+#cmake $SOURCEDIR                                                  \
+#      -DCMAKE_INSTALL_PREFIX="$INSTALLROOT"                       \
+#      -DROOTSYS="$ROOT_ROOT"                                      \
+#      ${CMAKE_BUILD_TYPE:+-DCMAKE_BUILD_TYPE="$CMAKE_BUILD_TYPE"} \
+#      ${ALIEN_RUNTIME_ROOT:+-DALIEN="$ALIEN_RUNTIME_ROOT"}        \
+#      ${FASTJET_ROOT:+-DFASTJET="$FASTJET_ROOT"}                  \
+#      ${ALICE_DAQ:+-DDA=ON -DDARPM=ON -DdaqDA=$DAQ_DALIB}         \
+#      ${ALICE_DAQ:+-DAMORE_CONFIG=$AMORE_CONFIG}                  \
+#      ${ALICE_DAQ:+-DDATE_CONFIG=$DATE_CONFIG}                    \
+#      ${ALICE_DAQ:+-DDATE_ENV=$DATE_ENV}                          \
+#      ${ALICE_DAQ:+-DDIMDIR=$DAQ_DIM -DODIR=linux}                \
+#      -DOCDB_INSTALL=PLACEHOLDER
+
