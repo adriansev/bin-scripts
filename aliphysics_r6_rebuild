@@ -4,7 +4,7 @@ CMAKECMD="cmake_alicephys_r6"
 
 PHYSICS_SRC="$tools/alice/physics-src"
 PHYS_BUILDDIR="$tools/alice/BUILDPHYS"
-PHYS_INSTALLDIR="$tools/alice/physics_r6"
+PHYS_INSTALLDIR="$tools/alice/physics-r6"
 
 mkdir -p ${PHYS_BUILDDIR}
 cd ${PHYSICS_SRC}
