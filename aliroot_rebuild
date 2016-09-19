@@ -1,24 +1,34 @@
 #!/bin/bash
 
-CMAKECMD="cmake_alice_r5"
+ROOT_VER=$(root-config --version)
+ROOT_VER_MAJOR=${ROOT_VER:0:1}
+NCPU=$(root-config --ncpu)
 
+if (( ROOT_VER_MAJOR == 5 )) ; then
+  aliroot_switch r5
+else
+  aliroot_switch r6
+fi
+
+echo -e "ROOT version is : $ROOT_VER\n"
+
+CMAKECMD="cmake_aliroot"
 ALIROOT_SRC="$tools/alice/v5-AN-latest-src"
 ALIROOT_BUILDDIR="$tools/alice/BUILD"
-ALIROOT_INSTALLDIR="$tools/alice/v5-AN"
+ALIROOT_INSTALLDIR="$tools/alice/aliroot"
 
 mkdir -p ${ALIROOT_BUILDDIR}
-cd ${ALIROOT_SRC}
-
-cd ${ALIROOT_BUILDDIR}
 rm -rf ${ALIROOT_BUILDDIR}/*
+cd ${ALIROOT_BUILDDIR}
 
 ${CMAKECMD} ${ALIROOT_SRC}
-make -j`root-config --ncpu`
+make -j $NCPU
 RV=$?
 (("$RV" != "0")) && echo "Compilation not succesful; see ${ALIROOT_BUILDDIR}" && exit $RV
 
 rm -rf ${ALIROOT_INSTALLDIR}/*
 make install
+RV=$?
 (("$RV" != "0")) && echo "Instalation not succesful; see ${ALIROOT_BUILDDIR}" && exit $RV
 
 rm -rf ${ALIROOT_BUILDDIR}/*
