@@ -20,17 +20,12 @@ fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
-# Build with C++11?
-root_cxx11=$(root-config --has-cxx11)
-[[ "$root_cxx11" == "yes" ]] && CXXFLAGS="${CXXFLAGS} -std=c++11"
-
 [[ -z $CGAL_LIB ]] && CGAL_LIB="/usr/lib64/"
 
 ROOT_DIR=$(root-config --prefix)
 
 cmake \
--DCMAKE_INSTALL_PREFIX=$ALICE/aliphysics -DCMAKE_C_COMPILER=`root-config --cc` -DCMAKE_CXX_COMPILER=`root-config --cxx` \
--DCMAKE_Fortran_COMPILER=`root-config --f77` \
+-DCMAKE_INSTALL_PREFIX=$ALICE/aliphysics \
 -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
 -DALIEN="$ALIEN_ROOT" \
 -DFASTJET="$ALICE/fastjet" \
@@ -38,4 +33,5 @@ cmake \
 -DCGAL_LIB="$CGAL_LIB" \
 -DALIROOT="$ALICE/aliroot" \
 $1 | tee cmake_out.txt
+
 
