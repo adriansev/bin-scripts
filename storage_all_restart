@@ -1,10 +1,10 @@
-storage_hosts="rd storage01 storage02 storage03 storage04 storage05 storage06"
+storage_hosts="rd storage02 storage03 storage04 storage05 storage06 storage07"
 for host in $storage_hosts
 do
 echo ##############
 echo
-ssh $host "~/bin/xrdservices restart"
+ssh $host "~/alicexrd/xrd.sh -f"
 echo
-echo ############## 
+echo ##############
 done
 

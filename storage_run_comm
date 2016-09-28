@@ -1,4 +1,4 @@
-storage_hosts="rd storage02 storage03 storage04 storage05 storage06"
+storage_hosts="rd storage02 storage03 storage04 storage05 storage06 storage07"
 for host in $storage_hosts ; do
   echo $host
   ssh $host "$1"
