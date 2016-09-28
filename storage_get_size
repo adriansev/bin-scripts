@@ -1,0 +1,11 @@
+storage_hosts="storage02 storage03 storage04 storage05 storage06 storage07"
+
+MYCMD=$(echo 'df --total -l --block-size=1G /storage* | tail -1 | awk -v HOST=$(hostname) '\''{ print HOST"\t"$2,"\t"$3,"\t"$4}'\''' | base64 -w0)
+
+echo "Size in GiB"
+echo -e "Host \t\t\t\tTotal \tUsed \tAvailable"
+
+for host in $storage_hosts ; do
+  ssh $host "echo $MYCMD | base64 -d | bash"
+done
+
