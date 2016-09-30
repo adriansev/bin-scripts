@@ -69,6 +69,10 @@ DateTime() {
   date +%Y%m%d_%H%M%S
 }
 
+pic_date() {
+    exiftool $1 | grep "Date/Time Original"
+}
+
 proc_info() {
 ps -eo pid,%cpu,rss,args | grep -i $1 | grep -v grep
 }
