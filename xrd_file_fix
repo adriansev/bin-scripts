@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# This tool will find data that is outside of arbitrary logical name for the fs
+# http://xrootd.org/doc/dev41/ofs_config.htm#_Toc401930733
+
+##################################################################################
+##   Definitions of used variables
+
+part=$1   ## the argument is the mount point of a storage partition
+
+MNT_POINT_PREFIX="/storage0"   ## all storage mount points have this format
+
+## defined either by hand or for ALICE in MONALISA; see (change name of SE site name) :
+## curl http://alimonitor.cern.ch/services/se.jsp?se='ALICE::SITE_NAME::FILE'
+LOCALPATHPFX="/home/aliprod/data/"
+XRD_NS_NAME="/xrdnamespace"
+
+XRDDATA="/xrddata/public/"    ## location of oss.space on a storage partition
+
+## OFFENDING FILES format
+FILES_SIG="%xrdnamespace%home%aliprod%data%"
+
+##################################################################################
+
+arg_valid=$(expr match "$part" "${MNT_POINT_PREFIX}")    ## the default mount point start with /storage0
+(( arg_valid == 0 )) && echo "Argument is not a ${MNT_POINT_PREFIX} partition" && exit 1
+
+FIRST_STORAGE_MNT=$(ls -1d ${MNT_POINT_PREFIX}* | head -n1 ) ## if MNT_POINT_PREFIX is regular, ls will give a sorted list and first MNT_POINT have xrdnamespace
+
+XRD_NS="${FIRST_STORAGE_MNT}${XRD_NS_NAME}${LOCALPATHPFX}"    ## location of xrootd namespace
+[[ ! -e ${XRD_NS} || ! -d ${XRD_NS} ]] && echo "xrootd namespace invalid!! check the inferred namespace : ${XRD_NS}" && exit 1
+
+## find ofending files
+for FILE in $(find ${part}${XRDDATA}/../ -maxdepth 1 -type f -name *${FILES_SIG}*); do
+
+  FILE_NS_NAME=$(basename $FILE | sed 's/%/\//g') ## get original full path name from xrd namespace
+  FN=$(basename ${FILE_NS_NAME})  ## get the file name
+  DN=$(dirname ${FILE_NS_NAME})   ## end its location
+
+  DSTDIR="${part}${XRDDATA}00/" ## where to move the file
+
+  echo $FILE
+  echo "DN : $DN"
+  echo "FN : $FN"
+  echo "Destination directory : ${DSTDIR}"
+
+  mkdir -p ${DSTDIR} ${DN}   ## make sure these exist
+  mv ${FILE} ${DSTDIR}${FN}; ret=$?  ## move and rename original file to what/where it supposed to be
+
+  if [[ "$ret" -eq 0 ]]; then
+    ln -f -s ${DSTDIR}${FN} ${FILE_NS_NAME} ## recreate the symlink to point to the new location (if symlink existent it will be overwritten)
+  fi
+
+  echo
+done
+
+
+
