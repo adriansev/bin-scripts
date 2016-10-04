@@ -1,0 +1,26 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && echo "argument must be an xrootd server or redirector" && exit 1
+
+SRV=$1
+
+SRV_SHORT=$(echo ${SRV} | awk -F. '{print $1}')
+
+LOCALPATHPFX="/home/aliprod/data"
+
+FILE1="/tmp/xrd_ls_dir1"
+FILE2="/tmp/xrd_ls_dir2"
+
+XRD_RD="${SRV}:1094"
+
+xrdfs ${XRD_RD} ls ${LOCALPATHPFX} > ${FILE1} 2>/dev/null
+sort -u ${FILE1} > /tmp/temp ; mv -f /tmp/temp ${FILE1}
+
+for dir in $(<${FILE1}) ; do
+  xrdfs ${XRD_RD} ls $dir >> ${FILE2} 2>/dev/null
+done
+sort -u ${FILE2} > /tmp/temp ; mv -f /tmp/temp ${FILE2}
+
+rm -f ${FILE1}
+mv -f ${FILE2} ./${SRV_SHORT}_xrd_dir_list
+
