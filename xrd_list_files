@@ -1,0 +1,18 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && echo "argument 1 must be an xrootd server or redirector" && exit 1
+[[ -z "$2" ]] && echo "argument 2 must be a xrootd directory list" && exit 1
+
+SRV=$1
+LIST=$2
+
+SRV_SHORT=$(echo ${SRV} | awk -F. '{print $1}')
+
+OUTPUT=${SRV_SHORT}_xrd_file_list
+
+for dir in $(<${LIST}) ; do
+  xrdfs ${SRV} ls -l $dir >>${OUTPUT} 2>/dev/null
+  echo >>${OUTPUT}
+done
+
+
