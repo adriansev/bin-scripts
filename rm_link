@@ -1,0 +1,13 @@
+#!/bin/bash
+
+link=$1
+
+[[ ! -e "${link}" ]] && echo "Link does not exist" >&2 && exit 1
+[[ ! -h "${link}" ]] && echo "Argument is not a symbolic link" >&2 && exit 1
+
+file=$(readlink -f ${link})
+
+[[ ! -e "${file}" ]] && echo "Target of the link does not exist" >&2 && exit 1
+
+rm -rf ${file} && unlink ${link}
+
