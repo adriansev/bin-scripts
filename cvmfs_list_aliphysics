@@ -1,0 +1,3 @@
+#!/bin/bash
+cvmfs_list_alice | grep AliPhysics | tail -n 10
+

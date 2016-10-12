@@ -2,6 +2,10 @@
 ###   FUNCTIONS   ###
 #####################
 
+cvmfs_alice_load() {
+eval `alienv printenv VO_ALICE@AliPhysics::$1`
+}
+
 qstat_slr_f() {
 scontrol show jobid -dd $1
 }
