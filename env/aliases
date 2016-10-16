@@ -67,17 +67,6 @@ alias dirac_proxy_init='dirac-proxy-init -g auger_user -M'
 alias auger_lfc_enable='export LFC_HOST=`lcg-infosites --vo auger lfc`'
 alias se_auger_enable='source ~/bin/se_auger_vars'
 
-## ALIEN
-alias aliensh='bash --rcfile ${GSHELL_ROOT}/bin/alien_Shell'
-alias alien_cd='. ${GSHELL_ROOT}/bin/alien_cd dummy'
-alias alien_pwd=' ${GSHELL_ROOT}/bin/alien_pwd -1'
-
-## ALICE aliases
-alias alicesw-installer='bash <(curl -fsSL http://alien.cern.ch/alice-installer)'
-alias alicesw-install-all='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --all'
-alias alicesw-clean-all='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --clean-all'
-alias alicesw-bugreport='bash <(curl -fsSL http://alien.cern.ch/alice-installer) --bugreport'
-
 ## GIT
 alias g='git'
 alias git_cm='commit'

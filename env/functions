@@ -3,7 +3,19 @@
 #####################
 
 cvmfs_alice_load() {
+eval `alienv printenv VO_ALICE@$1`
+}
+
+cvmfs_alicephys_load() {
 eval `alienv printenv VO_ALICE@AliPhysics::$1`
+}
+
+cvmfs_alice_enter() {
+alienv enter VO_ALICE@$1
+}
+
+cvmfs_alicephys_enter() {
+alienv enter VO_ALICE@AliPhysics::$1
 }
 
 qstat_slr_f() {
