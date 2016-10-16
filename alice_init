@@ -6,5 +6,6 @@ rm -rf /tmp/x509up_u`id -u`
 
 alien-token-init asevcenc
 
-eval $( grep -v LD_LIBRARY_PATH /tmp/gclient_env_$(id -u) )
+sed -i '/LD_LIBRARY_PATH/d' /tmp/gclient_env_$(id -u)
+source /tmp/gclient_env_$(id -u)
 
