@@ -18,6 +18,16 @@ cvmfs_alicephys_enter() {
 alienv enter VO_ALICE@AliPhysics::$1
 }
 
+cvmfs_alicephys_load_latest() {
+local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
+eval `alienv printenv VO_ALICE@AliPhysics::$latest`
+}
+
+cvmfs_alicephys_enter_latest() {
+local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
+alienv enter VO_ALICE@AliPhysics::$latest
+}
+
 qstat_slr_f() {
 scontrol show jobid -dd $1
 }
