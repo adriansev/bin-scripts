@@ -1,2 +1,0 @@
-#! /bin/bash
-(cd ${ALIEN_ROOT}/api/bin && ./alien-token-init $@)
