@@ -4,5 +4,7 @@ rm -rf /tmp/gclient_env_`id -u`
 rm -rf /tmp/gclient_token_`id -u`
 rm -rf /tmp/x509up_u`id -u`
 
-${ALIEN_ROOT}/api/bin/alien-token-init asevcenc
+alien-token-init asevcenc
+
+eval $( grep -v LD_LIBRARY_PATH /tmp/gclient_env_$(id -u) )
 
