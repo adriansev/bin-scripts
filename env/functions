@@ -28,6 +28,14 @@ local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' |
 alienv enter VO_ALICE@AliPhysics::$latest
 }
 
+__cvmfs_enabled() {
+[[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"
+}
+
+__cvmfs_get_aliphys() {
+alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2}'
+}
+
 qstat_slr_f() {
 scontrol show jobid -dd $1
 }
