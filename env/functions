@@ -33,7 +33,7 @@ __cvmfs_enabled() {
 }
 
 __cvmfs_get_aliphys() {
-alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2}'
+alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'
 }
 
 qstat_slr_f() {
