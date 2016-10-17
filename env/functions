@@ -331,7 +331,7 @@ transfer() {
     rm -f $tmpfile
 }
 
-start_cdf() {
-cd $1 && (nohup ./cmd &>output.txt &) && cd ..
+job_start_local() {
+cd $1 && (nohup ./cmd &>cmd_output.txt &) && cd ..
 }
 
