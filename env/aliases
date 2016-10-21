@@ -270,6 +270,8 @@ alias rq='root.exe -l -b -q -x'
 alias aliroot='aliroot -l'
 alias alirq='aliroot -l -b -q -x'
 
+alias g++root='g++ $(root-config --libs) $(root-config --cflags)'
+
 alias tutorials='cd $ROOTSYS/tutorials'
 
 alias makej8='nohup time -p make -j8 >`basename $PWD`.out 2>`basename $PWD`.err &'
