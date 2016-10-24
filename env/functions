@@ -335,3 +335,9 @@ job_start_local() {
 cd $1 && (nohup ./cmd &>cmd_output.txt &) && cd ..
 }
 
+date_baby() {
+    d1=$(date -d "$1" +%s)
+    d2=$(date +%s)
+    echo $(( (d2 - d1) / 86400 )) days
+}
+
