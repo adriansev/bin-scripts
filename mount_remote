@@ -1,0 +1,44 @@
+#!/bin/sh
+exec &>> ~/loginout.sshfs
+
+cfgid=$1
+cfg="$HOME/bin/env/${cfgid}.sshmount"
+
+[[ ! -e ${cfg} || ! -f ${cfg} ]] && echo "Configuration file not found or not a file" && exit 1
+source ${cfg}
+
+SSHFS_OPTS="compression=yes,sshfs_sync,noatime,reconnect,Cipher=arcfour256,cache=no,sshfs_sync,nonempty"
+
+mount() {
+mount_ok=$(grep ${dir_local} /proc/mounts)
+
+if [[ -z "$mount_ok" ]] ; then
+   echo -e "\t mount sshfs"
+   mkdir -p $dir_local
+   sshfs ${remote}:${dir_remote} ${dir_local} -o ${SSHFS_OPTS}
+   mount -t fuse.sshfs
+   echo
+else
+   echo -e "\t" "[ OK ]" "sshfs mount point already mounted"
+fi
+}
+
+umount() {
+fusermount -u ${dir_local} && echo -e "\t ${dir_local} sshfs umounted"
+}
+
+if [ "$2" = "mount" ]
+then
+   echo -ne `date +%d.%m.%Y%t%k:%M:%S`
+   mount
+elif [ "$2" = "umount" ]
+then
+   echo -ne `date +%d.%m.%Y%t%k:%M:%S`
+   umount
+else
+   echo "Accepted arguments are : "
+   echo " mount  : mount dir from remote"
+   echo " umount : umount dir"
+fi
+
+
