@@ -1,0 +1,3 @@
+remote="augerkit"
+dir_remote="/gluster/users/sevcenco/work"
+dir_local="/home/adrian/work-auger"
