@@ -1,53 +1,32 @@
+######################################
+os_ver=$(lsb_release -sr)
+######################################
+
 ###############
 ##    Vc    ###
 ###############
 export VC_DIR=${tools}/heplibs/vc
-
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${VC_DIR}/lib
-
-export C_INCLUDE_PATH=${VC_DIR}/include
-export CPLUS_INCLUDE_PATH=${VC_DIR}/include
 
 ################
 ##     Vdt   ###
 ################
 export VDT_DIR=${tools}/heplibs/vdt
-
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${VDT_DIR}/lib
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:${VDT_DIR}/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${VDT_DIR}/include
 
 ################
 ##   libRS   ###
 ################
-
 #export RS_HOME=$tools/heplibs/librs
-
 #export RS_INC_DIR=$RS_HOME/include
 #export RS_LIB_DIR=$RS_HOME/lib
-
 #export PATH=$PATH:$RS_HOME/bin
-
 ## export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$RS_LIB_DIR
-## export C_INCLUDE_PATH=$C_INCLUDE_PATH:$RS_INC_DIR
-## export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$RS_INC_DIR
-
-
-################
-##  Eigen3   ###
-################
-#export EIGEN3=${tools}/heplibs/eigen
-#export EIGEN3_INCLUDE_DIR=${EIGEN3}/include
-
-#export C_INCLUDE_PATH=$C_INCLUDE_PATH:${EIGEN3_INCLUDE_DIR}
-#export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${EIGEN3_INCLUDE_DIR}
 
 ############
 ##  CGAL  ##
 ############
-f23=`grep 23 /etc/fedora-release`
-if [[ -z "$f23" ]] ; then
+if [[ "$os_ver" -lt 23 ]] ; then
     export CGAL_DIR=$tools/heplibs/CGAL
     export CGAL_LIB=$CGAL_DIR/lib
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CGAL_LIB
@@ -59,52 +38,34 @@ fi
 ################
 ##   HepMC   ###
 ################
-f23=`grep 23 /etc/fedora-release`
-if [[ -z "$f23" ]] ; then
+if [[ "$os_ver" -lt 23 ]] ; then
   export HEPMC_DIR=$tools/heplibs/HepMC
   export HEPINSTALLDIR=${HEPMC_DIR}
 
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HEPMC_DIR}/lib
-
-  export C_INCLUDE_PATH=$C_INCLUDE_PATH:${HEPMC_DIR}/include
-  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${HEPMC_DIR}/include
 fi
 
 ################
 ##   HepPDT  ###
 ################
 export HEPPDT_DIR=$tools/heplibs/HepPDT
-
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${HEPPDT_DIR}/lib
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:${HEPPDT_DIR}/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${HEPPDT_DIR}/include
 
 ################
 ##   Pluto   ###
 ################
 #export PLUTO_dir=$tools/Pluto
-
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${PLUTO_dir}
-
-#export C_INCLUDE_PATH=$C_INCLUDE_PATH:${PLUTO_dir}/src
-#export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${PLUTO_dir}/src
-
-
 
 #####################
 ##     CERNLIB     ##
 #####################
-export CERN=$tools/heplibs/cernlib
-export CERN_LEVEL=2006b
-export CERN_ROOT=$CERN
+#export CERN=$tools/heplibs/cernlib
+#export CERN_LEVEL=2006b
+#export CERN_ROOT=$CERN
 
-export PATH=$PATH:${CERN_ROOT}/bin/
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CERN_ROOT/lib
-
-## export C_INCLUDE_PATH=$C_INCLUDE_PATH:$CERN_ROOT/include
-## export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$CERN_ROOT/include
-
+#export PATH=$PATH:${CERN_ROOT}/bin/
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CERN_ROOT/lib
 
 ########################
 ##    MillepedeII     ##
@@ -137,15 +98,10 @@ export LHAPATH=$tools/lhapdf-data
 ##     PYTHIA8 LIBS
 ##export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHIA8/lib
 
-##export C_INCLUDE_PATH=$C_INCLUDE_PATH:$PYTHIA8/include
-##export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$PYTHIA8/include
-
-
 ###########
 ## CLHEP ##
 ###########
-##f23=`grep 23 /etc/fedora-release`
-##if [[ -z "$f23" ]] ; then
+if [[ "$os_ver" -lt 23 ]] ; then
   export CLHEP_BASE_DIR=${tools}/heplibs/clhep
   export CLHEP_ROOT_DIR=$CLHEP_BASE_DIR
 
@@ -154,10 +110,7 @@ export LHAPATH=$tools/lhapdf-data
 
   export PATH=$PATH:${CLHEP_BASE_DIR}/bin/
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${CLHEP_LIB_DIR}
-
-  export C_INCLUDE_PATH=$C_INCLUDE_PATH:${CLHEP_INCLUDE_DIR}
-  export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${CLHEP_INCLUDE_DIR}
-##fi
+fi
 
 
 #####################
@@ -174,27 +127,5 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FASTJET/lib
 
 export C_INCLUDE_PATH=$C_INCLUDE_PATH:$FASTJET/include
 export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$FASTJET/include
-
-
-#############
-##   VGM   ##
-#############
-export VGM_INSTALL=${tools}/heplibs/vgm
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VGM_INSTALL/lib64
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:$VGM_INSTALL/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$VGM_INSTALL/include
-
-
-####################
-##   GEANT4_VMC   ##
-####################
-export G4VMC_INSTALL=${tools}/heplibs/geant4_vmc
-
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$G4VMC_INSTALL/lib64
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:$G4VMC_INSTALL/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$G4VMC_INSTALL/include
 
 
