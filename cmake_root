@@ -26,12 +26,12 @@ XRD_SYS="-DXROOTD_INCLUDE_DIR="/usr/include/xrootd/" \
 
 XRD=${XRD_ALIEN}
 
-ver=$(lsb_release -sr)
-(( ver == 24 )) && XRD=${XRD_SYS}
+OS_VER=$(lsb_release -sr)
+OS_MAJOR_VER=$(awk -F. '{print $1}' <<< "${OS_VER}")
+(( OS_MAJOR_VER >= 23 )) && XRD=${XRD_SYS}
 
-if [[ "$2" == "xrdsys" ]] ; then
-  XRD=${XRD_SYS}
-fi
+## choose system xrd
+[[ "$2" == "xrdsys" ]] &&  XRD=${XRD_SYS}
 
 echo
 echo "XRD is :"
@@ -41,8 +41,7 @@ echo
 ## GCC version
 GCCLINE=$(gcc --version|head -n1)
 arr=($GCCLINE)
-VER=${arr[2]}
-
+GCC_MAJOR=${arr[2]}
 
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
