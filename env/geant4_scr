@@ -44,5 +44,28 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${G4LIB}
 export C_INCLUDE_PATH=$C_INCLUDE_PATH:${G4INCLUDE}
 export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${G4INCLUDE}
 
-##source $tools/geant4/bin/geant4.sh 
+##source $tools/geant4/bin/geant4.sh
+
+
+#############
+##   VGM   ##
+#############
+export VGM_INSTALL=${tools}/heplibs/vgm
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VGM_INSTALL/lib64
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:$VGM_INSTALL/include
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$VGM_INSTALL/include
+
+
+####################
+##   GEANT4_VMC   ##
+####################
+export G4VMC_INSTALL=${tools}/heplibs/geant4_vmc
+
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$G4VMC_INSTALL/lib64
+
+export C_INCLUDE_PATH=$C_INCLUDE_PATH:$G4VMC_INSTALL/include
+export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$G4VMC_INSTALL/include
+
 
