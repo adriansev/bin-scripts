@@ -1,9 +1,29 @@
 #!/bin/bash
 
-VER="v6r15p12"
+VER="v6r15p20"
 
+DIRACDIR=$HOME/DIRAC 
+cd ${DIRACDIR}
+
+echo "Uptading the install script"
 $HOME/bin/dirac-install_update
+echo "done"
+echo
 
-$HOME/bin/dirac-install -r $VER -e COMDIRAC -V formation -installationPath=$HOME/DIRAC
+echo "Start install script"
+$HOME/bin/dirac-install -r $VER -t client  -e COMDIRAC -V formation -P ${DIRACDIR}
+echo -e '\ninstall done!\n'
+
+echo "create proxy"
+dirac-proxy-init -g auger_user
+echo -e "proxy done\n"
+
+echo "Configuration -> formation"
+dirac-configure defaults_formation.cfg
+echo -e "Configuration done\n"
+
+echo "Configuration -> VO url"
+dirac-configure -V auger -C dips://dirac.in2p3.fr:9135/Configuration/Server
+echo -e "Configuration done\n"
 
 
