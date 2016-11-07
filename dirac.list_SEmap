@@ -1,0 +1,21 @@
+#!/bin/env python
+
+import sys, pprint
+
+from DIRAC.Core.Base import Script
+Script.parseCommandLine()
+
+from DIRAC.Interfaces.API.Job import Job
+from DIRAC.Interfaces.API.Dirac import Dirac
+
+#from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
+from DIRAC.DataManagementSystem.Utilities.DMSHelpers import DMSHelpers
+
+dirac = Dirac()
+h = DMSHelpers(vo='auger')
+
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint (h.getSiteSEMapping())
+
+#print h.getSiteSEMapping()
+

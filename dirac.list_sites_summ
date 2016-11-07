@@ -1,0 +1,18 @@
+#!/bin/env python
+
+import sys,pprint
+
+from DIRAC.Core.Base import Script
+Script.parseCommandLine()
+
+from DIRAC.Interfaces.API.Job import Job
+from DIRAC.Interfaces.API.Dirac import Dirac
+from DIRAC.WorkloadManagementSystem.Client.JobMonitoringClient import JobMonitoringClient
+
+dirac = Dirac()
+jobMon = JobMonitoringClient()
+
+pp = pprint.PrettyPrinter(indent=4)
+pp.pprint (jobMon.getSiteSummary())
+
+##print jobMon.getSiteSummary()
