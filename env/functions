@@ -37,15 +37,17 @@ slr_job_c_stat () { sacct -j $1 --format=JobID,JobName,MaxRSS,Elapsed; }
 
 slr_joball_c_stat () { sacct -u $(id -un) --format=JobID,JobName,MaxRSS,Elapsed; }
 
+###########################################################
+##   GIT
 git_push2master_current () {
-branch_name=$(git symbolic-ref --short -q HEAD)
+local branch_name=$(git symbolic-ref --short -q HEAD)
 git push origin $branch_name:master
 }
 
 git_push2master_byname () {
 [[ -z $1 ]] && echo "An argument is needed : the branch name" && return
 
-branch_list=$(git branch -l)
+local branch_list=$(git branch -l)
 [[ !( "$branch_list" =~ "$1" ) ]] && echo "The argument need to be a valid branch name" && return
 
 git push origin $1:master
@@ -69,14 +71,15 @@ git_pwhatis () {
 git show -s --pretty='tformat:%h, %s, %ad' --date=short
 }
 
-git_sync_branch () {
-  branch_name=$(git symbolic-ref --short -q HEAD)
-  git checkout master
-  git pull --rebase
-  git fetch -t --all
-  git checkout $branch_name
-  git pull --rebase . master
+git_rebase_local () {
+local branch_name=$(git symbolic-ref --short -q HEAD)
+git checkout master
+git pull --rebase
+git fetch -t --all
+git checkout $branch_name
+git pull --rebase . master
 }
+###########################################################
 
 SourceIfValid () { [[ -f $1 ]] && source $1; }
 
@@ -108,20 +111,20 @@ NiceTime () {
 }
 
 whereami () {
-host=$(hostname -s)
-fullhost=$(hostname -f)
+local host=$(hostname -s)
+local fullhost=$(hostname -f)
 [[ "$fullhost" = "sev.spacescience.ro" ]] && host="ISS"
 echo $host
 }
 
 mymake () {
-CPUS=$(grep processor /proc/cpuinfo | wc -l)
+local CPUS=$(grep processor /proc/cpuinfo | wc -l)
 nohup time -p make -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &
 }
 
 eth_irq () {
         if [ "$1" = "all" ]; then
-            list_of_eth=$(ip link | grep -E -o "eth[0-99]");
+            local list_of_eth=$(ip link | grep -E -o "eth[0-99]");
             for eth in $list_of_eth; do
                grep --color $eth /proc/interrupts | cut -d \: -f 1 | awk '{print $1}'
             done;
@@ -206,13 +209,16 @@ diff_long ()    { diff $1 $2; }
 diff_u_long ()  { diff -u $1 $2; }
 diff_wu_long () { diff -wu $1 $2; }
 
+diff_code   () { diff  -u "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
+diff_code_w () { diff -wu "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
+
 root-module () {
   if [ $# -lt 1 ] ; then
     echo "root-module need exactly one argument"
     return 1
   fi
 
-  name=$(basename $1 .cxx)
+  local name=$(basename $1 .cxx)
   local root_cflags = $(root-config --cflags)
 
   g++ -fPIC -Wall -g -c $name.cxx -o $name.o ${root_cflags}
@@ -274,8 +280,8 @@ transfer () {
 job_start_local () { cd $1 && (nohup ./cmd &>cmd_output.txt &) && cd .. ; }
 
 date_baby () {
-    d1=$(date -d "$1" +%s)
-    d2=$(date +%s)
+    local d1=$(date -d "$1" +%s)
+    local d2=$(date +%s)
     echo $(( (d2 - d1) / 86400 )) days
 }
 
