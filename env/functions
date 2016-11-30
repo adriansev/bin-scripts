@@ -1,63 +1,48 @@
+#!/bin/bash
 #####################
 ###   FUNCTIONS   ###
 #####################
 
-cvmfs_alice_load() {
-eval `alienv printenv VO_ALICE@$1`
-}
+functions_list () { declare -f; }
+functions_list_name () { declare -F; }
+functions_show_def () { declare -f $1; }
 
-cvmfs_alicephys_load() {
-eval `alienv printenv VO_ALICE@AliPhysics::$1`
-}
+cvmfs_alice_load () { eval $(alienv printenv VO_ALICE@$1); }
 
-cvmfs_alice_enter() {
-alienv enter VO_ALICE@$1
-}
+cvmfs_alicephys_load () { eval $(alienv printenv VO_ALICE@AliPhysics::$1); }
 
-cvmfs_alicephys_enter() {
-alienv enter VO_ALICE@AliPhysics::$1
-}
+cvmfs_alice_enter () { alienv enter VO_ALICE@$1; }
 
-cvmfs_alicephys_load_latest() {
+cvmfs_alicephys_enter () { alienv enter VO_ALICE@AliPhysics::$1; }
+
+cvmfs_alicephys_load_latest () {
 local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
-eval `alienv printenv VO_ALICE@AliPhysics::$latest`
+eval $(alienv printenv VO_ALICE@AliPhysics::$latest)
 }
 
-cvmfs_alicephys_enter_latest() {
+cvmfs_alicephys_enter_latest () {
 local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
 alienv enter VO_ALICE@AliPhysics::$latest
 }
 
-__cvmfs_enabled() {
-[[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"
-}
+__cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
 
-__cvmfs_get_aliphys() {
-alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'
-}
+__cvmfs_get_aliphys () { alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
 
-qstat_slr_f() {
-scontrol show jobid -dd $1
-}
+qstat_slr_f () { scontrol show jobid -dd $1; }
 
-slr_job_r_stat() {
-sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j $1 --allsteps
-}
+slr_job_r_stat () { sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j $1 --allsteps; }
 
-slr_job_c_stat() {
-sacct -j $1 --format=JobID,JobName,MaxRSS,Elapsed
-}
+slr_job_c_stat () { sacct -j $1 --format=JobID,JobName,MaxRSS,Elapsed; }
 
-slr_joball_c_stat() {
-sacct -u $(id -un) --format=JobID,JobName,MaxRSS,Elapsed
-}
+slr_joball_c_stat () { sacct -u $(id -un) --format=JobID,JobName,MaxRSS,Elapsed; }
 
-git_push2master_current() {
+git_push2master_current () {
 branch_name=$(git symbolic-ref --short -q HEAD)
 git push origin $branch_name:master
 }
 
-git_push2master_byname() {
+git_push2master_byname () {
 [[ -z $1 ]] && echo "An argument is needed : the branch name" && return
 
 branch_list=$(git branch -l)
@@ -66,27 +51,25 @@ branch_list=$(git branch -l)
 git push origin $1:master
 }
 
-git_branch_name() {
-git symbolic-ref --short -q HEAD
-}
+git_branch_name () { git symbolic-ref --short -q HEAD; }
 
-git_l() {
+git_l () {
 git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
 }
 
-git_list() {
+git_list () {
 git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
 }
 
-git_whatis() {
+git_whatis () {
 git show -s --pretty='tformat:%h (%s, %ad)' --date=short
 }
 
-git_pwhatis() {
+git_pwhatis () {
 git show -s --pretty='tformat:%h, %s, %ad' --date=short
 }
 
-function git_sync_branch() {
+git_sync_branch () {
   branch_name=$(git symbolic-ref --short -q HEAD)
   git checkout master
   git pull --rebase
@@ -95,24 +78,16 @@ function git_sync_branch() {
   git pull --rebase . master
 }
 
-SourceIfValid() {
-[[ -f $1 ]] && source $1
-}
+SourceIfValid () { [[ -f $1 ]] && source $1; }
 
-now_str() {
-  date +%Y%m%d_%H%M%S
-}
+now_str () { date +%Y%m%d_%H%M%S; }
 
-pic_date() {
-    exiftool $1 | grep "Date/Time Original"
-}
+pic_date () { exiftool $1 | grep "Date/Time Original"; }
 
-proc_info() {
-ps -eo pid,%cpu,rss,args | grep -i $1 | grep -v grep
-}
+proc_info () { ps -eo pid,%cpu,rss,args | grep -i $1 | grep -v grep; }
 
 # Prints the time given in seconds in hours, minutes, seconds
-function NiceTime() {
+NiceTime () {
   local SS HH MM STR
   SS="$1"
 
@@ -132,45 +107,34 @@ function NiceTime() {
   #printf "%02dh %02dm %02ds" $HH $MM $SS
 }
 
-
-whereami ()
-{
-host=`hostname -s`
-fullhost=`hostname -f`
+whereami () {
+host=$(hostname -s)
+fullhost=$(hostname -f)
 [[ "$fullhost" = "sev.spacescience.ro" ]] && host="ISS"
 echo $host
 }
 
-
-mymake()
-{
-nohup time -p make -j$1 >`basename $PWD`.out 2>`basename $PWD`.err  &
+mymake () {
+CPUS=$(grep processor /proc/cpuinfo | wc -l)
+nohup time -p make -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &
 }
 
-eth_irq ()
-{
-    base_str=`expr match "$1" '\(eth\)'`;
-    if [ "$base_str" = "eth" ]; then
-        grep --color $1 /proc/interrupts | cut -d \: -f 1 | awk '{print $1}';
-    else
+eth_irq () {
         if [ "$1" = "all" ]; then
-            list_of_eth=`ip link | grep -E -o "eth[0-99]"`;
-            for eth in $list_of_eth;
-            do
+            list_of_eth=$(ip link | grep -E -o "eth[0-99]");
+            for eth in $list_of_eth; do
                grep --color $eth /proc/interrupts | cut -d \: -f 1 | awk '{print $1}'
             done;
+        elif [ -n "$1" ]; then
+            grep --color $1 /proc/interrupts | cut -d \: -f 1 | awk '{print $1}';
         else
             echo "Accepted arguments are : ";
             echo " all     : print IRQ's for all eth's";
             echo " ethX    : print IRQ for ethX";
-        fi;
-    fi
+        fi
 }
 
-
-
-ex ()
-{
+ex () {
     if [ -f $1 ]; then
         case $1 in
             *.tar.bz2)
@@ -216,72 +180,52 @@ ex ()
 }
 
 
-files2Lower ()
-{
-    for file in *;
-    do
+files2Lower () {
+    for file in *; do
         lc=$(echo "$file" | tr "[A-Z]" "[a-z]");
         [[ $lc != $file ]] && mv -i "$file" "$lc";
     done
 }
 
-mkcd ()
-{
-mkdir $1 && cd $1
-}
+mkcd () { mkdir $1 && cd $1; }
 
-quote ()
-{
-echo \'${1//\'/\'\\\'\'}\'
-}
+quote () { echo \'${1//\'/\'\\\'\'}\'; }
 
+toLower () { echo $1 | tr "[:upper:]" "[:lower:]"; }
+toUpper () { echo $1 | tr "[:lower:]" "[:upper:]"; }
 
-toLower ()
-{
-echo $1 | tr "[:upper:]" "[:lower:]"
-}
-
-toUpper ()
-{
-echo $1 | tr "[:lower:]" "[:upper:]"
-}
-
-tarxz ()
-{
+tarxz () {
 XZ_OPT="--check=sha256 -T0" tar cJ --acls --xattrs --selinux -f ${1}.tar.xz ${1}
 }
 
+diff_short ()    { diff --suppress-common-lines $1 $2; }
+diff_u_short ()  { diff -u --suppress-common-lines $1 $2; }
+diff_wu_short () { diff -wu --suppress-common-lines $1 $2; }
 
-function diff-short()
-{
-diff --suppress-common-lines $1 $2
-}
+diff_long ()    { diff $1 $2; }
+diff_u_long ()  { diff -u $1 $2; }
+diff_wu_long () { diff -wu $1 $2; }
 
-function diff-long()
-{
-diff $1 $2
-}
-
-function root-module
-{
+root-module () {
   if [ $# -lt 1 ] ; then
     echo "root-module need exactly one argument"
     return 1
   fi
 
-  name=`basename $1 .cxx`
-  g++ -fPIC -Wall -g -c $name.cxx -o $name.o `root-config --cflags`
+  name=$(basename $1 .cxx)
+  local root_cflags = $(root-config --cflags)
+
+  g++ -fPIC -Wall -g -c $name.cxx -o $name.o ${root_cflags}
   rootcint -f ${name}Cint.cxx -c ${name}.h
-  g++ -fPIC -Wall -g -c ${name}Cint.cxx -o ${name}Cint.o `root-config --cflags`
+  g++ -fPIC -Wall -g -c ${name}Cint.cxx -o ${name}Cint.o ${root_cflags}
   g++ -fPIC -shared -Wl,-soname,${name}.so -o ${name}.so ${name}Cint.o ${name}.o
   rm -f ${name}Cint.cxx ${name}Cint.h ${name}Cint.o ${name}.o
 }
 
 
-transfer() {
+transfer () {
     # check arguments
-    if [ $# -eq 0 ];
-    then
+    if [ $# -eq 0 ]; then
         echo "No arguments specified. Usage:\necho transfer /tmp/test.md\ncat /tmp/test.md | transfer test.md"
         return 1
     fi
@@ -291,25 +235,21 @@ transfer() {
       echo "Could not find curl."; return
     fi
 
-
     # get temporarily filename, output is written to this file show progress can be showed
     tmpfile=$( mktemp -t transferXXX )
 
     # upload stdin or file
     file=$1
 
-    if tty -s;
-    then
+    if tty -s; then
         basefile=$(basename "$file" | sed -e 's/[^a-zA-Z0-9._-]/-/g')
 
-        if [ ! -e $file ];
-        then
+        if [ ! -e $file ]; then
             echo "File $file doesn't exists."
             return 1
         fi
 
-        if [ -d $file ];
-        then
+        if [ -d $file ]; then
             # zip directory and transfer
             zipfile=$( mktemp -t transferXXX.zip )
             cd $(dirname $file) && zip -r -q - $(basename $file) >> $zipfile
@@ -331,13 +271,38 @@ transfer() {
     rm -f $tmpfile
 }
 
-job_start_local() {
-cd $1 && (nohup ./cmd &>cmd_output.txt &) && cd ..
-}
+job_start_local () { cd $1 && (nohup ./cmd &>cmd_output.txt &) && cd .. ; }
 
-date_baby() {
+date_baby () {
     d1=$(date -d "$1" +%s)
     d2=$(date +%s)
     echo $(( (d2 - d1) / 86400 )) days
+}
+
+openssl_pem_p12 () {
+local name=$(basename $1 .pem)
+local txt=$3
+openssl pkcs12 -export -in $1 -inkey $2 -out ${name}.p12 -name ${txt}
+}
+
+openssl_p12_pem () {
+openssl pkcs12 -clcerts -nokeys -out usercert.pem -in $1
+openssl pkcs12 -nocerts -out userkey.pem -in $1
+}
+
+openssl_verify () { openssl verify -CApath $1 $2; }
+
+openssl_DN () {
+local filename=$(basename "$1")
+local ext="${filename##*.}"
+if [[ "$ext" == "pem" ]] ; then
+    openssl x509 -in $1 -noout -subject | sed 's/subject= //';
+elif [[ "$ext" == "p12" ]] ; then
+    openssl pkcs12 -in $1 -nokeys -clcerts | openssl x509 -noout -subject | sed 's/subject= //';
+fi
+}
+
+openssl_compare_key_cert () {
+diff -qs <(openssl rsa -in $1 -pubout) <(openssl x509 -in $2 -pubkey -noout)
 }
 
