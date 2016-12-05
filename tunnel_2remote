@@ -1,0 +1,44 @@
+#!/bin/bash
+
+help () {
+echo "Usage: `basename $0` local_port remote_port remote_ip ssh_alias"
+echo "example : `basename $0` 5000 80 remote_ip myserver "
+echo "local port 5000 will be forwarded to the remote_ip:80 through myserver"
+echo "where myserver is any user@host or ssh alias defined in .ssh/config"
+}
+
+NUM_RE='^[0-9]+$'
+MY_SSH_DIR="/home/adrian/.ssh/"
+MY_SSH_CONFIG="${MY_SSH_DIR}/config"
+PUB1="${MY_SSH_DIR}/id_rsa"
+PUB2="${MY_SSH_DIR}/id_ed25519"
+PUB3="${MY_SSH_DIR}/id_ecdsa"
+
+[[ $# -ne 4 ]] && help && exit 1
+
+[[ ! $1 =~ $re ]] && echo "First argument is not number (port)" && help && exit 1
+[[ ! $2 =~ $re ]] && echo "Second argument is not number (port)" && help && exit 1
+
+LOCAL_PORT=$1
+REMOTE_PORT=$2
+REMOTE_IP=$3
+REMOTE_SERVER=$4
+
+SSH="ssh"
+SSH_ARGS=" -fNT -L"
+
+SUDO=""
+(( LOCAL_PORT < 1025 )) && SSH="sudo -E ${SSH} -F ${MY_SSH_CONFIG} -i ${PUB1}" && SUDO="sudo"
+
+CMD="${SSH} ${SSH_ARGS}"
+
+EXISTENT=$(ps -C ssh -o pid=,args= | grep "$CMD $LOCAL_PORT")
+
+if [[ -n "$EXISTENT" ]] ; then
+  PREV_PID=$(echo $EXISTENT | awk '{print $1}')
+  ${SUDO} kill -9 $PREV_PID
+fi
+
+COMMAND="${CMD} ${LOCAL_PORT}:${REMOTE_IP}:${REMOTE_PORT} ${REMOTE_SERVER}"
+
+eval $COMMAND
