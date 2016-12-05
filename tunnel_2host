@@ -1,0 +1,31 @@
+#!/bin/bash
+
+help () {
+echo "Usage: `basename $0` local_port remote_port ssh_alias"
+echo "example : `basename $0` 5000 80 myserver "
+echo "local port 5000 will be forwarded to the port 80 of the myserver"
+echo "where myserver is any user@host or ssh alias defined in .ssh/config"
+}
+
+NUM_RE='^[0-9]+$'
+
+[[ $# -ne 3 ]] && help && exit 1
+
+[[ ! $1 =~ $re ]] && echo "First argument is not number (port)" && help && exit 1
+[[ ! $2 =~ $re ]] && echo "Second argument is not number (port)" && help && exit 1
+
+CMD="ssh -t -f -N -L"
+LOCAL_PORT=$1
+REMOTE_PORT=$2
+REMOTE_SERVER=$3
+
+EXISTENT=`ps -C ssh -o pid=,args= | grep "$CMD$LOCAL_PORT"`
+
+if [[ -n "$EXISTENT" ]] ; then
+  PREV_PID=`echo $EXISTENT | awk '{print $1}'`
+  kill -9 $PREV_PID
+fi
+
+COMMAND=$CMD" "$LOCAL_PORT":localhost:"$REMOTE_PORT" ${REMOTE_SERVER}"
+
+eval $COMMAND
