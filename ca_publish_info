@@ -1,0 +1,7 @@
+#!/bin/bash
+
+CA_DIR="/home.hdd/adrian/CA-ISS/"
+LIST="${CA_DIR}/ca_publish_list"
+
+rsync -aW --delete --files-from=${LIST} ${CA_DIR}/pki/ /var/www/html/CA/
+rsync -aW --delete --files-from=${LIST} ${CA_DIR}/pki/ monitor_ml:/var/www/html/CA/
