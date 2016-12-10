@@ -312,3 +312,17 @@ openssl_compare_key_cert () {
 diff -qs <(openssl rsa -in $1 -pubout) <(openssl x509 -in $2 -pubkey -noout)
 }
 
+openssl_check_csr () { openssl req -text -noout -verify -in $1; }
+openssl_check_key () { openssl rsa -in $1 -check; }
+openssl_check_cert () { openssl x509 -in $1 -text -noout; }
+openssl_check_p12 () { openssl pkcs12 -info -in $1; }
+
+openssl_cert_txt () { openssl x509 -in $1 -text; }
+
+openssl_key_nopass () {
+local priv1=$(basename "$1")
+local ext="${priv1##*.}"
+local filename="${priv1%.*}"
+local priv2="${filename}_nopass.${ext}"
+openssl rsa -in $1 -out ${priv2}
+}
