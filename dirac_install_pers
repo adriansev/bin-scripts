@@ -1,8 +1,8 @@
 #!/bin/bash
 
-VER="v6r16p1"
+VER="v6r17"
 
-DIRACDIR=$HOME/DIRAC 
+DIRACDIR=$HOME/DIRAC
 cd ${DIRACDIR}
 
 echo "Uptading the install script"
