@@ -10,14 +10,16 @@ PEDANTIC=""
 ROOT_DIR=$(root-config --prefix)
 
 # AVX
-FQDN=`hostname -f`
-if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
-  GCCARCH="-march=native -mtune=native"
-  avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
-  [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
-else
-  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
+FQDN=$(hostname -f)
+if [[ "$FQDN" == "issaf.spacescience.ro"  ]] ; then
+  OPT="-D_last_target_arch="generic" -DVC_IMPL="SSE" -DTARGET_ARCHITECTURE="generic" "
   GCCARCH="-march=core2"
+else
+  OPT="-D_last_target_arch="auto" -DVC_IMPL="auto" -DTARGET_ARCHITECTURE:STRING="auto" "
+  GCCARCH="-march=native -mtune=native"
+
+  avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
+  [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
 fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
@@ -26,6 +28,8 @@ cmake \
 -DCMAKE_INSTALL_PREFIX=$tools/alice/aliroot \
 -DCMAKE_BUILD_TYPE=$BUILDTYPE \
 -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
+-DVc_DIR="${tools}/heplibs/vc/lib/cmake/Vc" \
+${OPT} \
 -DROOTSYS=${ROOT_DIR} \
 -DALIEN=${ALIEN_ROOT} \
 -DFASTJET=${FASTJET_ROOT} \
