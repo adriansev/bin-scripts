@@ -14,9 +14,9 @@ export G4ABLADATA=${tools}/geant4-data/G4ABLA
 #################################################################
 
 export G4SYSTEM=Linux-g++
-export G4INSTALL=$tools/geant4
-export G4INCLUDE=$G4INSTALL/include/Geant4
-export G4LIB=$G4INSTALL/lib64
+export G4INSTALL=${tools}/geant4
+export G4INCLUDE=${G4INSTALL}/include/Geant4
+export G4LIB=${G4INSTALL}/lib64
 
 #export G4LIB_BUILD_SHARED=1
 #export G4LIB_USE_ZLIB=1
@@ -34,28 +34,17 @@ export G4LIB=$G4INSTALL/lib64
 #export G4VIS_USE_OPENGLX=1
 #export G4VIS_USE_RAYTRACERX=1
 
-
-##     GEANT4 PATHS
-# export PATH=$PATH:${G4INSTALL}/bin
-
-##     GEANT4 LIBS
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${G4LIB}
-
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:${G4INCLUDE}
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${G4INCLUDE}
-
 ##source $tools/geant4/bin/geant4.sh
-
 
 #############
 ##   VGM   ##
 #############
 export VGM_INSTALL=${tools}/heplibs/vgm
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$VGM_INSTALL/lib64
+append_item_2var LD_LIBRARY_PATH ${VGM_INSTALL}/lib64
 
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:$VGM_INSTALL/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$VGM_INSTALL/include
+# export C_INCLUDE_PATH=$C_INCLUDE_PATH:$VGM_INSTALL/include
+# export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$VGM_INSTALL/include
 
 
 ####################
@@ -63,9 +52,9 @@ export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$VGM_INSTALL/include
 ####################
 export G4VMC_INSTALL=${tools}/heplibs/geant4_vmc
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$G4VMC_INSTALL/lib64
+append_item_2var LD_LIBRARY_PATH ${G4VMC_INSTALL}/lib64
 
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:$G4VMC_INSTALL/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$G4VMC_INSTALL/include
+# export C_INCLUDE_PATH=$C_INCLUDE_PATH:$G4VMC_INSTALL/include
+# export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$G4VMC_INSTALL/include
 
 

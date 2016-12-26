@@ -1,4 +1,4 @@
 #################
-###   PATHS   ### 
+###   PATHS   ###
 #################
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/lib64/qt-3.3/bin:$HOME/bin:$HOME/.local/bin:$JAVA_HOME/bin
+export PATH=$HOME/bin:$HOME/.local/bin:$JAVA_HOME/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin:/usr/lib64/qt-3.3/bin
