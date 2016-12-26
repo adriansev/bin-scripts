@@ -6,7 +6,7 @@ export FLUFOR=gfortran
 ##     FLUKA PATHS
 export PATH=$PATH:${FLUPRO}:${FLUPRO}/flutil
 
-##     FLUKA LIBS 
+##     FLUKA LIBS
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${FLUPRO}
 
 

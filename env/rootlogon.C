@@ -1,4 +1,6 @@
 {
+gSystem->AddIncludePath("-I/usr/include");
+gSystem->AddDynamicPath("/usr/lib64");
 gSystem->Load("libCGAL");
 gSystem->Load("libfastjet");
 gSystem->Load("libsiscone");

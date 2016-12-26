@@ -2,10 +2,6 @@
 ##       ALIROOT
 ##
 
-## AliROOT
-
-##export OCDB_PATH='/cvmfs/alice.cern.ch/x86_64-2.6-gnu-4.1.2/Packages/OCDB/v5-05-76-AN/'
-
 export ALICE=${tools}/alice
 export GEANT3DIR=${ALICE}/geant3
 
@@ -13,11 +9,19 @@ export ALICE_ROOT=${ALICE}/aliroot
 export ALICE_PHYSICS=${ALICE}/aliphysics
 
 ##     AliROOT PATHS
-export PATH=$PATH:${ALICE_ROOT}/bin:${ALICE_PHYSICS}/bin
+insert_item_2var PATH ${ALICE_ROOT}/bin
+insert_item_2var PATH ${ALICE_PHYSICS}/bin
 
 ##     AliROOT LIBS
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${GEANT3DIR}/lib64:${ALICE_ROOT}/lib:${ALICE_PHYSICS}/lib
+insert_item_2var LD_LIBRARY_PATH ${GEANT3DIR}/lib64
+insert_item_2var LD_LIBRARY_PATH ${ALICE_ROOT}/lib
+insert_item_2var LD_LIBRARY_PATH ${ALICE_PHYSICS}/lib
 
-export C_INCLUDE_PATH=$C_INCLUDE_PATH:${GEANT3DIR}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
-export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:${GEANT3DIR}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
+## insert_item_2var C_INCLUDE_PATH ${GEANT3DIR}/include
+## insert_item_2var C_INCLUDE_PATH ${ALICE_ROOT}/include
+## insert_item_2var C_INCLUDE_PATH ${ALICE_PHYSICS}/include
+
+## insert_item_2var CPLUS_INCLUDE_PATH ${GEANT3DIR}/include
+## insert_item_2var CPLUS_INCLUDE_PATH ${ALICE_ROOT}/include
+## insert_item_2var CPLUS_INCLUDE_PATH ${ALICE_PHYSICS}/include
 

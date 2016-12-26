@@ -7,6 +7,40 @@ functions_list () { declare -f; }
 functions_list_name () { declare -F; }
 functions_show_def () { declare -f $1; }
 
+SourceIfValid () { [[ -f $1 ]] && source $1; }
+
+append_item_2var () {
+[[ -z "$1" || -z "$2" ]] && return 1
+local VAR=$1
+local STR=$2
+VAR_CONT=$(env | grep ^${VAR}= | sed "s/${VAR}=//" | sed "s/^://")
+export ${VAR}=${VAR_CONT} ## clean up the beginning ":"
+
+[[ "${VAR_CONT}" == *"${STR}"* ]] && return ## if path present return
+
+if [[ -z "${VAR_CONT}" ]]; then
+    export ${VAR}="${STR}" ## add path
+else
+    export ${VAR}="${VAR_CONT}:${STR}" ## add path
+fi
+}
+
+insert_item_2var () {
+[[ -z "$1" || -z "$2" ]] && return 1
+local VAR=$1
+local STR=$2
+VAR_CONT=$(env | grep ^${VAR}= | sed "s/${VAR}=//" | sed "s/^://")
+export ${VAR}=${VAR_CONT} ## clean up the beginning ":"
+
+[[ "${VAR_CONT}" == *"${STR}"* ]] && return ## if path present return
+
+if [[ -z "${VAR_CONT}" ]]; then
+    export ${VAR}="${STR}" ## add path
+else
+    export ${VAR}="${STR}:${VAR_CONT}" ## add path
+fi
+}
+
 cvmfs_alice_load () { eval $(alienv printenv VO_ALICE@$1); }
 
 cvmfs_alicephys_load () { eval $(alienv printenv VO_ALICE@AliPhysics::$1); }
@@ -82,8 +116,6 @@ git checkout $branch_name
 git pull --rebase . master
 }
 ###########################################################
-
-SourceIfValid () { [[ -f $1 ]] && source $1; }
 
 now_str () { date +%Y%m%d_%H%M%S; }
 
@@ -287,6 +319,18 @@ date_baby () {
     echo $(( (d2 - d1) / 86400 )) days
 }
 
+###################
+###   OpenSSL   ###
+###################
+
+openssl_verify ()     { openssl verify -CApath $1 $2; }
+openssl_check_csr ()  { openssl req -text -noout -verify -in $1; }
+openssl_check_key ()  { openssl rsa -in $1 -check; }
+openssl_check_cert () { openssl x509 -in $1 -text -noout; }
+openssl_cert_txt ()   { openssl x509 -in $1 -text; }
+openssl_check_p12 ()  { openssl pkcs12 -info -in $1; }
+openssl_compare_key_cert () { diff -qs <(openssl rsa -in $1 -pubout) <(openssl x509 -in $2 -pubkey -noout); }
+
 openssl_pem_p12 () {
 local name=$(basename $1 .pem)
 local txt=$3
@@ -298,8 +342,6 @@ openssl pkcs12 -clcerts -nokeys -out usercert.pem -in $1
 openssl pkcs12 -nocerts -out userkey.pem -in $1
 }
 
-openssl_verify () { openssl verify -CApath $1 $2; }
-
 openssl_DN () {
 local filename=$(basename "$1")
 local ext="${filename##*.}"
@@ -310,17 +352,6 @@ elif [[ "$ext" == "p12" ]] ; then
 fi
 }
 
-openssl_compare_key_cert () {
-diff -qs <(openssl rsa -in $1 -pubout) <(openssl x509 -in $2 -pubkey -noout)
-}
-
-openssl_check_csr () { openssl req -text -noout -verify -in $1; }
-openssl_check_key () { openssl rsa -in $1 -check; }
-openssl_check_cert () { openssl x509 -in $1 -text -noout; }
-openssl_check_p12 () { openssl pkcs12 -info -in $1; }
-
-openssl_cert_txt () { openssl x509 -in $1 -text; }
-
 openssl_key_nopass () {
 local priv1=$(basename "$1")
 local ext="${priv1##*.}"
@@ -328,3 +359,4 @@ local filename="${priv1%.*}"
 local priv2="${filename}_nopass.${ext}"
 openssl rsa -in $1 -out ${priv2}
 }
+
