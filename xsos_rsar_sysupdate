@@ -1,12 +1,12 @@
 #!/bin/bash
 
-cd /home/adrian/work-GRID/rsar
+cd /home/adrian/software/rsar
 git checkout master && git pull
-sudo -- /usr/bin/bash -c 'cp /home/adrian/work-GRID/rsar/rsar /usr/local/bin/ ; cp /home/adrian/work-GRID/rsar/rsar-bash-completion.bash /etc/bash_completion.d/'
-cp /home/adrian/work-GRID/rsar/rsar ~/bin/ ; cp /home/adrian/work-GRID/rsar/rsar-bash-completion.bash ~/bin/env/
+sudo -- /usr/bin/bash -c 'cp /home/adrian/software/rsar/rsar /usr/local/bin/ ; cp /home/adrian/software/rsar/rsar-bash-completion.bash /etc/bash_completion.d/'
+cp /home/adrian/software/rsar/rsar ~/bin/ ; cp /home/adrian/software/rsar/rsar-bash-completion.bash ~/bin/env/
 
-cd /home/adrian/work-GRID/xsos
+cd /home/adrian/software/xsos
 git checkout master && git pull
-sudo -- /usr/bin/bash -c 'cp /home/adrian/work-GRID/xsos/xsos /usr/local/bin/ ; cp /home/adrian/work-GRID/xsos/xsos-bash-completion.bash /etc/bash_completion.d/'
-cp /home/adrian/work-GRID/xsos/xsos ~/bin/ ; cp /home/adrian/work-GRID/xsos/xsos-bash-completion.bash ~/bin/env/
+sudo -- /usr/bin/bash -c 'cp /home/adrian/software/xsos/xsos /usr/local/bin/ ; cp /home/adrian/software/xsos/xsos-bash-completion.bash /etc/bash_completion.d/'
+cp /home/adrian/software/xsos/xsos ~/bin/ ; cp /home/adrian/software/xsos/xsos-bash-completion.bash ~/bin/env/
 
