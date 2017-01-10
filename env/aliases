@@ -60,9 +60,8 @@ alias job.status_c='glite-ce-job-status -l job_status.log -i jobid'
 alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
 
 # DIRAC
-
 alias dirac_enable='source $HOME/DIRAC/bashrc'
-alias dirac_proxy_init='dirac-proxy-init -g auger_user -M'
+alias dirac_proxy_init='dirac-proxy-init -v 96:00 -g auger_user -M'
 
 alias dirac-dfc-cli='dirac-dms-filecatalog-cli -f AugerFileCatalog'
 alias dirac-dfc-mydir="dcd /auger/user/a/asevcenc/ ; dpwd"
