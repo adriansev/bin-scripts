@@ -1,0 +1,10 @@
+#!/bin/bash
+
+redir="rd.spacescience.ro"
+
+MYCMD=$(echo 'for d in /storage*; do rm -f ${d}/xrddata/xrd-test 2>/dev/null && touch ${d}/xrddata/xrd-test 2>/dev/null && echo "$(hostname -s) :: ${d} OK" || echo "$(hostname -s) :: ${d} FAIL <<<<<<<<<<<<<<<<<<<<<<<"; done' | base64 -w0)
+
+for srv in $(xrdmapc --list s -r ${redir}:1094 | awk '/Srv/ {gsub(":1094","",$2);print $2}'); do
+    ssh -p 60000 aliprod@${srv} "echo $MYCMD | base64 -d | bash"
+    echo
+done
