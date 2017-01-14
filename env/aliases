@@ -61,7 +61,7 @@ alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
 
 # DIRAC
 alias dirac_enable='source $HOME/DIRAC/bashrc'
-alias dirac_proxy_init='dirac-proxy-init -v 96:00 -g auger_user -M; dinit -p;'
+alias dirac_myproxy='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_user -M; dinit -p 2&>1 >/dev/null; } || echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software"'
 
 alias dirac-lfc-cli='dirac-dms-filecatalog-cli -f AugerLcgFileCatalog'
 alias dirac-dfc-cli='dirac-dms-filecatalog-cli -f AugerFileCatalog'
