@@ -3,6 +3,8 @@
 xrd_servers="storage02 storage03 storage04 storage05 storage06 storage07"
 #xrd_servers="storage06"
 
+rm -f /tmp/*.xrdreport
+
 for serv in $xrd_servers ; do
   ssh $serv "df -l -k | grep storage | awk '{printf (\"used=%d \t avail=%d\n\",\$3,\$4);}'" > /tmp/${serv}.xrdreport
 done
@@ -11,40 +13,40 @@ xrd_used_size="0"
 xrd_avail_size="0"
 xrd_total_size="0"
 
-for report in `ls -1 /tmp/*.xrdreport`; do
+for report in /tmp/*.xrdreport; do
   serv_used_size="0"
   serv_avail_size="0"
 
-  server=`basename $report .xrdreport`
+  server=$(basename $report .xrdreport)
 
   while read -r line ; do
     eval $line
 
-    serv_used_size=`echo "scale=2; ${serv_used_size} + ${used}" | /usr/bin/bc`
-    serv_avail_size=`echo "scale=2; ${serv_avail_size} + ${avail}" | /usr/bin/bc`
+    serv_used_size=$(echo "scale=2; ${serv_used_size} + ${used}" | /usr/bin/bc)
+    serv_avail_size=$(echo "scale=2; ${serv_avail_size} + ${avail}" | /usr/bin/bc)
 
 #    echo -e $used "\t" $avail
   done < "$report"
 
-  serv_total_size=`echo "scale=2; ${serv_used_size} + ${serv_avail_size}" | /usr/bin/bc`
+  serv_total_size=$(echo "scale=2; ${serv_used_size} + ${serv_avail_size}" | /usr/bin/bc)
 #  echo -e $serv_total_size "\t" $serv_used_size "\t" $serv_avail_size
 
-  sum_total_GiB=`echo "scale=3; ${serv_total_size}/1048576" | /usr/bin/bc`
-  sum_avail_GiB=`echo "scale=3; ${serv_avail_size}/1048576" | /usr/bin/bc`
-  sum_used_GiB=`echo "scale=3; ${serv_used_size}/1048576" | /usr/bin/bc`
+  sum_total_GiB=$(echo "scale=3; ${serv_total_size}/1048576" | /usr/bin/bc)
+  sum_avail_GiB=$(echo "scale=3; ${serv_avail_size}/1048576" | /usr/bin/bc)
+  sum_used_GiB=$(echo "scale=3; ${serv_used_size}/1048576" | /usr/bin/bc)
 
-  xrd_used_size=`echo "scale=3; ${xrd_used_size} + ${sum_used_GiB}" | /usr/bin/bc`
-  xrd_avail_size=`echo "scale=3; ${xrd_avail_size} + ${sum_avail_GiB}" | /usr/bin/bc`
-  xrd_total_size=`echo "scale=3; ${xrd_total_size} + ${sum_total_GiB}" | /usr/bin/bc`
+  xrd_used_size=$(echo "scale=3; ${xrd_used_size} + ${sum_used_GiB}" | /usr/bin/bc)
+  xrd_avail_size=$(echo "scale=3; ${xrd_avail_size} + ${sum_avail_GiB}" | /usr/bin/bc)
+  xrd_total_size=$(echo "scale=3; ${xrd_total_size} + ${sum_total_GiB}" | /usr/bin/bc)
 
   echo -e $server"\tT="$sum_total_GiB"\tU="$sum_used_GiB"\tA="$sum_avail_GiB
 
 done
 
 
-xrd_used_size_T=`echo "scale=3; ${xrd_used_size}/1024" | /usr/bin/bc`
-xrd_avail_size_T=`echo "scale=3; ${xrd_avail_size}/1024" | /usr/bin/bc`
-xrd_total_size_T=`echo "scale=3; ${xrd_total_size}/1024" | /usr/bin/bc`
+xrd_used_size_T=$(echo "scale=3; ${xrd_used_size}/1024" | /usr/bin/bc)
+xrd_avail_size_T=$(echo "scale=3; ${xrd_avail_size}/1024" | /usr/bin/bc)
+xrd_total_size_T=$(echo "scale=3; ${xrd_total_size}/1024" | /usr/bin/bc)
 
 echo
 echo "Total storage on ALICE::ISS:FILE"
