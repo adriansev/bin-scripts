@@ -1,0 +1,16 @@
+#!/bin/bash
+
+SRV="$1"
+shift
+
+CMD=""
+whitespace="[[:space:]]"
+for i in "$@" ; do
+    [[ $i =~ $whitespace ]] && i=\"$i\"
+    [[ -z "${CMD}" ]] && CMD="${i}" || CMD="${CMD} ${i}"
+done
+
+SSHCMD=$(echo "${CMD}" | /usr/bin/base64 -w0)
+
+/usr/bin/ssh ${SRV} "echo ${SSHCMD} | /usr/bin/base64 -d | /bin/bash"
+
