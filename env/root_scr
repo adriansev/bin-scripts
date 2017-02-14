@@ -18,6 +18,7 @@ ROOTSYS=${ROOTMAINDIR}/${ROOTVER}
 export ROOTSYS
 
 insert_item_2var MANPATH ${ROOTSYS}/man
+export MANPATH=:${MANPATH}
 
 ##     ROOT PATHS
 insert_item_2var PATH ${ROOTSYS}/bin
