@@ -1,17 +1,12 @@
 #!/bin/bash
 
-VER="v6r17"
+VER=$1
 
 DIRACDIR=$HOME/DIRAC
 cd ${DIRACDIR}
 
-echo "Uptading the install script"
-$HOME/bin/dirac-install_update
-echo "done"
-echo
-
 echo "Start install script"
-$HOME/bin/dirac-install -r $VER -t client  -e COMDIRAC -V formation -P ${DIRACDIR}
+$HOME/bin/dirac-install -r ${VER} -t client  -e COMDIRAC -V formation -P ${DIRACDIR}
 echo -e '\ninstall done!\n'
 
 echo "create proxy"
