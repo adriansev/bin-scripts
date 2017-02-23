@@ -31,7 +31,7 @@ OS_MAJOR_VER=$(awk -F. '{print $1}' <<< "${OS_VER}")
 (( OS_MAJOR_VER >= 23 )) && XRD=${XRD_SYS}
 
 ## choose system xrd
-[[ "$2" == "xrdsys" ]] &&  XRD=${XRD_SYS}
+[[ "$2" == "xrdsys" ]] && XRD=${XRD_SYS}
 
 echo
 echo "XRD is :"
@@ -47,11 +47,11 @@ GCC_MAJOR=${arr[2]}
 PEDANTIC=""
 
 # AVX
-FQDN=`hostname -f`
-if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
+FQDN=$(hostname -f)
+if [[ "${FQDN}" != "issaf.spacescience.ro"  ]] ; then
   GCCARCH="-march=native"
-  avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
-  [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
+  avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
+  [[ "${avx_enable}" == "yes" ]] && AVX="-mavx"
 else
   ISSAF_OPT="-DVC_IMPL=SSE -D_last_target_arch=generic -DTARGET_ARCHITECTURE=generic "
   GCCARCH="-march=core2"
@@ -77,7 +77,7 @@ fi
 
 cmake \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} ${ADDITIONAL_CMAKE_OPT} \
--DCMAKE_C_FLAGS=${CXXFLAGS} -DCMAKE_CXX_FLAGS=${CXXFLAGS} -Dcxx11=1 \
+-DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -Dcxx11=1 \
 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_gsl=0 -Dbuiltin_afterimage=0 -Dbuiltin_cfitsio=0 -Dbuiltin_davix=0 \
 -Dbuiltin_freetype=0 -Dbuiltin_lzma=0 -Dbuiltin_zlib=0 -Dbuiltin_pcre=0 \
 -Dbuiltin_xrootd=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 \
@@ -85,7 +85,7 @@ cmake \
 -Dpythia6_nolink=1 \
 -DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
--Dalien=1  -DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
+-Dalien=1 -DALIEN_INCLUDE_DIR=${GSHELL_ROOT}/include -DALIEN_LIBRARY=${GSHELL_ROOT}/lib/libgapiUI.so \
 ${XRD} \
 $1 | tee cmake_out.txt
 
