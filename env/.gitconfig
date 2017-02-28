@@ -1,0 +1,62 @@
+[user]
+    name = Adrian Sevcenco
+    email = adrian.sevcenco@cern.ch
+    github = adriansev
+
+[credential]
+    helper = store
+
+[branch]
+    autosetuprebase = always
+
+[branch "master"]
+    rebase = true
+
+[alias]
+    cm = ’commit’
+    co = ’checkout’
+    st = ’status’
+
+    lognice = log --graph --decorate --pretty=oneline --abbrev-commit --all
+    logbranch = log --graph --decorate --pretty=oneline --abbrev-commit --first-parent --no-merges
+
+    l = log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
+    ll = log --stat --abbrev-commit
+    list = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+
+    changes = diff --name-status
+    diffstat = diff --stat
+    whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
+    pwhatis = show -s --pretty='tformat:%h, %s, %ad' --date=short
+
+[core]
+    editor = mcedit
+
+[merge]
+    tool = kdiff3
+
+[color]
+    ui = true
+    interactive = auto
+    status = auto
+    branch = auto
+
+[push]
+    default = simple
+
+[sendemail]
+    smtpencryption = tls
+    smtpserver = smtp.cern.ch
+    smtpuser = asevcenc
+    smtpserverport = 587
+    from = Adrian.Sevcenco@cern.ch
+    envelopesender = auto
+
+[format]
+    suffix = .patch
+    numbered = auto
+    signoff = true
+
+[help]
+    autocorrect = 10
+
