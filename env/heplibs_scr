@@ -111,3 +111,15 @@ insert_item_2var LD_LIBRARY_PATH ${FASTJET}/lib
 ## insert_item_2var C_INCLUDE_PATH ${FASTJET}/include
 ## insert_item_2var CPLUS_INCLUDE_PATH ${FASTJET}/include
 
+
+#####################
+##     DPMJET      ##
+#####################
+export DPMJET_ROOT=${tools}/heplibs/DPMJET
+
+##     DPMJET PATHS
+insert_item_2var PATH ${DPMJET_ROOT}/bin
+
+##     DPMJET LIBS
+insert_item_2var LD_LIBRARY_PATH ${DPMJET_ROOT}/lib
+
