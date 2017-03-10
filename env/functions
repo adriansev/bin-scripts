@@ -115,6 +115,15 @@ git pull --rebase
 git checkout $branch_name
 git pull --rebase . master
 }
+
+git_delete_branch () {
+git checkout master
+git fetch -p origin
+git push origin --delete $1
+git branch -D $1
+git fetch -p origin
+}
+
 ###########################################################
 
 now_str () { date +%Y%m%d_%H%M%S; }
