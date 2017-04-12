@@ -6,7 +6,7 @@ export ALIEN_INSTALLER_PREFIX=${tools}/alien
 export ALIEN_ROOT=${ALIEN_INSTALLER_PREFIX}
 export ALIEN=${ALIEN_INSTALLER_PREFIX}
 
-alias aliensh='bash --rcfile ${ALIEN_ROOT}/api//bin/alien_Shell'
+alias aliensh='bash --rcfile ${ALIEN_ROOT}/api/bin/alien_Shell'
 alias alien_cd='. ${ALIEN_ROOT}/bin/alien_cd dummy'
 alias alien_pwd=' ${ALIEN_ROOT}/api//bin/alien_pwd -1'
 
@@ -15,7 +15,7 @@ export GAPI_LOCATION=${ALIEN_ROOT}/api/
 export GLOBUS_LOCATION=${ALIEN_ROOT}/globus/
 export MYPROXY_LOCATION=$ALIEN_ROOT/globus/
 
-export GBBOX_ENVFILE=$(ls -1c /tmp/gbbox_$(id -u)_* | head -n 1)
+# export GBBOX_ENVFILE=$(ls -1c /tmp/gbbox_$(id -u)_* | head -n 1)
 
 sys_cert_location=$(ls -1 /etc/grid-security/certificates/*.signing_policy)
 if [[ -z "$sys_cert_location" ]] ; then
@@ -29,7 +29,7 @@ fi
 export X509_CERT_DIR
 export XrdSecSSLCADIR
 
-#export GSHELL_NO_GCC=1
+export GSHELL_NO_GCC=1
 
 insert_item_2var MANPATH ${ALIEN_ROOT}/api/share/man
 insert_item_2var PATH ${ALIEN_ROOT}/api/bin
