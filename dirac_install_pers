@@ -9,6 +9,8 @@ echo "Start install script"
 $HOME/bin/dirac-install -r ${VER} -t client  -e COMDIRAC -V formation -P ${DIRACDIR}
 echo -e '\ninstall done!\n'
 
+[[ -n "$DIRACPLAT" ]] && source $HOME/DIRAC/bashrc
+
 echo "create proxy"
 dirac-proxy-init -g auger_user
 echo -e "proxy done\n"
