@@ -1,11 +1,11 @@
 #!/bin/bash
-UID=$(id -u)
+MYUID=$(id -u)
 MYUSER="asevcenc"
 
-rm -rf /tmp/gbbox_${UID}_* /tmp/gclient_env_${UID} /tmp/gclient_token_${UID} /tmp/x509up_u${UID}
+rm -rf /tmp/gbbox_${MYUID}_* /tmp/gclient_env_${MYUID} /tmp/gclient_token_${MYUID} /tmp/x509up_u${MYUID}
 
 alien-token-init ${MYUSER}
 
-sed -i '/LD_LIBRARY_PATH/d' /tmp/gclient_env_${UID}
-#source /tmp/gclient_env_$(id -u)
+sed -i '/LD_LIBRARY_PATH/d' /tmp/gclient_env_${MYUID}
+echo source /tmp/gclient_env_${MYUID}
 
