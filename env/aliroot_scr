@@ -8,6 +8,8 @@ export GEANT3DIR=${ALICE}/geant3
 export ALICE_ROOT=${ALICE}/aliroot
 export ALICE_PHYSICS=${ALICE}/aliphysics
 
+export ALIROOT_OCDB_ROOT=${ALICE}/AliRootOCDB
+
 ##     AliROOT PATHS
 insert_item_2var PATH ${ALICE_ROOT}/bin
 insert_item_2var PATH ${ALICE_PHYSICS}/bin
