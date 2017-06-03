@@ -1,15 +1,13 @@
 #!/bin/bash
 
 ##QSTAT_OUT=$( cat qstatf1.out )
-QSTAT_OUT=$( ssh alien qstat -f -1 )
+QSTAT_OUT=$( qstat -f -1 )
 
 IOKILL="4"
 re='^[0-9]+$'
 if [[ -n "$1" ]] && [[ $1 =~ $re ]] ; then
     IOKILL=$1
 fi
-
-echo $IOKILL
 
 echo "${QSTAT_OUT}" | /bin/awk -v KILLTIME=${IOKILL} '
 function getVal ( line,   linearr ) {
