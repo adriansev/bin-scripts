@@ -1,0 +1,61 @@
+#!/bin/bash
+
+##QSTAT_OUT=$( cat qstatf1.out )
+QSTAT_OUT=$( ssh alien qstat -f -1 )
+
+IOKILL="4"
+re='^[0-9]+$'
+if [[ -n "$1" ]] && [[ $1 =~ $re ]] ; then
+    IOKILL=$1
+fi
+
+echo $IOKILL
+
+echo "${QSTAT_OUT}" | /bin/awk -v KILLTIME=${IOKILL} '
+function getVal ( line,   linearr ) {
+split(line,linearr,/( = )|(: )/);
+return linearr[2];
+}
+
+function hms_to_sec ( time,   timearr) {
+split(time,timearr,":");
+return timearr[1]*3600 + timearr[2]*60 + timearr[3];
+}
+
+function sec_to_hms (sec,   h,   m,   s) {
+if (sec < 0) { sec *= -1; }
+h = int ( sec/3600 );
+sec = sec%3600;
+m = int ( sec/60 );
+s = sec%60;
+return sprintf("%02d:%02d:%02d",h,m,s);
+}
+
+BEGIN {
+RS = "Job Id: " ; FS = "\n";
+JOBID="";STATE=""; CPUT=0; WALLT=0;
+}
+
+{
+## always JobId is first
+JOBID = $1;
+gsub(".alien.spacescience.ro","",JOBID);
+
+## processing all info of record
+for (i=2;i<=NF;i++) {
+    if ( $i ~ "job_state" )                { STATE = getVal($i);}
+    if ( $i ~ "resources_used.cput" )      { CPUT = getVal($i);}
+    if ( $i ~ "resources_used.walltime"  ) { WALLT = getVal($i);}
+    }
+
+if ( STATE == "R" ) {
+    DIFF = hms_to_sec(WALLT) - hms_to_sec(CPUT);
+    DIFF_h = int (DIFF/3600);
+    if ( DIFF_h > int (KILLTIME) ) { printf("%s ", JOBID); }
+    }
+}
+
+END { printf("\n"); }
+'
+
+
