@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##QSTAT_OUT=$( cat qstatf1.out )
-QSTAT_OUT=$( ssh alien qstat -f -1 )
+QSTAT_OUT=$( qstat -f -1 )
 
 echo "${QSTAT_OUT}" | /bin/awk '
 function getVal ( line,   linearr ) {
@@ -53,17 +53,7 @@ if ( STATE == "R" ) {
     DIFF_h = int (DIFF/3600);
     if ( DIFF_h > 0 ) { WARNING = sprintf ("IO time > %dh",DIFF_h); }
 
-#    print JOBID;
-#    print WN;
-#    print CPUT;
-#    print WALLT;
-#    print sec_to_hms(DIFF);
-#    print "\n";
-
     printf("%s\t\t%s\t%s\t%s\t%s\t\t%s\n", JOBID, WN, CPUT, WALLT, sec_to_hms(DIFF), WARNING);
     }
-
 }'
-
-
 
