@@ -1,0 +1,13 @@
+#!/bin/bash
+
+KILL_HOURS=6
+
+DEL_LIST=$( /root/work/bin/qstat_list_iokill ${KILL_HOURS} | tr -d '\n' )
+
+if [[ -n "${DEL_LIST}" ]] ; then
+    date
+    echo "Killing jobs : ${DEL_LIST}"
+    /opt/torque/bin/qdel -m "CLEAN UP script :: IO time > ${KILL_HOURS}" ${DEL_LIST} && echo "Jobs succesfully deleted" || echo "Error (for unknown reasons)"
+    echo
+fi
+
