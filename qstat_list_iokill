@@ -1,9 +1,9 @@
 #!/bin/bash
 
 ##QSTAT_OUT=$( cat qstatf1.out )
-QSTAT_OUT=$( qstat -f -1 )
+QSTAT_OUT=$( /opt/torque/bin/qstat -f -1 )
 
-IOKILL="4"
+IOKILL="6"
 re='^[0-9]+$'
 if [[ -n "$1" ]] && [[ $1 =~ $re ]] ; then
     IOKILL=$1
@@ -48,8 +48,8 @@ for (i=2;i<=NF;i++) {
 
 if ( STATE == "R" ) {
     DIFF = hms_to_sec(WALLT) - hms_to_sec(CPUT);
-    DIFF_h = int (DIFF/3600);
-    if ( DIFF_h > int (KILLTIME) ) { printf("%s ", JOBID); }
+    DIFF_h = DIFF/3600;
+    if ( DIFF_h >= KILLTIME ) { printf("%s ", JOBID); }
     }
 }
 
