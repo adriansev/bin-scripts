@@ -6,26 +6,24 @@ DIRACDIR=$HOME/DIRAC
 cd ${DIRACDIR}
 
 echo "Start install script"
-$HOME/bin/dirac-install -r ${VER} -t client -e COMDIRAC -V formation -P ${DIRACDIR}
+$HOME/bin/dirac-install -r ${VER} -t client -e COMDIRAC -V auger -P ${DIRACDIR}
 echo -e '\ninstall done!\n'
 
 source ${DIRACDIR}/bashrc
 
+echo "create simple proxy"
 dirac-proxy-init -x
-
-#mv ${DIRACDIR}/etc/dirac.cfg ${DIRACDIR}/etc/dirac.cfg.ini
-
-echo "Configuration -> VO url"
-dirac-configure -F -V auger -C dips://dirac-conf.in2p3.fr:9135/Configuration/Server -I
-echo -e "Configuration done\n"
-
-echo "create proxy"
-dirac-proxy-init -g auger_user -M
 echo -e "proxy done\n"
 
 echo "Configuration -> formation"
-dirac-configure defaults_formation.cfg
+dirac-configure defaults-auger.cfg
 echo -e "Configuration done\n"
 
+#echo "Configuration -> VO url"
+#dirac-configure -F -V auger -C dips://dirac-conf.in2p3.fr:9135/Configuration/Server -I
+#echo -e "Configuration done\n"
 
+#echo "create proxy"
+#dirac-proxy-init -g auger_user -M
+#echo -e "proxy done\n"
 
