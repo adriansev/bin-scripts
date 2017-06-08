@@ -1,0 +1,56 @@
+# DIRAC bashrc file, used by service and agent run scripts to set environment
+export PYTHONUNBUFFERED=yes
+export PYTHONOPTIMIZE=x
+
+## DIRAC locations
+[[ -z "$DIRAC" ]] && export DIRAC=$HOME/DIRAC
+
+# DIRAC platform
+[[ -z "$DIRACPLAT" ]] && export DIRACPLAT=$( ${DIRAC}/scripts/dirac-platform )
+
+export DIRACBIN=${DIRAC}/${DIRACPLAT}/bin
+export DIRACLIB=${DIRAC}/${DIRACPLAT}/lib
+export DIRACSCRIPTS=${DIRAC}/scripts
+
+
+export TERMINFO=$DIRAC/${DIRACPLAT}/share/terminfo:/usr/share/terminfo:/etc/terminfo
+export RRD_DEFAULT_FONT=$DIRAC/${DIRACPLAT}/share/rrdtool/fonts/DejaVuSansMono-Roman.ttf
+
+# CAs path for SSL verification 
+## asume that the system installed CAs are most up to date and prefer the system if found
+GRID_CERTS="/etc/grid-security/certificates"
+[[ ! -e ${GRID_CERTS}/CERN-GridCA.pem ]] && GRID_CERTS=${DIRAC}/etc/grid-security/certificates
+
+export X509_CERT_DIR=${GRID_CERTS}
+export SSL_CERT_DIR=${GRID_CERTS}
+export REQUESTS_CA_BUNDLE=${GRID_CERTS}
+
+export X509_VOMS_DIR=${DIRAC}/etc/grid-security/vomsdir
+
+# Prepend the PYTHONPATH, the LD_LIBRARY_PATH
+PATH=$(echo $PATH | sed "s#$HOME/bin:##") ## make sure that $HOME/bin will be first in path
+
+( echo $PATH | grep -q $DIRACBIN ) || export PATH=$DIRACBIN:$PATH
+( echo $PATH | grep -q $DIRACSCRIPTS ) || export PATH=$DIRACSCRIPTS:$PATH
+
+( echo $LD_LIBRARY_PATH | grep -q $DIRACLIB ) || export LD_LIBRARY_PATH=$DIRACLIB:$LD_LIBRARY_PATH
+( echo $LD_LIBRARY_PATH | grep -q $DIRACLIB/mysql ) || export LD_LIBRARY_PATH=$DIRACLIB/mysql:$LD_LIBRARY_PATH
+
+( echo $PYTHONPATH | grep -q $DIRAC ) || export PYTHONPATH=$DIRAC:$PYTHONPATH
+
+export PATH=$HOME/bin:$PATH
+
+# Gfal2 configuration and plugins
+export GFAL_CONFIG_DIR=${DIRAC}/${DIRACPLAT}/etc/gfal2.d
+export GFAL_PLUGIN_DIR=${DIRACLIB}/gfal2-plugins
+
+# new OpenSSL version require OPENSSL_CONF to point to some accessible location
+export OPENSSL_CONF=/tmp
+
+# IPv6 support
+export GLOBUS_IO_IPV6=FALSE
+export GLOBUS_FTP_CLIENT_IPV6=FALSE
+
+# ARC Computing Element
+export ARC_PLUGIN_PATH=${DIRACLIB}/arc
+

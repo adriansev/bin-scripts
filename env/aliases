@@ -60,7 +60,7 @@ alias job.status_c='glite-ce-job-status -l job_status.log -i jobid'
 alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
 
 # DIRAC
-alias dirac_enable='source $HOME/DIRAC/bashrc'
+alias dirac_enable='source $HOME/bin/env/bashrc_dirac_auger'
 alias dirac_myproxy='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_user -M && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
 alias dirac_myproxy_prod='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_prod -M && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
 
