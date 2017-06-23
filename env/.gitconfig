@@ -13,9 +13,9 @@
     rebase = true
 
 [alias]
-    cm = ’commit’
-    co = ’checkout’
-    st = ’status’
+    cm = 'commit'
+    co = 'checkout'
+    st = 'status'
 
     lognice = log --graph --decorate --pretty=oneline --abbrev-commit --all
     logbranch = log --graph --decorate --pretty=oneline --abbrev-commit --first-parent --no-merges
