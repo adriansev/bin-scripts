@@ -4,7 +4,7 @@ void edit(char *file)
 {
    char s[64], *e;
    if (!strcmp(gSystem->GetName(), "WinNT")) {
-      if (e = getenv("EDITOR"))
+      if ( (e = getenv("EDITOR")) )
          sprintf(s, "start %s %s", e, file);
       else
          sprintf(s, "start notepad %s", file);
@@ -34,20 +34,20 @@ void dir(char *path=0)
 }
 
 //______________________________________________________________________________
-char *pwd()
+const char* pwd()
 {
     return gSystem->WorkingDirectory();
 }
 
 //______________________________________________________________________________
-char *cd(char *path=0)
+const char* cd (char *path=0)
 {
- if (path)
-   gSystem->ChangeDirectory(path);
+ if (path) { gSystem->ChangeDirectory(path); }
  return pwd();
 }
 
 //______________________________________________________________________________
+/*
 void bexec2(char *macro)
 {
 printf("in bexec dir=%s\n",dir.Data());
@@ -64,3 +64,6 @@ printf("in bexec dir=%s\n",dir.Data());
    if (tmacro2) tmacro2->SetTextColor(2);
    bench->Modified(); bench->Update();
 }
+*/
+
+
