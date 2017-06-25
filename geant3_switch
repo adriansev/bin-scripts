@@ -5,12 +5,12 @@ v6="geant3-r6"
 
 cd $tools/alice
 
-if [ "$1" = "r5" ]
-then
+if [ "$1" = "r5" ] ; then
+  root_switch r5
   unlink geant3
   ln -s ${v5} geant3
-elif [ "$1" = "r6" ]
-then
+elif [ "$1" = "r6" ] ; then
+  root_switch r6
   unlink geant3
   ln -s ${v6} geant3
 else
