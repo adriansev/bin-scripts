@@ -1,0 +1,44 @@
+#!/bin/bash
+
+ALIROOT_TRUNK="/home.hdd/physics-tools/alice/trunk-src/"
+ALIROOTSRC="/home.hdd/physics-tools/alice/v5-AN-latest-src/"
+ALIPHYSSRC="/home.hdd/physics-tools/alice/physics-src/"
+GEANT3SRC="/home.hdd/physics-tools/alice/geant3-src/"
+ROOTSRC="/home.hdd/physics-tools/root/root-mygit"
+
+git_branch_name () { git symbolic-ref --short -q HEAD; }
+
+cd ${GEANT3SRC}
+CURRENT_BRANCH=$(git_branch_name)
+git checkout master
+git fetch -t --all && git pull --rebase
+git gc --aggressive
+git checkout ${CURRENT_BRANCH}
+
+cd ${ROOTSRC}
+CURRENT_BRANCH=$(git_branch_name)
+git checkout master
+./sync_upstream
+git push
+git checkout ${CURRENT_BRANCH}
+git gc --aggressive
+
+cd ${ALIROOTSRC}
+git gc --aggressive
+
+cd ${ALIROOT_TRUNK}
+CURRENT_BRANCH=$(git_branch_name)
+git checkout master
+./sync_upstream
+git push
+git checkout ${CURRENT_BRANCH}
+git gc --aggressive
+
+cd ${ALIPHYSSRC}
+CURRENT_BRANCH=$(git_branch_name)
+git checkout master
+./sync_upstream
+git push
+git checkout ${CURRENT_BRANCH}
+git gc --aggressive
+
