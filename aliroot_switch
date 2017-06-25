@@ -1,9 +1,9 @@
 #!/bin/bash
 
-ALIROOT_R5="v5-AN"
+ALIROOT_R5="v5-AN-r5"
 ALIROOT_R6="v5-AN-r6"
 
-ALIPHYS_R5="physics"
+ALIPHYS_R5="physics-r5"
 ALIPHYS_R6="physics-r6"
 
 cd $tools/alice
