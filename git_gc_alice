@@ -8,37 +8,47 @@ ROOTSRC="/home.hdd/physics-tools/root/root-mygit"
 
 git_branch_name () { git symbolic-ref --short -q HEAD; }
 
+echo cd ${GEANT3SRC}
 cd ${GEANT3SRC}
 CURRENT_BRANCH=$(git_branch_name)
 git checkout master
 git fetch -t --all && git pull --rebase
 git gc --aggressive
 git checkout ${CURRENT_BRANCH}
+echo
 
+echo cd ${ROOTSRC}
 cd ${ROOTSRC}
 CURRENT_BRANCH=$(git_branch_name)
 git checkout master
 ./sync_upstream
 git push
-git checkout ${CURRENT_BRANCH}
 git gc --aggressive
+git checkout ${CURRENT_BRANCH}
+echo
 
+echo cd ${ALIROOTSRC}
 cd ${ALIROOTSRC}
 git gc --aggressive
+echo
 
+echo cd ${ALIROOT_TRUNK}
 cd ${ALIROOT_TRUNK}
 CURRENT_BRANCH=$(git_branch_name)
 git checkout master
 ./sync_upstream
 git push
-git checkout ${CURRENT_BRANCH}
 git gc --aggressive
+git checkout ${CURRENT_BRANCH}
+echo
 
+echo cd ${ALIPHYSSRC}
 cd ${ALIPHYSSRC}
 CURRENT_BRANCH=$(git_branch_name)
 git checkout master
 ./sync_upstream
 git push
-git checkout ${CURRENT_BRANCH}
 git gc --aggressive
+git checkout ${CURRENT_BRANCH}
+echo
 
