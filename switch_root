@@ -1,0 +1,19 @@
+#!/bin/bash
+
+ROOT5="v5-34_reldbg"
+ROOT6="v6-00"
+
+cd $tools/root
+
+if [ "$1" = "r5" ]
+then
+  unlink root
+  ln -s ${ROOT5} root
+elif [ "$1" = "r6" ]
+then
+  unlink root
+  ln -s $ROOT6 root
+else
+  echo "r5, r6"
+fi
+
