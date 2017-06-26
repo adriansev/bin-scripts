@@ -69,10 +69,10 @@ ROOT_INSTALL=$tools/root/root
 
 # if ROOT 5 disable ROOT 6 options
 if (( ROOT_VER_MAJOR == 5 )) ; then
-  root_switch r5
+  switch_root r5
   ADDITIONAL_CMAKE_OPT="${ROOT5_CMAKE_OPT}"
 else
-  root_switch r6
+  switch_root r6
   ADDITIONAL_CMAKE_OPT="${ROOT6_CMAKE_OPT}"
 fi
 

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ls -la $ROOTSYS/../root
+ls -la ${ALICE}/geant3
+ls -la ${ALICE}/aliphysics
+ls -la ${ALICE}/aliroot
+
+
+
+
+

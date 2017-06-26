@@ -5,9 +5,9 @@ ROOT_VER_MAJOR=${ROOT_VER:0:1}
 NCPU=$(root-config --ncpu)
 
 if (( ROOT_VER_MAJOR == 5 )) ; then
-  aliroot_switch r5
+  switch_aliroot r5
 else
-  aliroot_switch r6
+  switch_aliroot r6
 fi
 
 echo -e "ROOT version is : $ROOT_VER\n"
