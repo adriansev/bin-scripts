@@ -9,7 +9,7 @@ void edit(char *file)
       else
          sprintf(s, "start notepad %s", file);
    } else {
-      if (e = getenv("EDITOR"))
+      if ( (e = getenv("EDITOR")) )
          sprintf(s, "%s %s", e, file);
       else
          sprintf(s, "xterm -e vi %s &", file);
@@ -17,6 +17,7 @@ void edit(char *file)
    gSystem->Exec(s);
 }
 
+/*
 //______________________________________________________________________________
 void ls(char *path=0)
 {
@@ -24,7 +25,9 @@ void ls(char *path=0)
    if (path) strcat(s,path);
    gSystem->Exec(s);
 }
+*/
 
+/*
 //______________________________________________________________________________
 void dir(char *path=0)
 {
@@ -32,6 +35,8 @@ void dir(char *path=0)
    if (path) strcat(s,path);
    gSystem->Exec(s);
 }
+*/
+
 
 //______________________________________________________________________________
 const char* pwd()
