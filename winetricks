@@ -19497,3 +19497,40 @@ then
 fi
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
+                  WINETRICKS_CURMENU=main
+                        ;;
+                    esac
+                    ;;
+                esac
+            fi
+        done
+        ;;
+    *)
+        winetricks_stats_init
+        # Command-line case
+        winetricks_detect_sudo
+        # User gave command-line arguments, so just run those verbs and exit
+        for verb
+        do
+            case $verb in
+            *.verb)
+                # Load the verb file
+                # shellcheck disable=SC1090
+                case $verb in
+                    */*) . "$verb" ;;
+                    *) . ./"$verb" ;;
+                esac
+                # And forget that the verb comes from a file
+                verb="$(echo "$verb" | sed 's,.*/,,;s,.verb,,')"
+                ;;
+            esac
+            execute_command "$verb"
+        done
+        ;;
+
+    esac
+
+    winetricks_stats_report
+fi
+
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
