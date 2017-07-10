@@ -1,7 +1,9 @@
+#!/bin/bash
+
 storage_hosts="rd storage02 storage03 storage04 storage05 storage06 storage07"
 for host in $storage_hosts ; do
   echo $host
-  ssh $host "$1"
+  ssh_run_cmd $host "$@"
   echo
 done
 
