@@ -1,33 +1,33 @@
 # ROOT Environment settings are handled via the class TEnv. To see which values are active do: gEnv->Print().
 
-# Path used by dynamic loader to find shared libraries. This path will be appended to the LD_LIBRARY_PATH
+# Path used by dynamic loader to find shared libraries. This path will be appended to the (DY)LD_LIBRARY_PATH on Unix and to PATH on Windows.
+# Paths are different for Unix and Windows. The example shows the defaults for all ROOT applications for either Unix or Windows.
 Unix.*.Root.DynamicPath:    .:$(CGAL_DIR)/lib:$(FASTJET)/lib:$(ROOTSYS)/lib:$(ALICE_ROOT)/lib:$(ALICE_PHYSICS)/lib
 
-# Path used to find macros.
-Unix.*.Root.MacroPath:      .:$(ROOTSYS)/macros:
+# Path used to find macros. Paths are different for Unix and Windows. The example shows the defaults for all ROOT applications for either Unix or Windows.
+Unix.*.Root.MacroPath:      .
 
-# Path used to find plugin macros.
-Unix.*.Root.PluginPath:      :$(ROOTSYS)/etc/plugins:
+# Path used to find plugin macros. Paths are different for Unix and Windows. The example shows the defaults for all ROOT applications for either Unix or Windows.
+#Unix.*.Root.PluginPath:     $(ROOTSYS)/etc/plugins
 
 # Path where to look for TrueType fonts.
 Unix.*.Root.UseTTFonts:     true
-*.*.Root.TTFontPath:        $(ROOTSYS)/fonts
+#*.*.Root.TTFontPath:        $(ROOTSYS)/fonts
 
 # Use thread library (if exists).
 Unix.*.Root.UseThreads:     false
 
-# Select the compression algorithm (0=old zlib, 1=new zlib) ; Note, setting this to `0' may be a security vulnerability.
+# Select the compression algorithm (0=old zlib, 1=new zlib) Note, setting this to `0' may be a security vulnerability.
 Root.ZipMode:            1
 
 # Show where item is found in the specified path.
-Root.ShowPath:           false
+Root.ShowPath:           true
 
-# Activate malloc/new, free/delete calls via the TMemStat class the parameter buffersize is the number of calls to malloc
-# or free that can be stored in one memory buffer. when the buffer is full, the calls to malloc/free pointing to the same location
-# are eliminated and not written to the final Tree. The default value 100000 is such that between 50 and 90% of the calls
-# are eliminated depending on the application. the parameter TMemStat.maxcalls is the maximum number of new/delete calls to be monitored
-# 5 million calls is a reasonable number. if your code has been compiled with -fno-omit-frame-pointer you can specify gnubuiltin for Root.TMemStat.system.
-# In this case the backtrace is much faster.
+# Activate malloc/new, free/delete calls via the TMemStat class the parameter buffersize is the number of calls to malloc or free that can be stored in one memory buffer.
+# when the buffer is full, the calls to malloc/free pointing to the same location are eliminated and not written to the final Tree.
+# The default value 100000 is such that between 50 and 90% of the calls are eliminated depending on the application.
+# the parameter TMemStat.maxcalls is the maximum number of new/delete calls to be monitored 5 million calls is a reasonable number.
+# if your code has been compiled with -fno-omit-frame-pointer you can specify gnubuiltin for Root.TMemStat.system. In this case the backtrace is much faster.
 Root.TMemStat:            0
 Root.TMemStat.buffersize: 100000
 Root.TMemStat.maxcalls:   5000000
@@ -52,8 +52,7 @@ Root.Stacktrace:         yes
 # Allow for a customized backtrace script.
 #Root.StacktraceScript:   $(ROOTSYS)/etc/gdb-backtrace.sh
 
-# Allow for a customized backtrace messages (e.g. referencing your own project bug tracking system). Change this message rather then the entire script.
-# The % characters will be replaced by newlines.
+# Allow for a customized backtrace messages (e.g. referencing your own project bug tracking system). Change this message rather then the entire script. The % characters will be replaced by newlines.
 #Root.StacktraceMessage:  The lines below might hint at the cause of the crash.%If they do not help you then please submit a bug report at%http://myproject/bugs. Please post the ENTIRE stack trace%from above as an attachment in addition to anything else%that might help us fixing this issue.
 
 # Ignore errors lower than the ignore level. Possible values: Print, Info, Warning, Error, Break, SysError and Fatal.
@@ -65,9 +64,11 @@ X11.FindBestVisual:      yes
 X11.UseXft:              no
 X11.XInitThread:         yes
 
-# Settings for Cocoa backend. The EnableAntiAliasing flag defines if you want to have anti-aliased
-# lines/polygon in a canvas/pad. Possible values: yes (enable AA), no (disable AA) and auto (use AA only on Retina displays)
+# Settings for Cocoa backend. The EnableAntiAliasing flag defines if you want to have anti-aliased lines/polygon in a canvas/pad. Possible values:
+# yes (enable AA), no (disable AA) and auto (use AA only on Retina displays)
+# There is a special flag EnableFillAreaAntiAliasing for fill area which is "no" by default because antialiasing for fill area may create artificial meshes on on plots
 Cocoa.EnableAntiAliasing: yes
+Cocoa.EnableFillAreaAntiAliasing: no
 
 # Default editor.
 Unix.*.Editor:           mcedit
@@ -78,13 +79,15 @@ Unix.*.Editor:           mcedit
 # Default Fitter (current choices are Minuit and Fumili).
 Root.Fitter:             Minuit
 
+# Enable (default) or disable the RooFit banner printing.
+RooFit.Banner:  no
+
 # Specify list of file endings which TTabCom (TAB completion) should ignore.
 #TabCom.FileIgnore:       .cpp:.h:.cmz
 
-# TCanvas specific settings. Opaque move and resize show full pad during the operation instead of only the outline. In case you have a really very
-# old graphics card turn these options off. UseScreenFactor=true means to size canvas according to size of screen, so a canvas still looks good on a
-# low resolution laptop screen without having to change canvas size in macros. HighLightColor 2 = red. ShowEventStatus allows the event status bar to
-# be turned on by default. AutoExec allows TExec objects to be executed on mouse and key events.
+# TCanvas specific settings. Opaque move and resize show full pad during the operation instead of only the outline. In case you have a really very old graphics card turn these options off.
+# UseScreenFactor=true means to size canvas according to size of screen, so a canvas still looks good on a low resolution laptop screen without having to change canvas size in macros.
+# HighLightColor 2 = red. ShowEventStatus allows the event status bar to be turned on by default. AutoExec allows TExec objects to be executed on mouse and key events.
 Canvas.MoveOpaque:          true
 Canvas.ResizeOpaque:        true
 Canvas.ShowGuideLines:      true
@@ -100,8 +103,7 @@ Canvas.PrintDirectory:      .
 # Set the default precision when writing floating point numbers in TCanvas::SaveSource
 Canvas.SavePrecision:       7
 
-# Set the default TStyle
-# Predefined styles are: Plain, Bold, Video, Pub, Classic, Modern.
+# Set the default TStyle Predefined styles are: Plain, Bold, Video, Pub, Classic, Modern.
 Canvas.Style:               Modern
 
 # Default file format to be used in the Canvas "Save As" dialog
@@ -126,16 +128,21 @@ Hist.Binning.3D.z:          100
 Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
 
+# Default histogram precision for TTree::Draw(). It can be 'float"or "double"
+Hist.Precision.1D:           double
+Hist.Precision.2D:           double
+Hist.Precision.3D:           double
+
 # Default statistics parameters names.
 Hist.Stats.Entries:          Entries
 Hist.Stats.Mean:             Mean
 Hist.Stats.MeanX:            Mean x
 Hist.Stats.MeanY:            Mean y
 Hist.Stats.MeanZ:            Mean z
-Hist.Stats.RMS:              RMS
-Hist.Stats.RMSX:             RMS x
-Hist.Stats.RMSY:             RMS y
-Hist.Stats.RMSZ:             RMS z
+Hist.Stats.StdDev:           Std Dev
+Hist.Stats.StdDevX:          Std Dev x
+Hist.Stats.StdDevY:          Std Dev y
+Hist.Stats.StdDevZ:          Std Dev z
 Hist.Stats.Underflow:        Underflow
 Hist.Stats.Overflow:         Overflow
 Hist.Stats.Integral:         Integral
@@ -168,7 +175,7 @@ Gui.Backend:                native
 Gui.Factory:                native
 
 # GUI style: modern (flat popup menus), modern-flat (flat frames), or classic (win 95 style)
-Gui.Style:                  modern
+Gui.Style:                  modern-flat
 Gui.DefaultFont:            -*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Gui.MenuFont:               -*-helvetica-medium-r-*-*-12-*-*-*-*-*-iso8859-1
 Gui.MenuHiFont:             -*-helvetica-bold-r-*-*-12-*-*-*-*-*-iso8859-1
@@ -186,7 +193,8 @@ Gui.DocumentForegroundColor: black
 Gui.TooltipBackgroundColor:  LightYellow
 Gui.TooltipForegroundColor:  black
 
-Gui.IconPath:                $(HOME)/icons:$(ROOTSYS)/icons:.
+#Unix.*.Gui.IconPath:         .:$(HOME)/icons:$(ROOTSYS)/icons:
+
 Gui.MimeTypeFile:            $(HOME)/.root.mimes
 
 # If above does not exists defaults to this:
@@ -196,7 +204,8 @@ Gui.MimeTypeFile:            $(HOME)/.root.mimes
 Browser.Name:                TRootBrowser
 
 # Browser Options (plugins)
-# F: File browser E: Text Editor H: HTML browser C: Canvas I: I/O redirection P: Proof G: GL viewer
+# F: File browser E: Text Editor H: HTML browser
+# C: Canvas I: I/O redirection P: Proof G: GL viewer
 Browser.Options:             FCEI
 
 # Can be either small, big, list, details
@@ -207,11 +216,14 @@ Browser.SortBy:              name
 Browser.GroupView:           10000
 Browser.ShowHidden:          no
 Browser.AutoThumbnail:       yes
+
+# Set the ExpandDirectories option to "no" to prevent expanding the parent directory tree (for example on nfs)
+Browser.ExpandDirectories    yes
+
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
-# OpenGL options (defaults are shown)
-# Default user interaction model for 3D view manipulation assumes that user controls the scene (rotates or moves it).
+# OpenGL options (defaults are shown) Default user interaction model for 3D view manipulation assumes that user controls the scene (rotates or moves it).
 # Change this to 'yes' to switch to viewer-centric model where controls "move" the viewer (or camera).
 OpenGL.EventHandler.ViewerCentricControls:  no
 
@@ -223,8 +235,8 @@ OpenGL.EventHandler.MouseWheelFactor:       1.0
 # Area around mouse cursor used to detect underlying objects for selection and hihglight.
 OpenGL.PickingRadius:                       3.0
 
-# Additional scaling factor for point-sizes and line-widths. The default value "native" sets this to 2.0 when running on mac in retina mode and 1.0
-# otherwise. Any floating-point number can be set but values above 4.0 do not make much sense.
+# Additional scaling factor for point-sizes and line-widths. The default value "native" sets this to 2.0 when running on mac in retina mode and 1.0 otherwise.
+# Any floating-point number can be set but values above 4.0 do not make much sense.
 OpenGL.PointLineScalingFactor:              "native"
 
 # Default scaling of lines used for drawing of polygons in wireframe mode ('w'). This can be set for every viewer in GLViewer GUI editor.
@@ -240,8 +252,7 @@ OpenGL.SavePicturesViaFBO:                  yes
 # If saving via FBO fails, fallback to using back-buffer for image capture.
 OpenGL.SavePictureFallbackToBB:             yes
 
-# Enable multi-sampling (full-scene antialisaing), if supported.
-# Set to 1 to use lowest available settings or a higher integer to request a specific number of samples per pixel (4 (linux) or 8 (mac) is reasonable).
+# Enable multi-sampling (full-scene antialisaing), if supported. Set to 1 to use lowest available settings or a higher integer to request a specific number of samples per pixel (4 (linux) or 8 (mac) is reasonable).
 OpenGL.Framebuffer.Multisample:             0
 
 # Flag to set CanvasPreferGL via gStyle
@@ -251,16 +262,17 @@ OpenGL.CanvasPreferGL:                      0
 Eve.Viewer.HideMenus:    1
 
 # Rint (interactive ROOT executable) specific alias, logon and logoff macros.
-Rint.Load:               ~/rootalias.C
-Rint.Logon:              ~/rootlogon.C
-Rint.Logoff:             ~/rootlogoff.C
+Rint.Load:               rootalias.C
+Rint.Logon:              rootlogon.C
+Rint.Logoff:             rootlogoff.C
 
 ### Prompt colors
 # Whether to use default colors for light-on-dark (i.e. reverse) color scheme:
 #Rint.ReverseColor:        no
 
-# Prompt colors: #rgb or #rrggbb or color names:
-#  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white", "default" will keep the current terminal color.
+# Prompt colors: %rgb or %rrggbb or color names:
+#  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"
+#  "default" will keep the current terminal color.
 # can be combined with string containing "under" and "bold".
 #Rint.TypeColor:          bold blue
 #Rint.BracketColor:       bold green
@@ -268,30 +280,28 @@ Rint.Logoff:             ~/rootlogoff.C
 #Rint.PromptColor:        default
 #Rint.TabComColor:        magenta
 
-
 ### History
 # Record session commands, set to "-" to turn off command recording.
 Rint.History:            $(HOME)/.root_hist
 
 # History file size, once HistSize is reached remove all but HistSave entries, set to 0 to turn off command recording.
-
 # Can be overridden by environment variable ROOT_HIST=size[:save], the ":save" part is optional.
-Rint.HistSize:         500000
+Rint.HistSize:         2500
 
 # Set to -1 for sensible default (80% of HistSize), set to 0 to disable history.
-Rint.HistSave:         -1
+# Rint.HistSave:         400
 
 # Print a single line welcome message instead of the default verbose version
-# Rint.WelcomeLite:      no
+Rint.WelcomeLite:      no
 
 # When the interactive ROOT starts, it can automatically load some frequently used includes. However, this introduces several overheads
 #  - A long list of CINT and system files will be kept open during the session
 #  - The initialisation takes more time (noticeable when using gdb or valgrind)
-#  - Memory overhead of about 5 Mbytes (1/3 of the base ROOT executable) when including <vector>
+#  - Memory overhead of about 5 Mbytes (1/3 of the base ROOT executable) when
+#    including <vector>
 # You can set the variable below to 0 to disable the loading of these includes at startup.
-# You can set the variable to 1 (default) to load only <iostream> , <string> and <RTypesCint.h>.
-# You can set it to 2 to load in addition <vector> and <pair>.
-# We strongly recommend setting the variable to 2 if your scripts include <vector> and you execute your scripts multiple times.
+# You can set the variable to 1 (default) to load only <iostream>, <string> and <DllImport.h>.
+# You can set it to 2 to load in addition <vector> and <utility>.  We strongly recommend setting the variable to 2 if your scripts include <vector> and you execute your scripts multiple times.
 Rint.Includes:      2
 
 # ACLiC customization.
@@ -302,13 +312,14 @@ ACLiC.Linkdef:          _linkdef
 #ACLiC.BuildDir:        /where/I/would/like/my/compiled/scripts
 
 # Add additional include directives for ACLiC compilations.
-ACLiC.IncludePaths:     -I$(FASTJET)/include -I$(ALICE_ROOT)/include -I$(ALICE_PHYSICS)/include
+#ACLiC.IncludePaths:     -I/where/the/includes/are
 
 # Select whether and how ACLiC tracks the dependency of the libraries.
 #  0 - No tracking
 #  1 - [Default] New libraries are explicitly linked to all currently loaded libraries
 #  2 - Generate and use rootmap file for each library
 #  3 - Generate rootmap file for each library _and_ explicitly link to the needed libraries.
+# On Windows, the default is 3
 #ACLiC.LinkLibs:      1
 
 # PROOF related variables
@@ -326,18 +337,15 @@ ACLiC.IncludePaths:     -I$(FASTJET)/include -I$(ALICE_ROOT)/include -I$(ALICE_P
 # Proof.GdbHook: 0
 #
 # To control the number of processes in PROOF-Lite (0 disables PROOF-Lite). This setting cannot be overwritten in the user rootrc files.
-# ProofLite.MaxWorkers: -1
-
-## The sandbox location is controlled by the ROOT configuration variable 'ProofLite.Sandbox'; the default is '~/.proof'.
-ProofLite.Sandbox: /home.hdd/adrian/proofbox
+ProofLite.MaxWorkers: -1
 
 # On the master enable parallel startup of workers using threads
-Proof.ParallelStartup: no
-
-Proof.StatsHist:       yes
-Proof.StatsTrace:      yes
-Proof.SlaveStatsTrace: yes
-
+# Proof.ParallelStartup: no
+#
+# Proof.StatsHist:       no
+# Proof.StatsTrace:      no
+# Proof.SlaveStatsTrace: no
+#
 # Proof.CondorHome:     /opt/condor
 # Proof.CondorConfig:   /opt/condor/etc/condor_config
 
@@ -352,10 +360,10 @@ Proofd.Authentication:  0
 
 # Connection is shutdown at timeout expiration. Timeout is in seconds.
 # Negotiation cannot be attempted at low level (i.e. inside TAuthenticate::Authenticate()) because of synchronization problems with the server.
-# At higher level, TAuthenticate::HasTimedOut() gives information about timeout:
-# 0 = no timeout; 1 = timeout, no methods left; 2 = timeout, still methods to be tried
-# Caller should decide about an additional attempt. Timeout disabled (< 0) by default.
-# Can be changed on-the-fly with the static method TAuthenticate::SetTimeOut(to_value)
+# At higher level, TAuthenticate::HasTimedOut() gives information about timeout: 0 = no timeout; 1 = timeout, no methods left;
+# 2 = timeout, still methods to be tried .
+# Caller should decide about an additional attempt.
+# Timeout disabled (< 0) by default. Can be changed on-the-fly with the static method TAuthenticate::SetTimeOut(to_value)
 # Auth.Timeout:        -1
 
 # Password dialog box. Set to 0 if you do not want a dialog box to be popped-up when a password is requested. Default is 1.
@@ -365,9 +373,8 @@ Proofd.Authentication:  0
 Proofd.SendSRPPwd:      0
 
 # Set this to 1 to use SSH authentication in PROOF servers (Master-to-Slave or Slaves-to-DataServers). This is switched
-# off by default because credentials forwarding for SSH is not controlled by the system; however the user may have other
-# ways to guarantee it, so it may want to switch it on.
-ProofServ.UseSSH:       1
+# off by default because credentials forwarding for SSH is not controlled by the system; however the user may have other ways to guarantee it, so it may want to switch it on.
+ProofServ.UseSSH:       0
 
 # Default login name (if not defined is taken from $(HOME)).
 #UsrPwd.Login:           qwerty
@@ -392,7 +399,8 @@ Krb5.ReUse:           no
 Globus.ReUse:         yes
 SSH.ReUse:            yes
 
-# Duration validity of the sec context for UsrPwd, SRP and SSH. Format:  <hours>:<minutes>  (default 24:00)
+# Duration validity of the sec context for UsrPwd, SRP and SSH.
+# Format:  <hours>:<minutes>  (default 24:00)
 #UsrPwd.Valid:     24:00
 #SRP.Valid:        24:00
 #SSH.Valid:        24:00
@@ -410,70 +418,65 @@ Globus.ProxyKeyBits:     1024
 #SSH.ExecDir:      /usr/bin
 
 # In case of error, SSH returns 1 (or 256 = 0x100).
-# To trap those errors for which one should retry, error printouts must be parsed; any substring found under the Env SSH.ErrorRetry
-# triggers a retry condition; strings can be added here in the form (including double quotes):
+# To trap those errors for which one should retry, error printouts must be parsed; any substring found under the Env SSH.ErrorRetry triggers a retry condition;
+# strings can be added here in the form (including double quotes):
 #              +SSH.ErrorRetry:     "<error_string>"
 # This is what one usually gets if the server has reached the maximum number of sshd daemons (defined by MaxStartups in sshd_config);
 # this is a typical case in which one should retry.
 SSH.ErrorRetry:   "Connection closed by remote host"
-
 # Max number of retries for SSH in case of retry error (see above).
 SSH.MaxRetry:     100
 
-# Type of key to be used for RSA encryption: 0 = local; 1 = SSL (default if openssl available).
+# Type of key to be used for RSA encryption:
+# 0 = local; 1 = SSL (default if openssl available).
 RSA.KeyType:  1
 
-# In case of 'RSA.KeyType: 1' this specifies the number of bits to be used for the Blowfish key used to encrypt the exchanged information
-# Default 256, minimum 128, maximum 15912.
+# In case of 'RSA.KeyType: 1' this specifies the number of bits to be used for the Blowfish key used to encrypt the exchanged information Default 256, minimum 128, maximum 15912.
 #SSL.BFBits:   256
 
 # Server authentication in TServerSocket.
-
+#
 # General: file with server access rules
 #SrvAuth.DaemonRc: /etc/root/system.daemonrc
-
-
+#
 # UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
 #SrvAuth.CheckHostsEquivalence: 1
-
+#
 # SRP: pass file (default $HOME/.srootdpass).
 #SrvAuth.SRPpassfile:  $HOME/.srootdpass
-
+#
 # Globus/GSI: hostcert configuration file.
 #SrvAuth.HostCert:  /etc/root/hostcert.conf
-
 # Globus/GSI: gridmap file.
 #SrvAuth.GridMap:  /etc/grid-security/grid-mapfile
-
+#
 # SSH: port for the sshd daemon.
-SrvAuth.SshdPort:  60000
+#SrvAuth.SshdPort:  22
 
 # Force file opening via TNetFile (TXNetFile) if a hostname is specified in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
 #TFile.ForceRemote:  yes
 
-# Control the action to be taken when opening an existing ROOT file which looks corrupted;
-# by default an attempt to recover the file is made; if this variable is set to no the file is just flagged as zombie.
+# Control the action to be taken when opening an existing ROOT file which looks corrupted; by default an attempt to recover the file is made;
+# if this variable is set to no the file is just flagged as zombie.
 TFile.Recover:      yes
 
 # Control the usage of asynchronous reading capabilities eventually supported by the underlying TFile implementation. Default is yes.
-TFile.AsyncReading:     yes
+#TFile.AsyncReading:     no
 
 # Control the usage of asynchronous prefetching capabilities irrespective of the TFile implementation. By default it is disabled.
-TFile.AsyncPrefetching:   yes
+#TFile.AsyncPrefetching:   no
 
 # Enable cross-protocol redirects
 TFile.CrossProtocolRedirects:  yes
 
-# List of S3 servers known to support multi-range HTTP GET requests. This is the value sent back by the S3 server in the 'Server:' header
-# of the HTTP response. Please note that Amazon S3 servers do not support this feature.
-# Add one line per server type with syntax: +TS3WebFile.Root.MultiRangeServer: Mucura
+# List of S3 servers known to support multi-range HTTP GET requests. This is the value sent back by the S3 server in the 'Server:' header of the HTTP response.
+# Please note that Amazon S3 servers do not support this feature. Add one line per server type with syntax:
+# +TS3WebFile.Root.MultiRangeServer: Mucura
 TS3WebFile.Root.MultiRangeServer:  Huawei OBS
 
-# Special cases for the TUrl parser, where the special cases are parsed in a protocol + file part, like rfio:host:/path/file.root,
-# castor:/path/file.root or /alien/path/file.root.
-# In case the file namespace descriptor ends with - the namespace is not a part of the filename.
-# Extend in private .rootrc with a +Url.Special line.
+# Special cases for the TUrl parser, where the special cases are parsed in a protocol + file part, like rfio:host:/path/file.root, castor:/path/file.root or /alien/path/file.root.
+# In case the file namespace descriptor ends with - the namespace is not a part of the filename. Extend in private .rootrc with a +Url.Special line.
 Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 +Url.Special:        /alien/- /castor/
 
@@ -484,116 +487,62 @@ Url.Special:         file: rfio: hpss: castor: gfal: dcache:
 # XProof.ReadTimeout: 10
 
 # The following env vars are handled by TXNetFile and related classes (module netx, libNetx.so).
-
-# maximum time to wait before server's response on a connect [120 s]
-# XNet.ConnectTimeout
-
-# maximum time to wait before considering a read/write failure [300 s]
-# XNet.RequestTimeout
-
-# sequence of TRegexp regular expressions separated by a |.
-# A domain is granted access to for the first connection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.ConnectDomainAllowRE
-
-# A domain is denied access to for the first connection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.ConnectDomainDenyRE
-
-# A domain is granted access to for a redirection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.RedirDomainAllowRE
-
-# A domain is denied access to for a redirection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
-# XNet.RedirDomainDenyRE
-
+# XNet.ConnectTimeout   - maximum time to wait before server's response on a connect [120 s]
+# XNet.RequestTimeout   - maximum time to wait before considering a read/write failure [300 s]
+# XNet.ConnectDomainAllowRE   - sequence of TRegexp regular expressions separated by a |. A domain is granted access to for the first connection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.ConnectDomainDenyRE    - sequence of TRegexp regular expressions separated by a |. A domain is denied access to for the first connection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.RedirDomainAllowRE     - sequence of TRegexp regular expressions separated by a |. A domain is granted access to for a redirection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
+# XNet.RedirDomainDenyRE      - sequence of TRegexp regular expressions separated by a |. A domain is denied access to for a redirection if it matches one of these regexps. Example: slac.stanford.edu|pd.infn.it|fe.infn.it
 # XNet.MaxRedirectCount - maximum number of redirections from server [16]
-
-# log verbosity level (0=nothing, 1=messages of interest to the user, 2=messages of interest to the developers (includes also user messages),
-# 3=dump of all sent/received data buffers (includes also user and developers messages). 4=dump also the data received/sent at the lower level [0]
-# XNet.Debug
-
-# sleep-time before going back to the load balancer (or rebouncing to the same failing host) after a read/write error [5 s]
-# XNet.ReconnectWait
-
-# read ahead value, in bytes, to use with the XrdClient internal caching scheme
-# Generally not much useful together with the TFile cache, which will disable the readahead as soon it starts operating,
-# i.e. requesting async data through XrdClient. Note that we cannot suppose that the TFile cache
-# will start working at the beginning of the data processing. Setting a read ahead size > 0 will involve this phase,
-# sometimes it could be an advantage, sometimes not. If > 0, TXNetFile will switch it on again if it sees that
-# synchronous ReadBuffer requests are issued again
+# XNet.Debug            - log verbosity level (0=nothing, 1=messages of interest to the user, 2=messages of interest to the developers (includes also user messages), 3=dump of all sent/received data buffers (includes also user and developers messages). [0] 4=dump also the data received/sent at the lower level
+# XNet.ReconnectWait    - sleep-time before going back to the load balancer (or rebouncing to the same failing host) after a read/write error [5 s]
+# XNet.ReadAheadSize    - read ahead value, in bytes, to use with the XrdClient internal caching scheme
+#                         Generally not much useful together with the TFile cache, which will disable the readahead as soon it starts operating, i.e. requesting async data through XrdClient.
+#                         Note that we cannot suppose that the TFile cache will start working at the beginning of the data processing.
+#                         Setting a read ahead size > 0 will involve this phase, sometimes it could be an advantage, sometimes not. If > 0, TXNetFile will switch it on again if it sees that synchronous ReadBuffer requests are issued again
 XNet.ReadAheadSize: 0
 
-# Default read cache size inside XrdClient, in bytes. TXNetFile/TFileReadCache automatically sets this to a
-# 'correct' value when needed. Set a value here to override a *minimum* size. It is not preallocated.
-# TFile/TXNetFile can anyway make it grow automatically when needed.
+# XNet.ReadCacheSize    - Default read cache size inside XrdClient, in bytes. TXNetFile/TFileReadCache automatically sets this to a 'correct' value when needed.
+#                         Set a value here to override a *minimum* size. It is not preallocated. TFile/TXNetFile can anyway make it grow automatically when needed.
 XNet.ReadCacheSize: 10000000
 
-# Number of connect retries to the first host
-# XNet.FirstConnectMaxCnt
+# XNet.FirstConnectMaxCnt - Number of connect retries to the first host
 
-# Print a particular string the developers can choose to quickly recognize the version at run time [0]
-# XNet.PrintTAG
+# XNet.PrintTAG         - Print a particular string the developers can choose to quickly recognize the version at run time [0]
 
-# Number of additional TCP streams to use per each physical connection 0=monostream mode 1-15=multistream mode
+# XNet.ParStreamsPerPhyConn
+#                       - Number of additional TCP streams to use per each physical connection 0=monostream mode, 1-15=multistream mode
 XNet.ParStreamsPerPhyConn: 0
 
-# Default size of the TCP window; set to 0 to use the system default, which means automatic scaling under Linux and MacOsX (at least). Value in bytes [0]
+# XNet.DfltTcpWindowSize
+#                       - Default size of the TCP window; set to 0 to use the system default, which means automatic scaling under Linux and MacOsX (at least). Value in bytes [0]
 # XNet.DfltTcpWindowSize  262144
 
-# The maximum amount of time either a request or a server wait request can be before the client declares an error.
+# XNet.TransactionTimeout
+#                       - The maximum amount of time either a request or a server wait request can be before the client declares an error.
 # XNet.TransactionTimeout: 28800
 
-# The following env vars are handled by TNetXNGFile (new xrootd client interface)
-# and related classes (module netxng, libNetxNG.so).
+# The following env vars are handled by TNetXNGFile (new xrootd client interface) and related classes (module netxng, libNetxNG.so).
 
 # Use the old xrootd client (libNetx) instead of the new (libNetxNG)
-XNet.UseOldClient: yes
+XNet.UseOldClient: no
 
-# A time window for the connection establishment. A connection failure is declared if the connection
-# is not established within the time window. If a connection failure happens earlier then another
-# connection attempt will only be made at the beginning of the next window.
-# NetXNG.ConnectionWindow
-
-# Number of connection attempts that should be made (number of available connection windows)
-# before declaring a permanent failure.
-# NetXNG.ConnectionRetry
-
-# Default value for the time after which an error is declared if it was impossible to get a response to a request.
-# NetXNG.RequestTimeout
-
-# Number of streams per session.
-# NetXNG.SubStreamsPerChannel
-
-# Resolution for the timeout events. Ie. timeout events will be processed only every XRD_TIMEOUTRESOLUTION seconds.
-# NetXNG.TimeoutResolution
-
-# Time after which the permanent failure flags are cleared out and a new connection may be attempted if needed.
-# NetXNG.StreamErrorWindow
-
-# Determines whether the fork handlers should be enabled, making the API fork safe.
-# NetXNG.RunForkHandler
-
-# Maximum number of allowed redirections.
-# NetXNG.RedirectLimit
-
-# Number of threads processing user callbacks.
-# NetXNG.WorkerThreads
-
-# Size of a single data chunk handled by xrdcopy.
-# NetXNG.CPChunkSize
-
-# Maximum number of asynchronous requests being processed by the xrdcopy command at any given time.
-# NetXNG.CPParallelChunks
-
-# A comma separated list of poller implementations in order of preference. The default is: libevent,built-in.
-# NetXNG.PollerPreference
-
-# Path to the client monitor library.
-# NetXNG.ClientMonitor
-
-# Additional optional parameters that will be passed to the monitoring object on initialization.
-# NetXNG.ClientMonitorParam
-
-# Query the server for acceptable vector read parameters
-# NetXNG.QueryReadVParams
+# NetXNG.ConnectionWindow     - A time window for the connection establishment. A connection failure is declared if the connection is not established within the time window. If a
+#                               connection failure happens earlier then another connection attempt will only be made at the beginning of the next window.
+# NetXNG.ConnectionRetry      - Number of connection attempts that should be made (number of available connection windows) before declaring a permanent failure.
+# NetXNG.RequestTimeout       - Default value for the time after which an error is declared if it was impossible to get a response to a request.
+# NetXNG.SubStreamsPerChannel - Number of streams per session.
+# NetXNG.TimeoutResolution    - Resolution for the timeout events. Ie. timeout events will be processed only every XRD_TIMEOUTRESOLUTION seconds.
+# NetXNG.StreamErrorWindow    - Time after which the permanent failure flags are cleared out and a new connection may be attempted if needed.
+# NetXNG.RunForkHandler       - Determines whether the fork handlers should be enabled, making the API fork safe.
+# NetXNG.RedirectLimit        - Maximum number of allowed redirections.
+# NetXNG.WorkerThreads        - Number of threads processing user callbacks.
+# NetXNG.CPChunkSize          - Size of a single data chunk handled by xrdcopy.
+# NetXNG.CPParallelChunks     - Maximum number of asynchronous requests being processed by the xrdcopy command at any given time.
+# NetXNG.PollerPreference     - A comma separated list of poller implementations in order of preference. The default is: libevent,built-in.
+# NetXNG.ClientMonitor        - Path to the client monitor library.
+# NetXNG.ClientMonitorParam   - Additional optional parameters that will be passed to the monitoring object on initialization.
+# NetXNG.QueryReadVParams     - Query the server for acceptable vector read parameters
 NetXNG.QueryReadVParams: $(ROOT_XRD_QUERY_READV_PARAMS)
 
 # Parameters that influence the behavior of TDavixFile/TDavixSystem. These classes give a comprehensive client side support for HTTP and WebDAV,
@@ -626,26 +575,37 @@ Davix.UseOldClient: yes
 # Davix.GSI.GridMode: y
 
 # Sets the Amazon S3 authentication parameters
+# Region is optional - if provided, davix will use v4 signatures
+# Token is optional, and enables the use of STS temporary credentials
+#
+# Alternate is optional and takes a boolean value. If set to true, davix will assume that the bucket name is in the path, not in the hostname.
+# Necessary because davix has to know the bucket name to calculate the S3 signatures.
 # Davix.S3.SecretKey: secret
-# Davix.S3.AccessKey: token
+# Davix.S3.AccessKey: access
+# Davix.S3.Region: region
+# Davix.S3.Token: token
+# Davix.S3.Alternate: yes
 
 # NOTE: The authentication of TDavixFile/TDavixSystem can be influenced through some well known environment variables:
-# X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY
-# They have the usual meaning for the X509 Grid things. The gEnv vars have higher priority over the these envvars.
+# X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY,
+# S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_TOKEN
+# The gEnv vars have higher priority over the these envvars.
 
-# Example of custom setting for the Rint application (root.exe).
-# This overrides the default specified above for a generic application. Color 5 is yellow.
+# Example of custom setting for the Rint application (root.exe). This overrides the default specified above for a generic application. Color 5 is yellow.
 Rint.Canvas.HighLightColor:      5
 
 # Set a size factor for auto sizing TTreeCache for TTrees. The estimated cluster size for the TTree and this factor is used to give the cache size.
-# If option is set to zero auto cache creation is disabled and the default cache size is the historical one (equivalent to factor 1.0). If set to
-# non zero auto cache creation is enabled and both auto created and default sized caches will use the configured factor:
-#               0.0 no automatic cache (default)
+# If option is set to zero auto cache creation is disabled and the default cache size is the historical one (equivalent to factor 1.0).
+# If set to non zero auto cache creation is enabled and both auto created and default sized caches will use the configured factor:
+#               0.0 no automatic cache
 #              >0.0 enable automatic cache
+#               1.0 enable automatic cache to fit one cluster (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_SIZE
-TTreeCache.Size: 4.0
+# TTreeCache.Size: 1.0
 
 # Set the default TTreeCache prefilling type.
-# The prefill type may be: 0 No Prefill (default); 1 All Branches
+# The prefill type may be: 0 No Prefill
+#                          1 All Branches (default)
 # Can be overridden by the environment variable ROOT_TTREECACHE_PREFILL
-# TTreeCache.Prefill: 0
+# TTreeCache.Prefill: 1
+
