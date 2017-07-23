@@ -162,7 +162,7 @@ echo $host
 
 mymake () {
 local CPUS=$(grep processor /proc/cpuinfo | wc -l)
-nohup time -p make -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &
+nohup time -p make -k -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &
 }
 
 eth_irq () {
