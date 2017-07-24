@@ -1,2 +1,4 @@
+#!/bin/bash
+
 cmake -DCMAKE_INSTALL_PREFIX=/home/physics-tools/quimby -DQUIMBY_ENABLE_ROOT="1" -DQUIMBY_ENABLE_PYTHON="1" -DQUIMBY_ENABLE_TESTING="1" $1
 

@@ -1,1 +1,3 @@
-echo `telnet bofh.jeffballard.us 666 2>/dev/null` |grep --color -o "Your excuse is:.*$"
+#!/bin/bash
+
+echo $(telnet bofh.jeffballard.us 666 2>/dev/null) |grep --color -o "Your excuse is:.*$"

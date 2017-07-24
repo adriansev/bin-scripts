@@ -1,6 +1,7 @@
 #!/bin/bash
+
 cd $HOME
-dir_name=`date +%d%m%Y`
+dir_name=$(date +%d%m%Y)
 
 backup_dev=$1
 backup_dir=BACKUP
@@ -23,11 +24,10 @@ then
   echo "Backup directory is found on usb device" ; DIR_FOUND=1
 else
   echo "Directory not found! Mount the corect disk and check for BACKUP"
-  exit 1 
-fi       
+  exit 1
+fi
 
 
-  
 if [ ! -e $backup_dev/$backup_dir/$dir_name ]
 then
   mkdir $backup_dev/$backup_dir/$dir_name

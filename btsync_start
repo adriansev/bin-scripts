@@ -1,1 +1,3 @@
+#!/bin/bash
+
 exec $HOME/bin/btsync --config $HOME/.sync/btsync.config

@@ -1,4 +1,4 @@
-
+#!/bin/bash
 
 cmake \
 -DCMAKE_INSTALL_PREFIX="${tools}/heplibs/geant4_vmc" \

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 my_name=$0
 
 

@@ -1,4 +1,4 @@
-#!/home/physics-tools/root/root/bin/root.exe -l
+#!/bin/env root.exe
 {
 printf ("First argument must be an PROOF system : lite (ProofLite - local), CAF, SKAF, JRAF, KIAF, SAF \n");
 printf ("Second argument is one of : reset, clear (ClearPackages), rootvers, datasets, logs \n");

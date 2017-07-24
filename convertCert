@@ -1,6 +1,6 @@
 #!/bin/bash
 
-now=`date +%d%m%Y_%H%M%S`
+now=$(date +%d%m%Y_%H%M%S)
 
 if [ $# -ne 1 ] ;then
   echo "Usage: $0 MyCert.p12" ; exit

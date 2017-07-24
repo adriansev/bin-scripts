@@ -1,2 +1,4 @@
+#!/bin/bash
+
 LD_LIBRARY_PATH=$tools/heplibs/clhep_2.0.4.7/lib:$LD_LIBRARY_PATH $tools/CRPropa2/bin/CRPropa "$@"
 
