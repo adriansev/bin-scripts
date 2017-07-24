@@ -176,6 +176,11 @@ local CPUS=$(grep processor /proc/cpuinfo | wc -l)
 nohup time -p make -k -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &
 }
 
+mymake_stop () {
+local CPUS=$(grep processor /proc/cpuinfo | wc -l)
+nohup time -p make --stop -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &
+}
+
 eth_irq () {
         if [ "$1" = "all" ]; then
             local list_of_eth=$(ip link | grep -E -o "eth[0-99]");
