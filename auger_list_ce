@@ -1,1 +1,3 @@
+#!/bin/bash
+
 lcg-infosites --vo auger ce | tail -n +3 | awk '{print $6}'

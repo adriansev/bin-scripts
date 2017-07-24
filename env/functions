@@ -160,6 +160,17 @@ local fullhost=$(hostname -f)
 echo $host
 }
 
+
+cxxflags () {
+CXXFLAGS='-march=native -O2'
+
+local avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
+[[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
+
+export CXXFLAGS
+export CFLAGS=${CXXFLAGS}
+}
+
 mymake () {
 local CPUS=$(grep processor /proc/cpuinfo | wc -l)
 nohup time -p make -k -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err &

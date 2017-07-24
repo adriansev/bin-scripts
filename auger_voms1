@@ -1,2 +1,4 @@
+#!/bin/bash
+
 voms-proxy-destroy
 voms-proxy-init --voms auger:/auger -valid 48:00 --vomses /etc/vomses/auger-voms1.grid.cesnet.cz

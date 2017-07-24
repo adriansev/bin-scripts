@@ -1,3 +1,5 @@
+#!/bin/bash
+
 cmake \
 -DCMAKE_INSTALL_PREFIX="${ALICE}/geant3" \
 -DROOT_CONFIG_EXECUTABLE="${ROOTSYS}/bin/root-config" \

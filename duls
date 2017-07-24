@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+
 #A script to produce a sorted du list; give a directory as argument or no argument works on current dir
 # M. Granado
 use Getopt::Std;

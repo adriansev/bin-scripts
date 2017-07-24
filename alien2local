@@ -2,7 +2,7 @@
 
 dir_location=$1
 
-run_nr=`echo $dir_location | awk -F"/" '{print $6}'` 
+run_nr=$(echo $dir_location | awk -F"/" '{print $6}')
 
 file_name=$2
 

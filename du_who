@@ -1,2 +1,4 @@
+#!/bin/bash
+
 du -sb * | sort -rn | head -5 | awk -F" " '{ size = $1/(1024 * 1024) ; print size,"MiB",$2 }'
 

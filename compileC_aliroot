@@ -1,4 +1,4 @@
-#!/home/physics-tools/root/root/bin/root.exe -l -q
+#!/bin/env root.exe
 {
   // include paths
   gSystem->AddIncludePath("-Wno-deprecated");

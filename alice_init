@@ -1,4 +1,5 @@
 #!/bin/bash
+
 MYUID=$(id -u)
 MYUSER="asevcenc"
 

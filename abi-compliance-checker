@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/bin/env perl
 ###########################################################################
 # ABI-compliance-checker v1.4, lightweight tool for checking
 # backward/forward binary compatibility of shared C/C++ libraries in OS Linux.

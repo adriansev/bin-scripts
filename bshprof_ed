@@ -1,1 +1,3 @@
-${EDITOR} $HOME/.bash_profile 
+#!/bin/bash
+
+${EDITOR} $HOME/.bash_profile
