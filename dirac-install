@@ -318,13 +318,7 @@ class ReleaseConfig( object ):
       self.__cfgCache[ urlcfg ] = cfg
       return S_OK( cfg )
     try:
-      md5path = urlcfg[:-4] + ".md5"
-      if os.path.exists( md5path ):
-        md5File = open( md5path, 'r' )
-        md5Data = md5File.read()
-        md5File.close()
-      else:
-        md5Data = urlretrieveTimeout( md5path, timeout = 60 )
+      md5Data = urlretrieveTimeout( urlcfg[:-4] + ".md5", timeout = 60 )
       md5Hex = md5Data.strip()
       #md5File.close()
       if md5Hex != hashlib.md5( cfgData ).hexdigest():
@@ -981,21 +975,6 @@ def fixBuildPaths():
   except:
     pass
 
-def fixPythonShebang():
-  """
-  Some scripts (like the gfal2 scripts) come with a shebang pointing to the system python.
-  We replace it with the environment one
- """
-
-  binaryPath = os.path.join( cliParams.targetPath, cliParams.platform )
-  try:
-    replaceCmd = "grep -rIl '#!/usr/bin/python' %s/bin | xargs sed -i'.org' 's:#!/usr/bin/python:#!/usr/bin/env python:g'" %  binaryPath
-    os.system( replaceCmd )
-  except:
-    pass
-
-
-
 
 def runExternalsPostInstall():
   """
@@ -1288,8 +1267,6 @@ def installExternals( releaseConfig ):
     #HACK: try to find a more elegant solution for the lcg bundles location
     if not downloadAndExtractTarball( tarsURL + "/../lcgBundles", "DIRAC-lcg", verString, False, cache = True ):
       logERROR( "Check that there is a release for your platform: DIRAC-lcg-%s" % verString )
-  logNOTICE( "Fixing Python Shebang..." )
-  fixPythonShebang()
   return True
 
 def createPermanentDirLinks():
