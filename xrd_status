@@ -21,7 +21,14 @@ echo -e "Free space (GiB) :\t${freesp}"
 echo
 
 for srv in $(xrdmapc --list s -r ${redir}:1094 | awk '/Srv/ {print $2}'); do
-  xrdinfo=$(echo -ne "spaceinfo /\nexit\n" | xrdfs $srv)
+  xrdinfo=$(echo -ne "query stats i\nspaceinfo /\nexit\n" | xrdfs ${srv})
+
+  stats=$(echo "$xrdinfo" | grep statistics | awk -F'[<>]' '{print $2}')
+  arrstats=($stats)
+  eval ${arrstats[2]}
+  eval ${arrstats[8]}
+
+  echo "Xrootd server cluster name is : $site and is running xrootd version $ver"
 
   # get xrd space info; Reported size in bytes; convert to GiB with 2 decimals
   totsp=$(echo "$xrdinfo" | grep Total | awk -F: '{printf "%.2f\n",$2/1073741824}')
