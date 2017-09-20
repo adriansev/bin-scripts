@@ -129,6 +129,7 @@ git fetch -p origin
 now_str () { date +%Y%m%d_%H%M%S; }
 
 pic_date () { exiftool $1 | grep "Date/Time Original"; }
+pic_info () { identify -format "Size : %wx%h ; DPI : %xx%y\n" $1; }
 
 proc_info () { ps -eo pid,%cpu,rss,args | grep -i $1 | grep -v grep; }
 
