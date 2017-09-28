@@ -59,7 +59,7 @@ fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
-ROOT6_CMAKE_OPT="-Dcxx14=0 -Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON -Dcxx11=1 \
+ROOT6_CMAKE_OPT="-Dcxx14=1 -Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON \
 -DLLVM_BUILD_TYPE=Release -DLLVM_ENABLE_THREADS=1 -DLLVM_PARALLEL_COMPILE_JOBS=4 -DLLVM_ENABLE_CXX1Y=1 \
 -Dbuiltin_veccore=1 "
 
@@ -78,7 +78,7 @@ fi
 
 cmake \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} ${ADDITIONAL_CMAKE_OPT} \
--DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
+-DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -Dcxx11=1 \
 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_gsl=0 -Dbuiltin_afterimage=0 -Dbuiltin_cfitsio=0 -Dbuiltin_davix=0 \
 -Dbuiltin_freetype=0 -Dbuiltin_lzma=0 -Dbuiltin_zlib=0 -Dbuiltin_pcre=0 \
 -Dbuiltin_xrootd=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 \
