@@ -1,3 +1,54 @@
+#if !( defined  (__CINT__) || defined (__CLING__) )
+
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+#include <utility>
+#include <cstdio>
+#include <cstring>
+
+#include <Rtypes.h>
+#include <TROOT.h>
+#include <TSystem.h>
+#include <TProfile.h>
+#include <TH1.h>
+#include <TH1F.h>
+#include <TH1D.h>
+#include <TProfile.h>
+#include <TMath.h>
+#include <TClonesArray.h>
+#include <TH1D.h>
+#include <TH2D.h>
+#include <TH3D.h>
+#include <THnSparse.h>
+#include <TProfile.h>
+#include <TSeqCollection.h>
+#include <TCollection.h>
+#include <TList.h>
+#include <TFile.h>
+#include <TLorentzVector.h>
+#include <TVector2.h>
+#include <TAttMarker.h>
+#include "TLegend.h"
+#include "TLegendEntry.h"
+#include "TStyle.h"
+#include "TPad.h"
+#include "TVirtualPad.h"
+#include "TCanvas.h"
+#include "TSystemDirectory.h"
+#include <TInterpreter.h>
+
+#include <THashList.h>
+#include <TString.h>
+#include <TObjString.h>
+
+#include "AliEmcalList.h"
+
+#endif
+
+using namespace std;
 
 //______________________________________________________________
 static TObject* Apply2Ptr (TObject* obj, const char* arg) {
