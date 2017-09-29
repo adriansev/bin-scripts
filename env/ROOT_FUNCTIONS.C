@@ -54,16 +54,18 @@ using namespace std;
 static TObject* Apply2Ptr (TObject* obj, const char* arg) {
   std::stringstream obj_str (""), cname_str (""); // containers for keeping the numeric pointers
   TString class_name ("");
-
+  TString* gint_class_id = NULL;
+  
   obj_str << obj; // record the pointer
   cname_str << &class_name ; // record the adress of class_name variable
 
   // get the class name
-  gInterpreter->ProcessLine(Form( "TString* gint_class_id = reinterpret_cast<TString*>(%s) ; *gint_class_id = ( (reinterpret_cast<TObject*>(%s))->ClassName() );" , cname_str.str().c_str(), obj_str.str().c_str() )) ;
+  gInterpreter->ProcessLine(Form( "gint_class_id = reinterpret_cast<TString*>(%s) ; *gint_class_id = ( (reinterpret_cast<TObject*>(%s))->ClassName() );" , cname_str.str().c_str(), obj_str.str().c_str() )) ;
   class_name.ReplaceAll("\"",""); class_name += "*";
 
   // apply the method (arg) to the object
   gInterpreter->ProcessLine(Form( "(( reinterpret_cast<%s>(%s) )->%s);" , class_name.Data() ,obj_str.str().c_str(), arg ));
+  gint_class_id = NULL;
   return obj;
 }
 
