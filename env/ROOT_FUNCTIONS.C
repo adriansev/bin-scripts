@@ -159,7 +159,7 @@ static TH1* ScaleH ( TH1* h, Double_t factor = 1., Option_t* option = "") {
 }
 
 //______________________________________________________________
-static TH1* SetAxis ( TH1* h, const char* axis_name, Float_t l_offset, Float_t l_size, Float_t t_offset, Float_t t_size) {
+static TH1* SetAxis ( TH1* h, const char* axis_name, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
   if (!h) { cout << "invalid pointer" << endl; return NULL; }
   TAxis* axis = NULL;
 
@@ -179,12 +179,12 @@ static TH1* SetAxis ( TH1* h, const char* axis_name, Float_t l_offset, Float_t l
 
 
 //______________________________________________________________
-static TH1* SetXProperties ( TH1* h, Float_t l_offset, Float_t l_size, Float_t t_offset, Float_t t_size) {
+static TH1* SetXProperties ( TH1* h, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
   return SetAxis (h, "x", l_offset, l_size, t_offset, t_size);
 }
 
 //______________________________________________________________
-static TH1* SetYProperties ( TH1* h, Float_t l_offset, Float_t l_size, Float_t t_offset, Float_t t_size) {
+static TH1* SetYProperties ( TH1* h, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
   return SetAxis (h, "y", l_offset, l_size, t_offset, t_size);
 }
 
