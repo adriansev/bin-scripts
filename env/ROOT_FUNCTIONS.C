@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <utility>
 #include <cstdio>
+#include <string>
 #include <cstring>
+
 
 #include <Rtypes.h>
 #include <TROOT.h>
@@ -51,21 +53,42 @@
 using namespace std;
 
 //______________________________________________________________
-static TObject* Apply2Ptr (TObject* obj, const char* arg) {
-  std::stringstream obj_str (""), cname_str (""); // containers for keeping the numeric pointers
+char* ObjGetPtr ( void* ptr /*or if on stack use &obj */) {
+  if (!ptr) {return NULL;}
+  std::stringstream obj_str;
+  obj_str << ptr; // record the pointer
+  return Form( "%s", obj_str.str().c_str() );
+}
+
+//______________________________________________________________
+TString ObjGetName (TObject* obj) {
   TString class_name ("");
-  TString* gint_class_id = NULL;
-  
-  obj_str << obj; // record the pointer
-  cname_str << &class_name ; // record the adress of class_name variable
+  TString* jagmrhmmpdjwikz_str_ptr = NULL;
+  TInterpreter* my_int = TInterpreter::Instance();
 
   // get the class name
-  gInterpreter->ProcessLine(Form( "gint_class_id = reinterpret_cast<TString*>(%s) ; *gint_class_id = ( (reinterpret_cast<TObject*>(%s))->ClassName() );" , cname_str.str().c_str(), obj_str.str().c_str() )) ;
-  class_name.ReplaceAll("\"",""); class_name += "*";
+  my_int->ProcessLine(Form( "jagmrhmmpdjwikz_str_ptr = reinterpret_cast<TString*>(%s) ; *jagmrhmmpdjwikz_str_ptr = ( (reinterpret_cast<TObject*>(%s))->ClassName() );" , ObjGetPtr(&class_name), ObjGetPtr(obj) )) ;
+  class_name.ReplaceAll("\"","");
 
+  jagmrhmmpdjwikz_str_ptr = NULL;
+  return class_name;
+}
+
+//______________________________________________________________
+void GetObjPtr_howto () {
+  cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
+}
+
+//______________________________________________________________
+void GetObjName_howto () {
+  cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
+}
+
+//______________________________________________________________
+static TObject* Apply2Ptr (TObject* obj, const char* arg) {
   // apply the method (arg) to the object
-  gInterpreter->ProcessLine(Form( "(( reinterpret_cast<%s>(%s) )->%s);" , class_name.Data() ,obj_str.str().c_str(), arg ));
-  gint_class_id = NULL;
+  TInterpreter* my_int = TInterpreter::Instance();
+  my_int->ProcessLine(Form( "(( reinterpret_cast<%s*>(%s) )->%s);" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg ));
   return obj;
 }
 
