@@ -1,0 +1,72 @@
+#!/usr/bin/perl
+#
+#	Detect questionable values for LDAP attributes
+#	written by Jan Engelhardt, 2015
+#
+#	This program is free software; you can redistribute it and/or
+#	modify it under the terms of the WTF Public License version 2 or
+#	(at your option) any later version.
+#
+use strict;
+use warnings;
+use Encode;
+use Getopt::Long;
+use MIME::Base64;
+
+our @wl = qw(
+	zarafaUniqueID
+);
+our $check_for_spaces = 1;
+
+&main();
+
+sub main
+{
+	my $dn;
+	my $dn_printed = 0;
+	my $dncount = 0;
+
+	while (defined(my $line = <STDIN>)) {
+		chomp($line);
+		if (substr($line, 0, 1) eq "#") {
+			next;
+		}
+		if ($line =~ /^dn:\s*/) {
+			$dn = $';
+			$dn_printed = 0;
+			next;
+		}
+		my($key, $is_encoded, $value) = &parse_line($line);
+		if (!defined($key) || &whitelisted($key)) {
+			next;
+		}
+		if ($is_encoded) {
+			$value = decode_base64($value);
+		}
+		if ($check_for_spaces && $value =~ /^\s|\s$/) {
+			if (!$dn_printed) {
+				print "\ndn: $dn\n";
+				$dn_printed = 1;
+				++$dncount;
+			}
+			print "$key(", length($key), "): $value\n";
+		}
+	}
+	close(STDIN);
+	print "\n$dncount DNs total\n";
+}
+
+sub parse_line
+{
+	my @r = (shift(@_) =~ /^([^:]+)(:+)(?:\s*)?(.*)/);
+	if (defined($r[1])) {
+		$r[1] = length($r[1]) >= 2 ? 1 : 0;
+	}
+	return @r;
+}
+
+sub whitelisted
+{
+	my $needle = shift @_;
+	return scalar grep { $_ eq $needle } @wl;
+}

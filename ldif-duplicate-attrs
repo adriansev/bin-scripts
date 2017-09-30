@@ -1,0 +1,130 @@
+#!/usr/bin/perl
+#
+#	Check for multi-value attributes in LDIF file
+#	written by Jan Engelhardt, 2015
+#
+#	This program is free software; you can redistribute it and/or
+#	modify it under the terms of the WTF Public License version 2 or
+#	(at your option) any later version.
+#
+use strict;
+use warnings;
+use Getopt::Long;
+
+our @wl = qw(
+	ACL objectClass member equivalentToMe DirXML-Associations
+	groupMembership securityEquals DirXML-PasswordSyncStatus
+	zarafaSendAsPrivilege zarafaAliases
+	departmentNumber
+);
+our $do_color = -t 1;
+
+&main();
+
+sub main
+{
+	&Getopt::Long::Configure(qw(bundling));
+	&GetOptions(
+		"C" => \$do_color,
+	);
+
+	my $attrcount = &parse_ldif();
+	&print_stats($attrcount);
+}
+
+sub parse_ldif
+{
+	my $dn;
+	my $attrcount = {};
+
+	while (defined(my $line = <STDIN>)) {
+		chomp($line);
+		if (substr($line, 0, 1) eq "#") {
+			next;
+		}
+		if ($line =~ /^dn:\s*/) {
+			$dn = $';
+			$attrcount->{$dn} = {};
+		}
+		my($key, $value) = &parse_line($line);
+		if (!defined($key) || &whitelisted($key)) {
+			# Blank lines and other unparsable lines get filtered
+			# here.
+			next;
+		}
+		++$attrcount->{$dn}->{$key};
+	}
+	close(STDIN);
+	return $attrcount;
+}
+
+sub parse_line
+{
+	return (shift(@_) =~ /^([^:]+):+(?:\s*)?(.*)/);
+}
+
+sub whitelisted
+{
+	my $needle = shift @_;
+	return scalar grep { $_ eq $needle } @wl;
+}
+
+sub print_stats
+{
+	my $attrcount = shift @_;
+	my $dncount = {};
+	my $crapdn;
+	my $globattr = {};
+
+	foreach my $dn (keys %$attrcount) {
+		my $count = 0;
+		my $dh = $attrcount->{$dn};
+
+		foreach my $key (keys %$dh) {
+			if ($dh->{$key} < 2) {
+				next;
+			}
+			$count += $dh->{$key};
+		}
+		$dncount->{$dn} = $count;
+	}
+
+	foreach my $dn (sort { $dncount->{$b} <=> $dncount->{$a} }
+	                keys %$dncount)
+	{
+		my $dh = $attrcount->{$dn};
+
+		if ($dncount->{$dn} == 0) {
+			next;
+		}
+
+		if ($do_color) {
+			print "\e[1;31m";
+		}
+		print $dncount->{$dn};
+		if ($do_color) {
+			print "\e[0;31m";
+		}
+		print "\t$dn\n";
+		print "\t";
+		foreach my $key (sort {
+				$dh->{$b} <=> $dh->{$a} || $a cmp $b }
+			keys %$dh)
+		{
+			if ($dh->{$key} < 2) {
+				next;
+			}
+			if ($do_color) {
+				print "\e[32m", substr($key, 0, 1), "\e[0m",
+				substr($key, 1);
+			} else {
+				print $key;
+			}
+			print "(", $attrcount->{$dn}->{$key}, ") ";
+			$globattr->{$dn} += $dh->{$key};
+		}
+		print "\n\n";
+		++$crapdn;
+	}
+	print $crapdn, " DNs\n";
+}
