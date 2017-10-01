@@ -12,7 +12,6 @@
 #include <utility>
 #include <cstdio>
 
-
 #include <Rtypes.h>
 #include <TROOT.h>
 #include <TSystem.h>
@@ -47,16 +46,16 @@
 #include <TString.h>
 #include <TObjString.h>
 
-#include "AliEmcalList.h"
+//#include <AliEmcalList.h>
 
 //#endif
 
 #undef __ROOT_FUNCTIONS_LOADED__
 #define __ROOT_FUNCTIONS_LOADED__ true
 
-bool f__ROOT_FUNCTIONS_LOADED__ = true;
-
 using namespace std;
+
+//void ROOT_FUNCTIONS(){ }
 
 //______________________________________________________________
 char* ObjGetPtr ( void* ptr /*or if on stack use &obj */) {
@@ -81,12 +80,12 @@ TString ObjGetName (TObject* obj) {
 }
 
 //______________________________________________________________
-void GetObjPtr_howto () {
+void ObjGetPtr_howto () {
   cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
 }
 
 //______________________________________________________________
-void GetObjName_howto () {
+void ObjGetName_howto () {
   cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
 }
 
