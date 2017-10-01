@@ -51,7 +51,7 @@
 #endif
 
 #ifndef __ROOT_FUNCTIONS_LOADED__
-  #define __ROOT_FUNCTIONS_LOADED__ 1
+  #define __ROOT_FUNCTIONS_LOADED__ true
 #endif
 
 using namespace std;
