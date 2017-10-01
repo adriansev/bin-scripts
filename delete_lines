@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PATTERN=$2
+
+echo "Pattern is : ${PATTERN}"
+
+/bin/sed -i.bak "/${PATTERN}/d" $1
+
