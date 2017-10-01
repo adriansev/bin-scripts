@@ -78,12 +78,12 @@ TString ObjGetName (TObject* obj) {
 }
 
 //______________________________________________________________
-void GetObjPtr_howto () {
+void ObjGetPtr_howto () {
   cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
 }
 
 //______________________________________________________________
-void GetObjName_howto () {
+void ObjGetName_howto () {
   cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
 }
 
