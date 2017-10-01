@@ -54,6 +54,8 @@
 #undef __ROOT_FUNCTIONS_LOADED__
 #define __ROOT_FUNCTIONS_LOADED__ true
 
+bool f__ROOT_FUNCTIONS_LOADED__ = true;
+
 using namespace std;
 
 //______________________________________________________________
