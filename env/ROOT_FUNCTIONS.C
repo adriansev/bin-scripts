@@ -1,14 +1,16 @@
-#if !( defined  (__CINT__) || defined (__CLING__) )
+//#if !( defined  (__CINT__) || defined (__CLING__) )
 
 #include <iostream>
-#include <fstream>
 #include <sstream>
+#include <fstream>
+
+#include <string>
+#include <cstring>
+
 #include <vector>
 #include <algorithm>
 #include <utility>
 #include <cstdio>
-#include <string>
-#include <cstring>
 
 
 #include <Rtypes.h>
@@ -16,39 +18,38 @@
 #include <TSystem.h>
 #include <TProfile.h>
 #include <TH1.h>
+#include <TH2.h>
 #include <TH1F.h>
-#include <TH1D.h>
-#include <TProfile.h>
-#include <TMath.h>
-#include <TClonesArray.h>
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH3D.h>
-#include <THnSparse.h>
 #include <TProfile.h>
+#include <TMath.h>
+#include <TLorentzVector.h>
+#include <TVector2.h>
+#include <TClonesArray.h>
+#include <THnSparse.h>
 #include <TSeqCollection.h>
 #include <TCollection.h>
 #include <TList.h>
+#include <THashList.h>
 #include <TFile.h>
-#include <TLorentzVector.h>
-#include <TVector2.h>
 #include <TAttMarker.h>
-#include "TLegend.h"
-#include "TLegendEntry.h"
-#include "TStyle.h"
-#include "TPad.h"
-#include "TVirtualPad.h"
-#include "TCanvas.h"
-#include "TSystemDirectory.h"
+#include <TLegend.h>
+#include <TLegendEntry.h>
+#include <TStyle.h>
+#include <TPad.h>
+#include <TVirtualPad.h>
+#include <TCanvas.h>
+#include <TSystemDirectory.h>
 #include <TInterpreter.h>
 
-#include <THashList.h>
 #include <TString.h>
 #include <TObjString.h>
 
 #include "AliEmcalList.h"
 
-#endif
+//#endif
 
 #undef __ROOT_FUNCTIONS_LOADED__
 #define __ROOT_FUNCTIONS_LOADED__ true
@@ -78,12 +79,12 @@ TString ObjGetName (TObject* obj) {
 }
 
 //______________________________________________________________
-void ObjGetPtr_howto () {
+void GetObjPtr_howto () {
   cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
 }
 
 //______________________________________________________________
-void ObjGetName_howto () {
+void GetObjName_howto () {
   cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
 }
 
