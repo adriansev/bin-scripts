@@ -140,6 +140,75 @@ static void PadToLogScale() {
 }
 
 //______________________________________________________________
+static void PadToLogScale_AutoScale() {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
+  if ( gPad->GetLogy() ) {return;}
+
+  TPad* oldpad = dynamic_cast<TPad*> gPad;
+  // Now loop through histos and find the extrema
+  TList* glist = oldpad->GetListOfPrimitives();
+  for (int i=0; i<glist->GetEntries(); ++i) {
+    TObject *obj = glist->At(i);
+    if ( obj->InheritsFrom("TH1") ) {
+      // If there is a 2D histogram, don't do anything.
+      if ( obj->InheritsFrom("TH2") ) { return; }
+      (dynamic_cast<TH1*>(obj))->SetMinimum();
+      Double_t min=0, max=999999999;
+      (dynamic_cast<TH1*>(obj))->GetMinimumAndMaximum(min,max);
+      (dynamic_cast<TH1*>(obj))->GetYaxis()->SetRangeUser(min, max);
+      }
+    }
+  gPad->SetLogy(); 
+  gPad->Modified();
+}
+
+//______________________________________________________________
+static void PadSetYaxis(Double_t r1, Double_t r2) {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
+
+  TPad* oldpad = dynamic_cast<TPad*> gPad;
+  // Now loop through histos and find the extrema
+  TList* glist = oldpad->GetListOfPrimitives();
+  for (int i=0; i<glist->GetEntries(); ++i) {
+    TObject *obj = glist->At(i);
+    if ( obj->InheritsFrom("TH1") ) { (dynamic_cast<TH1*>(obj))->GetYaxis()->SetRangeUser(r1, r2); }
+    }
+  gPad->Modified();
+}
+
+//______________________________________________________________
+static void PadSetXaxis(Double_t r1, Double_t r2) {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
+
+  TPad* oldpad = dynamic_cast<TPad*> gPad;
+  // Now loop through histos and find the extrema
+  TList* glist = oldpad->GetListOfPrimitives();
+  for (int i=0; i<glist->GetEntries(); ++i) {
+    TObject *obj = glist->At(i);
+    if ( obj->InheritsFrom("TH1") ) { (dynamic_cast<TH1*>(obj))->GetXaxis()->SetRangeUser(r1, r2); }
+    }
+  gPad->Modified();
+}
+
+//______________________________________________________________
+TH1D* Rebin (TH1D* h, Double_t* xbins) {
+Int_t nbins = ( sizeof (xbins)/sizeof (xbins[0]) ) - 1;
+TString h_name = h->GetName(); h_name += "_rebin";
+
+TH1D* h_rebin = dynamic_cast<TH1D*> (h->Rebin(nbins, h_name.Data(), xbins));
+return h_rebin;
+}
+
+//______________________________________________________________
+TH1F* Rebin (TH1F* h, Double_t* xbins) {
+Int_t nbins = ( sizeof (xbins)/sizeof (xbins[0]) ) - 1;
+TString h_name = h->GetName(); h_name += "_rebin";
+
+TH1F* h_rebin = dynamic_cast<TH1F*> (h->Rebin(nbins, h_name.Data(), xbins));
+return h_rebin;
+}
+
+//______________________________________________________________
 static TH1* NormH ( TH1* h, Option_t* option = "") {
   if (!h) { cout << "invalid pointer" << endl; return NULL; }
   TH1::SetDefaultSumw2(kTRUE);
