@@ -1,5 +1,5 @@
 {
-gSystem->AddIncludePath("-Wno-deprecated -I$. -I/usr/include -I$FASTJET/include -I$ROOTSYS/include -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
+gSystem->AddIncludePath("-Wno-deprecated -I$. -I/usr/include -I$FASTJET/include -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
 gSystem->AddDynamicPath("/usr/lib64/ $FASTJET/lib/ $ROOTSYS/lib/ $ALICE_ROOT/lib/ $ALICE_PHYSICS/lib/");
 
 //gSystem->Load("/usr/lib64/libCGAL");
