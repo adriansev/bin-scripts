@@ -50,6 +50,10 @@
 
 #endif
 
+#ifndef __ROOT_FUNCTIONS_LOADED__
+  #define __ROOT_FUNCTIONS_LOADED__ 1
+#endif
+
 using namespace std;
 
 //______________________________________________________________
