@@ -196,21 +196,13 @@ static void PadSetXaxis(Double_t r1, Double_t r2) {
 }
 
 //______________________________________________________________
-TH1D* Rebin (TH1D* h, Double_t* xbins) {
-Int_t nbins = ( sizeof (xbins)/sizeof (xbins[0]) ) - 1;
-TString h_name = h->GetName(); h_name += "_rebin";
-
-TH1D* h_rebin = dynamic_cast<TH1D*> (h->Rebin(nbins, h_name.Data(), xbins));
-return h_rebin;
+TH1D* Rebin (TH1D* h, Int_t nbins, Double_t* xbins) {
+return dynamic_cast<TH1D*>( h->Rebin(nbins, Form("%s_rebin",h->GetName()), xbins) );
 }
 
 //______________________________________________________________
-TH1F* Rebin (TH1F* h, Double_t* xbins) {
-Int_t nbins = ( sizeof (xbins)/sizeof (xbins[0]) ) - 1;
-TString h_name = h->GetName(); h_name += "_rebin";
-
-TH1F* h_rebin = dynamic_cast<TH1F*> (h->Rebin(nbins, h_name.Data(), xbins));
-return h_rebin;
+TH1D* Clone (TH1D* h) {
+return dynamic_cast<TH1D*>(h->Clone( Form("%s_cl",h->GetName()) ));
 }
 
 //______________________________________________________________
