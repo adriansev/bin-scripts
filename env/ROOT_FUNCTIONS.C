@@ -57,6 +57,8 @@ using namespace std;
 
 //void ROOT_FUNCTIONS(){ }
 
+#define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
 //______________________________________________________________
 char* ObjGetPtr ( void* ptr /*or if on stack use &obj */) {
   if (!ptr) {return NULL;}
