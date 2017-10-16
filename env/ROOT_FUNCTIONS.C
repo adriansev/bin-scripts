@@ -170,6 +170,20 @@ static void PadToLogScale_AutoScale() {
 }
 
 //______________________________________________________________
+static void PadRebin(Int_t binsgroup) {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
+
+  TPad* oldpad = dynamic_cast<TPad*> gPad;
+  // Now loop through histos and find the extrema
+  TList* glist = oldpad->GetListOfPrimitives();
+  for (int i=0; i<glist->GetEntries(); ++i) {
+    TObject *obj = glist->At(i);
+    if ( obj->InheritsFrom("TH1") ) { (dynamic_cast<TH1*>(obj))->Rebin(binsgroup); }
+    }
+  gPad->Modified();
+}
+
+//______________________________________________________________
 static void PadSetYaxis(Double_t r1, Double_t r2) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
 
@@ -341,7 +355,6 @@ return c;
 
 //______________________________________________________________
 TH1D* AddNewH (TH1D* h_old, TH1D* add_h, Double_t c1 = 1, TString prefix = "") {
-
     if (!h_old) {return NULL;}
     if (!add_h) {return NULL;}
 
@@ -359,7 +372,6 @@ TH1D* AddNewH (TH1D* h_old, TH1D* add_h, Double_t c1 = 1, TString prefix = "") {
 
 //______________________________________________________________
 TH2D* AddNewH (TH2D* h_old, TH2D* add_h, Double_t c1 = 1, TString prefix = "") {
-
     if (!h_old) {return NULL;}
     if (!add_h) {return NULL;}
 
@@ -378,7 +390,6 @@ TH2D* AddNewH (TH2D* h_old, TH2D* add_h, Double_t c1 = 1, TString prefix = "") {
 
 //______________________________________________________________
 Double_t Integral (const TH1D* h, Double_t val1, Double_t val2, Option_t* option = "" ) {
-
     if (!h) {return -99999;}
 
     Int_t bin1 = h->GetXaxis()->FindBin(val1);
@@ -388,8 +399,6 @@ Double_t Integral (const TH1D* h, Double_t val1, Double_t val2, Option_t* option
 
     return integral;
 }
-
-
 
 //______________________________________________________________________________
 void ls( TString path = ".") {
