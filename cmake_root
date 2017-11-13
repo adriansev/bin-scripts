@@ -39,9 +39,8 @@ echo $XRD
 echo
 
 ## GCC version
-GCCLINE=$(gcc --version|head -n1)
-arr=($GCCLINE)
-GCC_MAJOR=${arr[2]}
+GCCVERSION=$( gcc -dumpversion )
+GCC_MAJOR=$( echo ${GCCVERSION}| cut -f1 -d. )
 
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
@@ -58,8 +57,9 @@ else
 fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
+##(( GCC_MAJOR >= 6 )) && CXXFLAGS="${CXXFLAGS} -fopt-info-vec"
 
-ROOT6_CMAKE_OPT="-Dcxx14=1 -Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON -Dbuiltin_veccore=1 "
+ROOT6_CMAKE_OPT="-Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON -Dbuiltin_veccore=1 "
 ROOT5_CMAKE_OPT="-Dbuiltin_tbb=0 -Dtbb=1"
 
 ROOT_INSTALL=$tools/root/root
