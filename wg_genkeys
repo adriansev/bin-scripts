@@ -1,0 +1,6 @@
+#!/bin/bash
+PRIV_KEY="privkey_$(hostname -s)"
+PUB_KEY="pubkey_$(hostname -s)"
+
+wg genkey | tee ${PRIV_KEY} | wg pubkey > ${PUB_KEY}
+chmod 700 ${PRIV_KEY} ${PUB_KEY}
