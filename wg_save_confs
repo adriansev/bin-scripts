@@ -1,0 +1,6 @@
+#!/bin/bash
+
+WG_IFACES=$(ip -o -d link show | awk -F": " '/wireguard/ {print $2}')
+
+for WG_DEV in ${WG_IFACES}; do wg showconf ${WG_DEV} > ${WG_DEV}_$(date +%Y%m%d_%H%M%S).conf ; done
+
