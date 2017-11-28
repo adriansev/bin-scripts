@@ -8,7 +8,7 @@ PEER_IP_CIDR=$3
 
 WG_IFACES=$(ip -o -d link show | awk -F": " '/wireguard/ {print $2}')
 
-if [[ ! "${DEV}" =~ "${WG_IFACES}" ]] ; then
+if [[ ! "${WG_IFACES}" =~ "${DEV}" ]] ; then
     echo "Interface ${DEV} not found"
     echo "use wg_init_server or set up manually to add peers"
     exit
