@@ -14,7 +14,7 @@
 #                       Don't error for ls without --group-dir or --no-group
 #    V0.3, 21 Oct 2009, Handle older ls' which pepper output with reset codes
 #
-#    V1.1, 05 Jun 2014
+#    V1.4, 21 Nov 2016
 #      http://github.com/pixelb/scripts/commits/master/scripts/l
 
 # apply thousands separator to file sizes
@@ -94,12 +94,17 @@ if [ "$color_when" ]; then
     # as it defaults to blinking.  We could do all this in ~/.dir_colors
     # but so this script is more general, we do it here.
 
+    # Ensure LS_COLORS is delimited with ':' to simplify the following regexes.
+    # Otherwise we'd have to consider using word boundaries (\b, \<, [[:<:]]),
+    # but those are non portable.
+    LS_COLORS=":$LS_COLORS:"; export LS_COLORS
+
     # Newer ls use "mh" to represent the color for multi hardlinked
     # files so handle the backwards incompatibility with "hl"
-    if   dircolors | grep -F "mh=" >/dev/null; then
-      hl_no_color="s/hl[^:]*:/mh=:/; s/mh[^:]*:/mh=:/"
+    if   dircolors | grep -F ":mh=" >/dev/null; then
+      hl_no_color="s/:hl=[^:]*:/:mh=:/; s/:mh=[^:]*:/:mh=:/"
     elif dircolors | grep -F "hl=" >/dev/null; then
-      hl_no_color="s/mh[^:]*:/hl=:/; s/hl[^:]*:/hl=:/"
+      hl_no_color="s/:mh=[^:]*:/:hl=:/; s/:hl=[^:]*:/:hl=:/"
     fi
 
     # The extra quoting (wrapping in "") is required for
@@ -111,15 +116,15 @@ if [ "$color_when" ]; then
 
       sed \"
         $hl_no_color
-        s/su[^:]*:/su=:/
-        s/sg[^:]*:/sg=:/
-        s/ow[^:]*:/ow=:/
-        s/st[^:]*:/st=:/
-        s/tw[^:]*:/tw=:/
+        s/:su=[^:]*:/:su=:/
+        s/:sg=[^:]*:/:sg=:/
+        s/:ow=[^:]*:/:ow=:/
+        s/:st=[^:]*:/:st=:/
+        s/:tw=[^:]*:/:tw=:/
 
-        s/ca[^:]*:/ca=:/
+        s/:ca=[^:]*:/:ca=:/
 
-        s/mi=[^:]\{1,\}:/mi=$LS_HLI:/
+        s/:mi=[^:]\{1,\}:/:mi=$LS_HLI:/
       \"
 
       echo 'export LS_COLORS'
@@ -132,15 +137,24 @@ total=`$ls -s $color_never / | sed 's/\([^ ]*\).*/\1/;q'`
 # Use these options if available
 $ls --group-directories-first -d . >/dev/null 2>&1 && gdf=--group-directories
 $ls --no-group -d . >/dev/null 2>&1 && ng=--no-group
+$ls --quoting=shell-escape -d . >/dev/null 2>&1 && quote=--quoting=shell-escape
 
 # Bypass long format manipulation if any of following formats are specified
 # FIXME: Matching options like this is a bit brittle
 lfmt=lfmt
 echo "$*" | grep -E -- "-(m|i|x|s|C|-version|-help)" >/dev/null && lfmt=""
 
+# set -o pipefail is bash/ksh/zsh specific
+# So manually propagate the exit status from ls.
+# See http://stackoverflow.com/a/30658405/4421
+
+exec 4>&1
+ls_status=`{ {
+
 # Start with the standard long format listing
 # with colours, and latest files at bottom
-$ls -lrtq $color_opt$color_when $ng $gdf "$@" |
+$ls -lrtq $color_opt$color_when $ng $gdf $quote "$@";
+printf $? 1>&3; } |
 
 # process with sed to...
 sed "
@@ -181,4 +195,13 @@ sed "
 
   # restore any reset codes replaced above
   s/^0/${ESC}[0m/
-"
+" 1>&4; } 3>&1`
+
+sed_status=$?
+
+# Note if sed fails, then if ls outputs it will usually get
+# a SIGPIPE and exit with status 141.  Though that's dependent
+# on ls(1) propagating that "error", and also will not be the case
+# if ls does not output after sed terminates.  So factor both
+# exit values into the final exit status.
+test $ls_status != 0 && exit $ls_status || exit $sed_status
