@@ -1,4 +1,4 @@
-//#if !( defined  (__CINT__) || defined (__CLING__) )
+#if !( defined  (__CINT__) || defined (__CLING__) )
 
 #include <iostream>
 #include <sstream>
@@ -48,10 +48,7 @@
 
 //#include <AliEmcalList.h>
 
-//#endif
-
-#undef __ROOT_FUNCTIONS_LOADED__
-#define __ROOT_FUNCTIONS_LOADED__ true
+#endif
 
 using namespace std;
 
@@ -142,7 +139,7 @@ static void PadToLogScale() {
       (dynamic_cast<TH1*>(obj))->SetMinimum();
       }
     }
-  gPad->SetLogy(); 
+  gPad->SetLogy();
   gPad->Modified();
 }
 
@@ -165,7 +162,7 @@ static void PadToLogScale_AutoScale() {
       (dynamic_cast<TH1*>(obj))->GetYaxis()->SetRangeUser(min, max);
       }
     }
-  gPad->SetLogy(); 
+  gPad->SetLogy();
   gPad->Modified();
 }
 
@@ -387,7 +384,6 @@ TH2D* AddNewH (TH2D* h_old, TH2D* add_h, Double_t c1 = 1, TString prefix = "") {
     return h_new;
 }
 
-
 //______________________________________________________________
 Double_t Integral (const TH1D* h, Double_t val1, Double_t val2, Option_t* option = "" ) {
     if (!h) {return -99999;}
@@ -418,11 +414,127 @@ void ll( TString path = ".") {
 const char* pwd() { return gSystem->WorkingDirectory(); }
 
 //______________________________________________________________________________
-const char* cd ( TString path = ".")
-{
+const char* cd ( TString path = ".") {
  if ( gSystem->ChangeDirectory(path.Data()) )
     { return pwd(); }
  else
     { printf ("Could not change dir"); return pwd(); }
+}
+
+//______________________________________________________________________________
+Bool_t IsTreeType ( const TString& fileInput, const TString& treeName) {
+  TFile* f = TFile::Open (fileInput.Data());
+
+  if ( f->IsZombie() ) {
+    std::cout << " :: Skipping un-openable file: << " << fileInput.Data()  << std::endl; return kFALSE;
+    }
+  else {
+    TKey* key = f->FindKeyAny (treeName.Data());
+    if (key) { f->Close(); return kTRUE;  }
+    else     { f->Close(); return kFALSE; }
+    }
+}
+
+//______________________________________________________________________________
+TString FindTreeName ( const TString& file_list ) {
+  TString fDataType = "";  // result
+  if ( gSystem->AccessPathName ( file_list.Data() ) ) {
+    std::cout << "File not found: " << file_list.Data() << std::endl; return fDataType;
+    }
+
+  // Open the file
+  ifstream in; in.open ( file_list.Data() );
+  Int_t count = 0;
+  TString line;
+
+  while ( in.good() ) {
+    in >> line;
+    if ( line.IsNull() || line.BeginsWith ( "#" ) ) continue;
+    if ( count++ == 1 ) break; // look only over first file;
+
+    TString file ( line );
+
+    // STRICT ORDERING!!! If multiple tree types found last valid will be preffered
+    if (IsTreeType(file,"TreeK"))      { fDataType = "kine";    }
+    if (IsTreeType(file,"TE"))         { fDataType = "galice";  }
+    if (IsTreeType(file,"HLTESDTree")) { fDataType = "hltesd";  }
+    if (IsTreeType(file,"esdTree"))    { fDataType = "esd";     }
+    if (IsTreeType(file,"aodTree"))    { fDataType = "aod";     }
+
+    return fDataType;
+    }
+  in.close();
+  return fDataType ;
+}
+
+//______________________________________________________________________________
+TString GetInputDataPath ( const TString& file_list) {
+  std::string line_str;
+  TString line = line_str.c_str();
+
+  if ( gSystem->AccessPathName ( file_list.Data() ) ) {
+    std::cout << "File not found: " << file_list.Data() << std::endl; return line; }
+
+  // Open the file
+  ifstream in; in.open ( file_list.Data() );
+  Int_t count = 0;
+
+  while ( in.good() ) {
+    in >> line_str;
+    line = line_str.c_str();
+    if ( line.IsNull() || line.BeginsWith ( "#" ) ) { continue; }
+    if ( count == 1 ) { break; }  // look only over first file;
+    count++;
+    }
+  in.close();
+  line = line_str.c_str();
+  return line;
+}
+
+//______________________________________________________________________________
+TString GetPeriod ( const TString& file_path) {
+  TString period = "";
+
+  if (!file_path.IsNull()) {
+    // split string in tokens (libs)
+    TObjArray* tokens_list = file_path.Tokenize("/"); //tokens_list->Compress();
+    TIter next_str(tokens_list);
+    TObjString* token = NULL;
+    while ((token=(TObjString*)next_str())) {
+      TString token_str = token->GetString(); token_str.ToLower();
+      if ( token_str.Contains("lhc") ) { period = token_str; break; }
+      }
+    delete tokens_list;
+    }
+  return period;
+}
+
+//______________________________________________________________________________
+TString GetPass ( const TString& file_path) {
+  TString pass = "";
+
+  if (!file_path.IsNull()) {
+    // split string in tokens (libs)
+    TObjArray* tokens_list = file_path.Tokenize("/"); //tokens_list->Compress();
+    TIter next_str(tokens_list);
+    TObjString* token=0;
+    while ((token=(TObjString*)next_str())) {
+      TString token_str = token->GetString(); token_str.ToLower();
+      if ( token_str.Contains("pass") ) { pass = token_str; break; }
+      }
+    delete tokens_list;
+    }
+
+  return pass;
+}
+
+//______________________________________________________________________________
+Bool_t PeriodIsMC ( const TString& per_str ) {
+  TString period = per_str;
+  if (!period.IsNull()) {
+    period.ToLower();
+    if ( period.BeginsWith("lhc") && (period.Length() > 6) ) {return kTRUE;}
+  }
+  return kFALSE;
 }
 
