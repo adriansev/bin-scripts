@@ -5,7 +5,7 @@ MYUSER="asevcenc"
 
 rm -rf /tmp/gbbox_${MYUID}_* /tmp/gclient_env_${MYUID} /tmp/gclient_token_${MYUID} /tmp/x509up_u${MYUID}
 
-$HOME/bin/alien-token-init ${MYUSER}
+alien-token-init ${MYUSER}
 
 sed -i '/LD_LIBRARY_PATH/d' /tmp/gclient_env_${MYUID}
 echo source /tmp/gclient_env_${MYUID}
