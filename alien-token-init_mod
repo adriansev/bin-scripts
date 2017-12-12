@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cp $(which alien-token-init) $HOME/bin/ && sed -i 's/XRDGSIPROXY init/XRDGSIPROXY init -valid 96:00/' $HOME/bin/alien-token-init
