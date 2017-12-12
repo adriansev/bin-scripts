@@ -1,0 +1,572 @@
+#!/bin/bash
+# if not sourced
+
+type openssl &> /dev/null
+while [[ $? == 0 ]]; do
+  USERCERT=$HOME/.globus/usercert.pem
+  WARN="\033[41m\033[37m"
+  END="\033[m\n"
+  [[ -r "$USERCERT" ]] || { printf "${WARN}Cannot find user certificate in $USERCERT!${END}"; break; }
+  openssl x509 -in "$USERCERT" -noout -checkend 0 &> /dev/null || { printf "${WARN}Your certificate $USERCERT has expired!${END}"; break; }
+  openssl x509 -in "$USERCERT" -noout -checkend 604800 &> /dev/null || { printf "${WARN}Your certificate $USERCERT will expire in less than one week!${END}"; break; }
+  break
+done
+unset USERCERT WARN END
+
+#############################################################################################
+# guess the platform 
+for dir in /usr/share/libtool /usr/share/automake /usr/lib/rpm
+ do
+   if [ -f $dir/config.guess ]
+   then
+      platform=`$dir/config.guess`
+      break
+   fi
+ done
+
+case $platform in
+  i*86-*-linux-gnu)
+    platform=i686-pc-linux-gnu
+  ;;
+  ia64-*-linux-gnu)
+    platform=ia64-unknown-linux-gnu
+  ;;
+  powerpc-apple-darwin8.*.*)
+    platform=powerpc-apple-darwin8.1.0
+  ;;
+  i686-apple-darwin8.*)
+    platform=i686-apple-darwin8.6.1
+  ;;
+   x86_64-*-linux-gnu)
+   platform=x86_64-unknown-linux-gnu
+  ;;
+ esac
+##############################################################################################
+
+if [ -z $GSHELL_ROOT ] ; then
+    if [ -z $ROOT_SYS ]; then
+	GSHELL_ROOT=$ROOTSYS
+    else
+	GSHELL_ROOT=/opt/alien/api
+    fi
+fi
+
+if [ x$0 = "xbash" ]; then
+echo "Error:  Please don't source me - just execute me!";
+else
+echo $0 | grep ^\? && slashstart="yes"
+if [ x$slashstart = "xyes" ]; then 
+	bname=`dirname $0`;
+else
+	ename=`which $0`;
+	bname=`dirname $ename|sed 's:\/\/:\/:g'`;
+fi;
+gbname=`dirname $GSHELL_ROOT/./`
+vname=`dirname $bname`
+if [ $bname = "." ]; then
+        vname="..";
+fi
+
+gbnode=`ls -i $gbname/bin/alien-token-init 2>/dev/null | awk '{print $1}'`
+vnode=`ls -i $vname/bin/alien-token-init 2>/dev/null| awk '{print $1}'`
+
+# use an inode check to understand if GSHELL_ROOT/bin/gprefix-token-init and the called gprefix-token-init are the same file
+#if [ "$vname" = "$gbname" ]; then
+if [ "$gbnode" = "$vnode" ]; then
+if [ -z $1 ]; then
+username=$USER;
+else
+username=$1;
+fi
+
+testmac=`which otool 2> /dev/null`;
+hascurl=`which curl 2> /dev/null`;
+haswget=`which wget 2> /dev/null`; 
+
+export alien_API_VERSION="1.0.140x"
+export alien_API_PORT=10000
+
+test -z $GSHELL_ROOT && export GSHELL_ROOT=/opt/alien/api
+test -x $GSHELL_ROOT/bin/gbbox || echo "Error: gShell is not installed under $GSHELL_ROOT! ";
+
+test -n $GBBOX_ENVFILE && rm -f $GBBOX_ENVFILE
+source $GSHELL_ROOT/etc/env_gbbox.sh
+alias aliensh='bash --rcfile $GSHELL_ROOT/bin/alien_Shell'
+alias alien_cd='. $GSHELL_ROOT/bin/alien_cd dummy'
+alias alien_pwd=' $GSHELL_ROOT/bin/alien_pwd -1'
+
+servicesetup="/tmp/.gprefix-token-int.$RANDOM.$RANDOM.$RANDOM.servicesetup"
+closestsite="/tmp/.gprefix-token-int.$RANDOM.$RANDOM.$RANDOM.closestsite"
+
+if [ -z "$alien_API_NOSERVICE_CONFIG" ]; then
+    # get some common configuration we want to set for users
+    if [ x$haswget != "x" ]; then
+	env LD_LIBRARY_PATH=/dummy wget -q --timeout 10 alien.cern.ch/xservicesetup2 -O $servicesetup >&/dev/null
+    else 
+	if [ x$hascurl != "x" ]; then
+	    curl -m 10 alien.cern.ch/xservicesetup2 -o $servicesetup >&/dev/null
+	fi
+    fi 	
+    
+    if [ -r $servicesetup ]; then
+	source $servicesetup 2>/dev/null;
+	echo ---------------------------------------------------------------
+	echo "Setting central config:"
+	echo ===============================================================
+	cat $servicesetup
+	echo ===============================================================
+	unlink $servicesetup
+    fi
+fi
+
+
+if [ -z "$GRPEFIX_API_NOCLOSESTSITE_LOOKUP" ]; then
+    # get the closest site
+    if [ x$haswget != "x" ]; then
+	env LD_LIBRARY_PATH=/dummy wget -q --timeout 10 pcalimonitor.cern.ch/services/getClosestSite.jsp -O $closestsite 
+    else 
+	if [ x$hascurl != "x" ]; then
+	    curl -m 10 pcalimonitor.cern.ch/services/getClosestSite.jsp -o $closestsite >&/dev/null
+	fi
+    fi
+    if [ -r $closestsite ]; then
+	export alien_CLOSEST_SITE=`cat $closestsite`
+	echo ---------------------------------------------------------------
+	echo "Setting closest site to: $alien_CLOSEST_SITE"
+	echo ===============================================================
+	unlink $closestsite
+    fi
+fi
+
+
+#unlink $servicesetup >& /dev/null
+
+if [ -z "$alien_API_HOST" ]; then 
+    if [ -n "$alien_API_SERVER_LIST" ]; then
+	export GCLIENT_SERVER_LIST="$alien_API_SERVER_LIST";
+    else 
+	export GCLIENT_SERVER_LIST="pcapiserv03.cern.ch:$alien_API_PORT|";
+    fi
+else
+    export GCLIENT_SERVER_LIST="$alien_API_HOST:$alien_API_PORT|";
+fi
+
+test -z "$alien_API_USER" && export alien_API_USER="$username"
+test -z "$alien_API_VO" && export alien_API_VO="alice"
+
+rndfile="/tmp/.gprefix-token-init.$RANDOM.$RANDOM.$RANDOM"
+servicemessage="/tmp/.gprefix-token-int.$RANDOM.$RANDOM.$RANDOM.servicemessage"
+
+ldfile="/tmp/.gprefix-token-init.$RANDOM.$RANDOM.$RANDOM"
+
+# get the service message
+if [ x$haswget != "x" ]; then
+    env LD_LIBRARY_PATH=/dummy wget -q --timeout 10 alien.cern.ch/servicemessage -O $servicemessage >&/dev/null
+else 
+    if [ x$hascurl != "x" ]; then
+	curl -m 10 alien.cern.ch/servicemessage -o $servicesmessage >&/dev/null
+    fi
+fi 	
+
+if [ -r $servicemessage ]; then
+cat $servicemessage 2>/dev/null;
+fi
+
+
+
+unlink $servicemessage >& /dev/null
+
+if [ -z $X509_CERT_DIR ]; then
+    if [ -d $GSHELL_ROOT/../globus/share/certificates ]; then
+	export X509_CERT_DIR=$GSHELL_ROOT/../globus/share/certificates 
+    else 
+	if [ -d $GSHELL_ROOT/share/certificates ]; then
+	    export X509_CERT_DIR=$GSHELL_ROOT/share/certificates
+	else 
+	    if [ -d $ALIEN_ROOT/globus/share/certificates ]; then
+		export X509_CERT_DIR=$ALIEN_ROOT/globus/share/certificates
+	    else
+		if [ -d /opt/alien/globus/share/certificates ]; then
+		    export X509_CERT_DIR=/opt/alien/globus/share/certificates
+		else 
+		    if [ -d $GLOBUS_LOCATION/share/certificates ]; then
+			export X509_CERT_DIR=$GLOBUS_LOCATION/share/certificates;
+		    fi
+		fi
+	    fi
+	fi	
+    fi
+fi
+
+if [ -z  $X509_CERT_DIR ]; then 
+    echo "error: I cannot find or derive automatically X509_CERT_DIR from GSHELL_ROOT,ALIEN_ROOT,/opt/alien/globus/share/certificates or GLOBUS_LOCATION - specify it explicitly in the environment or define it by setting properly GSHELL_ROOT,ALIEN_ROOT or GLOBUS_LOCATION";
+    exit -1;
+else 
+    echo "Using X509_CERT_DIR=$X509_CERT_DIR" 
+fi
+
+
+#################################################################################################
+(
+  # do all path modifications only inside the subshell
+
+#################################################################################################
+export PATH=$GSHELL_ROOT/bin:$PATH;
+#################################################################################################
+
+#################################################################################################
+# put the gcc compiler path
+
+if [ -z $GSHELL_NO_GCC ]; then
+
+    if [ -z "$GSHELL_GCC" ]
+	then
+	yourgcc=`which gcc`
+	echo ===============================================================
+	echo "***************************************************************"
+	echo "You have installed as gcc $yourgcc !!!"
+	GSHELL_GCC=${GSHELL_GCC:=`ls -1 $GSHELL_ROOT/../*/*/bin/gcc 2>/dev/null | tail -1`}    
+	YOURGSHELL_GCC=`which gcc`;
+	apigcc=`cat $GSHELL_ROOT/etc/gapi-gcc-version`;
+	yourgcc=`$YOURGSHELL_GCC -v 2>&1 | grep "gcc version" | awk '{print $3}' | cut -d "." -f1,2`;
+
+	echo ---------------------------------------------------------------
+	echo "Client was compiled with   gcc version $apigcc";
+	echo "Your local compiler is     gcc version $yourgcc";
+	if [ ! -z "$GSHELL_GCC" ]; then
+	    distgcc=`$GSHELL_GCC -v 2>&1 | grep "gcc version" | awk '{print $3}' | cut -d "." -f1,2`;
+	    echo "The installation itself contains gcc version $distgcc"
+	else
+	    echo "The installation itself contains no gcc version"
+	fi
+	echo ---------------------------------------------------------------
+	if [ "$yourgcc" != "$apigcc" ]; then
+	    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	    echo "Your local compiler is in conflict with the gcc version used in the client libraries."
+	    echo 
+	    echo "You can use the installation as it is, but you cannot develope code and link against the gapi C++ library."
+	    echo 
+	    echo "To switch off this question set the environment variable: GSHELL_NO_GCC=1"
+	    echo 
+	    if [ ! -z "$GSHELL_GCC" ]; then
+		libgcca=`$GSHELL_GCC -print-libgcc-file-name`
+		gcc_lib_dir=`dirname $libgcca`
+		gcc_bin_dir=`dirname $GSHELL_GCC`
+	    fi
+	    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	    echo 
+	    echo 
+
+	    read -p "Do you want to recompile the API with your local compiler. This may take a while ....  <yes/no> ?"
+	    answeryes=""
+	    if [ "$REPLY" = "yes" ]; then    
+		answeryes="y"
+	    fi
+	    if [ "$REPLY" = "y" ]; then    
+		answeryes="y"
+	    fi
+	    if [ "$REPLY" = "YES" ]; then    
+		answeryes="y"
+	    fi
+	    if [ "$REPLY" = "Y" ]; then    
+		answeryes="y"
+	    fi
+	    if [ "$answeryes" = "y" ]; then
+		rm -rf /tmp/xgapi
+		if [ x$hascurl != "x" ]; then
+		    curl -s http://alitorrent.cern.ch/src/xalienfs/xgapi -o /tmp/xgapi >& /dev/null
+	        else if [ x$haswget != "x" ]; then
+		    env LD_LIBRARY_PATH=/dummy wget http://alitorrent.cern.ch/src/xalienfs/xgapi -O /tmp/xgapi >& /dev/null
+		     else
+		        echo "Error: you have neither curl or wget installed - cannot download!"
+			exit -1;
+                     fi
+	        fi  
+                if [ ! -e "/tmp/xgapi" ]; then
+		    echo "Error: download of xgapi script failed - do we have network or is /tmp/ full?";
+		    exit -1;
+                fi
+
+		chmod u+x /tmp/xgapi
+		if [ x$testmac = "x" ]; then
+		    /tmp/xgapi cert || exit -1
+		else
+		    sysctl machdep.cpu.extfeatures | grep "64" > /dev/null 2>&1
+		    if [ $? -eq 0 ]; then
+			echo "Warning: compiling for MAC in 64 bit mode ..."
+			/tmp/xgapi certmac64 || exit -1
+		    else
+			echo "Warning: compiling for MAC in 32 bit mode ..."
+			/tmp/xgapi cert || exit -1
+		    fi
+		fi
+	    else
+		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+		echo "Warning: you cannot link against the gapi C++ library since you don't recompile!";
+		echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+	    fi
+
+	else
+	    echo "Great! Your compiler setup is ok!"
+	    echo ---------------------------------------------------------------
+	fi
+	GSHELL_GCC=$YOURGSHELL_GCC
+    fi
+
+
+    GSHELL_GCC=${GSHELL_GCC:=`ls -1 $GSHELL_ROOT/../*/*/bin/gcc 2>/dev/null | tail -1`}    
+    libgcca=`$GSHELL_GCC -print-libgcc-file-name`
+    gcc_lib_dir=`dirname $libgcca`
+    gcc_bin_dir=`dirname $GSHELL_GCC`
+    
+#    export PATH=$gcc_bin_dir:$PATH
+#    export LD_LIBRARY_PATH=$gcc_lib_dir:$LD_LIBRARY_PATH
+#    export DYLD_LIBRARY_PATH=$gcc_lib_dir:$DYLD_LIBRARY_PATH
+fi
+#################################################################################################
+# fix the environemnt variables
+if [ x$testmac = "x" ]; then 
+export LD_LIBRARY_PATH=$GSHELL_ROOT/lib:$GSHELL_ROOT/lib64:$LD_LIBRARY_PATH
+else
+export DYLD_LIBRARY_PATH=$GSHELL_ROOT/lib:$GSHELL_ROOT/lib64:$DYLD_LIBRARY_PATH
+fi;
+
+
+#################################################################################################
+# check that all libaries are there
+if [ x$testmac = "x" ]; then
+   cnt=`ldd $GSHELL_ROOT/bin/alien_connect | grep found | wc -l | awk '{print $1}'`;
+else
+   cnt=`$GSHELL_ROOT/bin/gbbox  2>&1 | grep "image not found" | wc -l | awk '{print $1}'`
+fi;
+
+perl -e "my @paths = split \":\",\"$PATH\";my \$pathhash=();foreach (@paths) {\$_ =~ s/\/\//\//g;my @subdirs = split('/',\$_);my \$newdir;foreach my \$sdir (@subdirs) {if (\$sdir ne \"..\") {\$newdir .= \"\$sdir/\"; } else {chop \$newdir;\$newdir=~ s{[^/]*\$}{};}}\$pathhash->{\$newdir}=\"1\";}my \$cleanpath=\"\";foreach (keys %\$pathhash) {\$cleanpath .= \"\$_:\";}chop \$cleanpath;print \"\$cleanpath\n\";" > $rndfile
+export PATH=`cat $rndfile`
+perl -e "my @paths = split \":\",\"$LD_LIBRARY_PATH\";my \$pathhash=();foreach (@paths) {\$_ =~ s/\/\//\//g;my @subdirs = split('/',\$_);my \$newdir;foreach my \$sdir (@subdirs) {if (\$sdir ne \"..\") {\$newdir .= \"\$sdir/\"; } else {chop \$newdir;\$newdir=~ s{[^/]*\$}{};}}\$pathhash->{\$newdir}=\"1\";}my \$cleanpath=\"\";foreach (keys %\$pathhash) {\$cleanpath .= \"\$_:\";}chop \$cleanpath;print \"\$cleanpath\n\";"> $rndfile
+export LD_LIBRARY_PATH=`cat $rndfile`
+perl -e "my @paths = split \":\",\"$DYLD_LIBRARY_PATH\";my \$pathhash=();foreach (@paths) {\$_ =~ s/\/\//\//g;my @subdirs = split('/',\$_);my \$newdir;foreach my \$sdir (@subdirs) {if (\$sdir ne \"..\") {\$newdir .= \"\$sdir/\"; } else {chop \$newdir;\$newdir=~ s{[^/]*\$}{};}}\$pathhash->{\$newdir}=\"1\";}my \$cleanpath=\"\";foreach (keys %\$pathhash) {\$cleanpath .= \"\$_:\";}chop \$cleanpath;print \"\$cleanpath\n\";"> $rndfile
+export DYLD_LIBRARY_PATH=`cat $rndfile`
+unlink $rndfile
+
+
+if [ 0 -ne $cnt ]; then
+   if [ x$testmac = "x" ]; then
+      echo "Error: not all shared libaries are in the LD_LIBRARY_PATH! Check   'ldd alien_connect'";
+   else
+      echo "Error: not all shared libraries are in the DYLD_LIBRARY_PATH!   Check with otool -L";
+   fi;
+else
+    
+
+    if [ -z "$ALIEN_JOB_TOKEN"]; then  
+    proxyok=0
+    
+    # check that xrdgsiproxy is still in $ROOTSYS/bin
+    XRDGSIPROXY=`which xrdgsiproxy 2>/dev/null`
+    
+    if [ ! -e "$GSHELL_ROOT/bin/xrdgsiproxy" ]; then
+	if [ "x$ROOTSYS" != "x" ]; then
+	    if [ ! -e "$ROOTSYS/bin/xrdgsiproxy" ]; then
+		if [ -e "$ROOTSYS/net/xrootd/src/xrootd/bin/xrdgsiproxy" ]; then
+		    echo "===> Reinstalling xrdgsiproxy from $ROOTSYS/net/xrootd/..."
+		    cp -v $ROOTSYS/net/xrootd/src/xrootd/bin/xrdgsiproxy $ROOTSYS/bin;
+		    XRDGSIPROXY="$ROOTSYS/bin/xrdgsiproxy";
+		else
+		    if [ -z "$XRDGSIPROXY" ]; then
+                        echo "error: cannot find xrdgsiproxy in your ROOT installation ;-( ..."
+                        echo "warning: I will not be able to create a proxy for you ..."
+		    fi
+		fi
+	    fi
+	fi
+    else
+	XRDGSIPROXY="$GSHELL_ROOT/bin/xrdgsiproxy";
+    fi
+    
+    if [ -x $XRDGSIPROXY ]; then
+	proxyok=1
+	env LD_LIBRARY_PATH=$GSHELL_ROOT/lib:$LD_LIBRARY_PATH DYLD_LIBRARY_PATH=$GSHELL_ROOT/lib:$DYLD_LIBRARY_PATH $XRDGSIPROXY info -e -valid 1:00 >& /dev/null || proxyok=0;
+    fi;
+    if [ $proxyok -eq 0 ]; then
+	if [ -z $GSHELL_NO_PROXY_INIT ]; then
+	    echo "*********************************************************************************";
+	    echo "Attention: You don't have a valid grid proxy ( or less than 1 hour left ) - doing xrdgsiproxy init for you ...";
+	    echo "*********************************************************************************";
+	    $XRDGSIPROXY init -valid 96:00
+	    proxyok=1;
+	    env LD_LIBRARY_PATH=$GSHELL_ROOT/lib:$LD_LIBRARY_PATH DYLD_LIBRARY_PATH=$GSHELL_ROOT/lib:$DYLD_LIBRARY_PATH $XRDGSIPROXY info -e -valid 1:00 >& /dev/null || proxyok=0;
+	    if [ $proxyok -eq 0 ]; then
+		echo "*********************************************************************************";
+		echo "Fatal: The proxy creation failed - there is something wrong with your certificate or the environment settings!"
+		echo "*********************************************************************************";
+		exit 98;
+	    fi
+	else
+	    echo "*********************************************************************************";
+	    echo "Attention: You don't have a valid grid proxy - but auto proxy-init is disabled via then environment ...";
+	    echo "*********************************************************************************";
+	fi;
+    fi;
+    else
+	echo "*********************************************************************************";
+	echo "Attention: Doing job token authentication ...";
+	echo "*********************************************************************************";
+    fi
+
+
+	    # disable AFS passwd question
+        test -z $GCLIENT_NOPROMPT &&  export GCLIENT_NOPROMPT=1    
+	alien_connect "$alien_API_HOST" $alien_API_PORT $alien_API_USER && connected="1";
+	if [ x$connected != "x" ]; then 
+	    alien_PWD=`$GSHELL_ROOT/bin/alien_pwd -1`
+	    test -z $alien_PWD && alien_PWD="/"
+	    . alien_cd
+	    alien_HOME=`$GSHELL_ROOT/bin/alien_pwd -1`
+	    . alien_cd $alien_PWD
+	    if [ -z $alien_CLIENT_HOST]; then 
+		if [ x$testmac = "x" ]; then
+		    export alien_CLIENT_HOST=`hostname -f`
+		else
+		    export alien_CLIENT_HOST=`hostname`
+		fi;
+	    fi;
+
+	    mlconf=`$GSHELL_ROOT/bin/gbbox mlconfig $alien_CLIENT_HOST | grep -v	Unknown | sed s/\\%/\\\\%/ 2>/dev/null`
+   	    aliensite=`$GSHELL_ROOT/bin/gbbox -o site getsite -z $HOST 2>/dev/null`
+	    aliensitese=`$GSHELL_ROOT/bin/gbbox -o se getsite -z $HOST 2>/dev/null`
+#	    test -z "$mlconf" || export $mlconf; 
+	    if [ -z "$alien_CLOSE_SE"   ]; then
+		if [ ! -z "$aliensitese"      ]; then 
+		    echo $mlconf alien_HOME=\"$alien_HOME\" alien_SITE=\"$aliensite\" alien_CLOSE_SE=\"$aliensitese\" > $rndfile
+		else
+		    echo $mlconf alien_HOME=\"$alien_HOME\" alien_SITE=\"$aliensite\" > $rndfile
+		fi 
+	    else 
+		echo $mlconf alien_HOME=\"$alien_HOME\" alien_SITE=\"$aliensite\" alien_CLOSE_SE=\"$alien_CLOSE_SE\"> $rndfile
+	    fi
+
+	    #default retry variables
+	    test -z $GCLIENT_COMMAND_MAXWAIT && echo export GCLIENT_COMMAND_MAXWAIT=300 >> $rndfile
+	    test -z $GCLIENT_COMMAND_RETRY   && echo export GCLIENT_COMMAND_RETRY=20 >> $rndfile  
+	    test -z $GCLIENT_SERVER_RESELECT && echo export GCLIENT_SERVER_RESELECT=4 >> $rndfile 
+	    test -z $GCLIENT_SERVER_RECONNECT && echo export GCLIENT_SERVER_RECONNECT=2 >> $rndfile
+	    test -z $GCLIENT_RETRY_DAMPING   && echo export GCLIENT_RETRY_DAMPING=1.2 >> $rndfile
+	    test -z $GCLIENT_RETRY_SLEEPTIME && echo export GCLIENT_RETRY_SLEEPTIME=2 >> $rndfile
+	    #user defined
+	    test -z $GCLIENT_COMMAND_MAXWAIT || echo export GCLIENT_COMMAND_MAXWAIT=$GCLIENT_COMMAND_MAXWAIT >> $rndfile
+	    test -z $GCLIENT_COMMAND_RETRY   || echo export GCLIENT_COMMAND_RETRY=$GCLIENT_COMMAND_RETRY >> $rndfile  
+	    test -z $GCLIENT_SERVER_RESELECT || echo export GCLIENT_SERVER_RESELECT=$GCLIENT_SERVER_RESELECT >> $rndfile 
+	    test -z $GCLIENT_SERVER_RECONNECT || echo export GCLIENT_SERVER_RECONNECT=$GCLIENT_SERVER_RECONNECT >> $rndfile
+	    test -z $GCLIENT_RETRY_DAMPING   || echo export GCLIENT_RETRY_DAMPING=$GCLIENT_RETRY_DAMPING >> $rndfile
+	    test -z $GCLIENT_RETRY_SLEEPTIME || echo export GCLIENT_RETRY_SLEEPTIME=$GCLIENT_RETRY_SLEEPTIMG >> $rndfile
+
+	else 
+	    echo "-----------------------------------------------------------------";
+	    echo "Error: Connection to $alien_API_USER@$alien_API_HOST:$alien_API_PORT[$GCLIENT_SERVER_LIST] failed!";
+	fi;
+fi;
+if [ x$testmac = "x" ]; then
+    echo $LD_LIBRARY_PATH > $ldfile;
+else 
+    echo $DYLD_LIBRARY_PATH > $ldfile;
+fi
+
+)
+
+if [ -e $rndfile ]; then
+ 
+mlconf=`cat $rndfile`
+# test -z "$mlconf" || export $mlconf
+unlink $rndfile >& /dev/null
+
+if [ -e $ldfile ]; then
+
+NEWLD_LIBRARY_PATH=`cat $ldfile`
+unlink $ldfile >& /dev/null
+
+fi
+
+#######################################################################
+# export all settings into /tmp/gclient_env_$UID.tmp
+envfiletmp="/tmp/gclient_env_$UID.tmp"
+envfile="/tmp/gclient_env_$UID"
+echo "" > $envfiletmp
+echo "alias aliensh='bash --rcfile $GSHELL_ROOT/bin/alien_Shell'" >> $envfiletmp
+echo "alias alien_cd='. $GSHELL_ROOT/bin/alien_cd dummy'" >> $envfiletmp
+echo "alias alien_pwd=' $GSHELL_ROOT/bin/alien_pwd -1'" >> $envfiletmp
+
+#default
+if [ -z "$GCLIENT_SERVER_LIST" ]; then
+    echo "export GCLIENT_SERVER_LIST=\"pcapiserv03.cern.ch:10000\"" >> $envfiletmp
+else
+    if [ -z "$alien_API_HOST" ]; then
+	echo > /dev/null
+# don't put, if not specified by the user
+#	echo "export alien_API_HOST=\"pcapiserv04.cern.ch\"" >> $envfiletmp
+    else
+	echo "export alien_API_HOST=\"$alien_API_HOST\"" >> $envfiletmp
+    fi
+    
+    if [ -z "$alien_API_PORT" ]; then
+	echo "export alien_API_PORT=\"10000\"" >> $envfiletmp
+    else
+	echo "export alien_API_PORT=\"$alien_API_PORT\"" >> $envfiletmp
+    fi
+    echo "export GCLIENT_SERVER_LIST=\"$GCLIENT_SERVER_LIST\"" >> $envfiletmp
+fi
+
+if [ -z "$alien_API_USER" ]; then
+    echo "export alien_API_USER=\"$username\"" >> $envfiletmp
+else
+    echo "export alien_API_USER=\"$alien_API_USER\"" >> $envfiletmp    
+fi
+
+if [ -z "$alien_API_VO" ]; then
+    echo "export alien_API_VO=\"alice\"" >> $envfiletmp
+else
+    echo "export alien_API_VO=\"$alien_API_VO\"" >> $envfiletmp
+fi
+
+echo "export alien_CLOSEST_SITE=\"$alien_CLOSEST_SITE\"" >> $envfiletmp
+
+test -z "$mlconf" || echo "export $mlconf" >> $envfiletmp
+echo "export XRD_XRDCPSIZEHINT=0" >> $envfiletmp 
+test -z "$GLOBUS_LOCATION" || echo "export GLOBUS_LOCATION=$GLOBUS_LOCATION" >> $envfiletmp
+test -z "$X509_CERT_DIR" || echo "export X509_CERT_DIR=$X509_CERT_DIR" >> $envfiletmp
+test -z "$GBBOX_ENVFILE" || echo "export GBBOX_ENVFILE=$GBBOX_ENVFILE" >> $envfiletmp
+GSR="GSHELL_ROOT"; #to avoid bootstrap change
+test -z "$GSHELL_ROOT" || echo "export $GSR=$GSHELL_ROOT" >> $envfiletmp
+if [ x$testmac = "x" ]; then 
+    echo "export LD_LIBRARY_PATH=$NEWLD_LIBRARY_PATH:\$LD_LIBRARY_PATH" >> $envfiletmp
+else
+    echo "export DYLD_LIBRARY_PATH=$NEWLD_LIBRARY_PATH:\$DYLD_LIBRARY_PATH " >> $envfiletmp  
+fi;
+mv $envfiletmp $envfile
+#######################################################################
+echo Your identity: $alien_API_USER
+echo Creating token ..................................... Done
+echo -n "Your token is valid until: " 
+perl -e "print scalar localtime(`cat /tmp/gclient_token_$UID | grep Expiretime | cut -d '=' -f 2`),\"\n\""
+exit 0;
+else
+exit 99;
+fi; 
+
+else 
+        test -w $bname/alien-token-init || echo "Error: Cannot bootstrap - no permissions to modify files under $bname"
+	test -w $bname/alien-token-init || exit 98;
+	echo "----------------------------------------"
+	echo "Warning: Bootstrapping your installation"
+	echo "----------------------------------------"
+	pwd=$PWD
+	cd $bname
+	mv $bname/alien-token-init $bname/.alien-token-init
+	cp $bname/.alien-token-init $bname/alien-token-init
+	$bname/alien_apiservice-bootstrap
+	chmod u+x $bname/alien-token-init
+	cd $pwd
+	echo "---> Repeat: alien-token-init";
+	test -e $bname/.alien-token-init && unlink $bname/.alien-token-init
+	( $bname/alien-token-init $1 )
+fi;
+fi;
