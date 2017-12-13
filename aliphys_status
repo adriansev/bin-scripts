@@ -1,11 +1,50 @@
 #!/bin/bash
 
-ls -la $ROOTSYS/../root
-ls -la ${ALICE}/geant3
-ls -la ${ALICE}/aliphysics
-ls -la ${ALICE}/aliroot
+ROOT_VER=$(root-config --version)
 
+FJ_VER=$(fastjet-config --version)
+eval FJ_LINE=$(stat -c %N ${ALICE}/fastjet | awk -F" -> " '{print $2}')
 
+ALIROOT_SRC="${ALICE}/trunk-src"
+cd ${ALIROOT_SRC}
 
+ALIROOT_GIT_ID=$(awk '/define ALIROOT_VERSION/ {gsub ("\"","",$3) ;print $3;}' $ALICE/aliroot/include/ARVersion.h)
+ALIROOT_GIT_ID_DATE=$(git show --format="%ci %cr" ${ALIROOT_GIT_ID} | head -n1)
 
+ALIROOT_VER=$(git tag --contains ${ALIROOT_GIT_ID})
+[[ -z "${ALIROOT_VER}" ]] && ALIROOT_VER=$(git branch --contains ${ALIROOT_GIT_ID})
+[[ -z "${ALIROOT_VER}" ]] && ALIROOT_VER=${ALIROOT_GIT_ID}
+
+ALIPHYS_SRC="${ALICE}/physics-src"
+cd ${ALIPHYS_SRC}
+
+ALIPHYS_GIT_ID=$(awk '/define ALIPHYSICS_VERSION/ {gsub ("\"","",$3) ;print $3;}' $ALICE/aliphysics/include/APVersion.h)
+ALIPHYS_GIT_ID_DATE=$(git show --format="%ci %cr" ${ALIPHYS_GIT_ID} | head -n1)
+
+ALIPHYS_VER=$(git tag --contains ${ALIPHYS_GIT_ID})
+
+[[ -z "${ALIPHYS_VER}" ]] && ALIPHYS_VER=$(git branch --contains ${ALIPHYS_GIT_ID})
+[[ -z "${ALIPHYS_VER}" ]] && ALIPHYS_VER=${ALIPHYS_GIT_ID}
+
+echo "ROOT version : ${ROOT_VER}"
+stat -c %N ${ROOTSYS}/../root
+echo
+
+echo "FASTJET version : ${FJ_VER}"
+echo ${FJ_LINE} | awk -F_ '{ printf ("FJ CONTRIB version = %s\n",$3); }'
+stat -c %N ${ALICE}/fastjet
+echo
+
+echo "GEANT3 version :"
+stat -c %N ${ALICE}/geant3
+echo
+
+echo "ALIROOT version : ${ALIROOT_VER}"
+echo "Last commit date : ${ALIROOT_GIT_ID_DATE}"
+stat -c %N ${ALICE}/aliroot
+echo
+
+echo "ALIPHYSICS version : ${ALIPHYS_VER}"
+echo "Last commit date : ${ALIPHYS_GIT_ID_DATE}"
+stat -c %N ${ALICE}/aliphysics
 

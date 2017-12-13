@@ -1,0 +1,22 @@
+#!/bin/bash -e
+
+VER=$1
+
+cd $ALICE
+LIST_DIRS=$(ls -1d fastjet_*)
+
+LIST_INSTALLED=$(echo "${LIST_DIRS}" | awk '{gsub ("fastjet_","",$0); print;}')
+
+#echo "$LIST_INSTALLED"
+
+CURVER=$(stat -c %N fastjet)
+
+[[ -z "${VER}" ]] && { echo "Use : ${0} fj_version" ; echo -ne "Where available versions are :\n""${LIST_INSTALLED}""\n"; echo "Current version is : ${CURVER}"; exit 1;}
+
+[[ ! "$LIST_INSTALLED" =~ "${VER}" ]] && { echo "Unrecognized FJ version" ; echo -ne "Where available versions are :\n""${LIST_INSTALLED}""\n"; echo "Current version is : ${CURVER}"; exit 1;}
+
+FJ_TARGET="fastjet_${VER}"
+
+unlink fastjet
+ln -s ${FJ_TARGET} fastjet
+
