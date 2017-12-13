@@ -3,30 +3,21 @@
 ALIROOT_R5="v5-AN-r5"
 ALIROOT_R6="v5-AN-r6"
 
-ALIPHYS_R5="physics-r5"
-ALIPHYS_R6="physics-r6"
+cd ${ALICE}
 
-cd $tools/alice
-
-if [ "$1" = "r6" ] ; then
+if [[ "$1" = "r6" ]] ; then
   switch_root r6
   switch_geant3 r6
 
   unlink aliroot
-  ln -s $ALIROOT_R6 aliroot
+  ln -s ${ALIROOT_R6} aliroot
 
-  unlink aliphysics
-  ln -s $ALIPHYS_R6 aliphysics
-
-elif [ "$1" = "r5" ] ; then
+elif [[ "$1" = "r5" ]] ; then
   switch_root r5
   switch_geant3 r5
 
   unlink aliroot
   ln -s ${ALIROOT_R5} aliroot
-
-  unlink aliphysics
-  ln -s ${ALIPHYS_R5} aliphysics
 
 else
   echo "arguments are r5, r6"

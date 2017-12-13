@@ -5,17 +5,18 @@ ROOT_VER_MAJOR=${ROOT_VER:0:1}
 NCPU=$(root-config --ncpu)
 
 if (( ROOT_VER_MAJOR == 5 )) ; then
-  switch_aliroot r5
+  switch_aliphys r5
 else
-  switch_aliroot r6
+  switch_aliphys r6
 fi
 
 echo -e "ROOT version is : $ROOT_VER\n"
+aliphys_status
 
 CMAKECMD="cmake_alicephys"
-PHYSICS_SRC="$tools/alice/physics-src"
-PHYS_BUILDDIR="$tools/alice/BUILDPHYS"
-PHYS_INSTALLDIR="$tools/alice/aliphysics"
+PHYSICS_SRC="${ALICE}/physics-src"
+PHYS_BUILDDIR="${ALICE}/BUILDPHYS"
+PHYS_INSTALLDIR="${ALICE}/aliphysics"
 
 mkdir -p ${PHYS_BUILDDIR}
 cd ${PHYS_BUILDDIR}

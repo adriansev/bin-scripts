@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+make distclean
+./configure --prefix=${ALICE}/fastjet --enable-debug --enable-shared --enable-cgal --enable-allplugins --enable-allcxxplugins --enable-pyext
+
+make -j8 && make install
+

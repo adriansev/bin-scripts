@@ -1,0 +1,9 @@
+#!/bin/bash -e
+
+make distclean
+./configure --fastjet-config=$ALICE/fastjet/bin/fastjet-config
+
+make -j8 && make install
+
+make -j8 fragile-shared && make fragile-shared-install
+
