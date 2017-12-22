@@ -414,6 +414,9 @@ void ll( TString path = ".") {
 const char* pwd() { return gSystem->WorkingDirectory(); }
 
 //______________________________________________________________________________
+const char* curdir() { return gSystem->BaseName( pwd() ); }
+
+//______________________________________________________________________________
 const char* cd ( TString path = ".") {
  if ( gSystem->ChangeDirectory(path.Data()) )
     { return pwd(); }
