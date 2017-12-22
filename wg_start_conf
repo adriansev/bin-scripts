@@ -2,6 +2,8 @@
 
 [[ -z "$1" ]] && { echo "Usage : $0 CONF_FILE" && exit; }
 
+[[ "$1" == "save" ]] && { /bin/wg showconf ${Dev} > ${Dev}_$(date +%Y%m%d_%H%M%S).conf && exit; }
+
 FILE=$1
 
 # First check
@@ -59,8 +61,17 @@ echo "${WGCONF}" > ${WG_TMP_CONF}
 
 /bin/wg setconf ${Dev} ${WG_TMP_CONF} && rm -rf ${WG_TMP_CONF}
 
+## aditional conf files place in peers sub-directory relative to main configuration file will be parsed
+PEERS_DIR="$(/usr/bin/dirname ${FILE})/peers"
+for peer in ${PEERS_DIR}/*.conf; do
+    /bin/wg addconf ${Dev} ${peer}
+done
+
 ## activate link
 /sbin/ip link set up dev ${Dev}
+
+## status of the connection
+/bin/wg show
 
 ####################################################
 ## Apply the Routing Rules
@@ -73,6 +84,4 @@ for r in ${ROUTES}; do
     line=$(eval echo \$${r})
     /sbin/ip route add ${line} dev ${Dev}
 done
-
-/bin/wg showconf ${Dev} > ${Dev}_$(date +%Y%m%d_%H%M%S).conf
 
