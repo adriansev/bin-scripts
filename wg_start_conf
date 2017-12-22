@@ -1,0 +1,78 @@
+#!/bin/bash
+
+[[ -z "$1" ]] && { echo "Usage : $0 CONF_FILE" && exit; }
+
+FILE=$1
+
+# First check
+is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard)
+[[ -z "${is_module_loaded}" ]] && /sbin/modprobe wireguard
+
+# Second check
+is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard)
+[[ -z "${is_module_loaded}" ]] && /sbin/modprobe wireguard
+
+# Third check
+is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard)
+[[ -z "${is_module_loaded}" ]] && { echo "wireguard module could not be loaded. check the dkms or the loading of the module" && exit; }
+
+echo ${is_module_loaded}
+echo "OK : module is loaded"
+
+## keep configuration in memory and strip the comments
+CONF=$(cat ${FILE} | /bin/awk '!/^#/' )
+
+## Content of DeviceDef section
+DEVICEDEF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=1; next} /\[/{flag=0} flag')
+
+## Content of Routing Section
+ROUTESDEF=$( echo "${CONF}" | /bin/awk '/\[Routes\]/{flag=1; next} /\[/{flag=0} flag')
+
+## Extract the Wireguard portion of configuration
+WGCONF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=0; next} /\[/{flag=1} flag' | /bin/awk '/\[Routes\]/{flag=0; next} /\[/{flag=1} flag' )
+
+####################################################
+## Set the network device
+##echo "${DEVICEDEF}"
+eval "${DEVICEDEF}"
+
+[[ -z "${Dev}" ]] && { echo "Device name not defined! check contents of conf file" && exit; }
+[[ -z "${IpCIDR}" ]] && { echo "Device IP not defined! check contents of conf file" && exit; }
+
+WG_IFACES=$(ip -o -d link show | /bin/awk -F": " '/wireguard/ {print $2}')
+
+## if already setup remove it
+if [[ "${WG_IFACES}" =~ "${Dev}" ]] ; then
+    /sbin/ip link del dev ${Dev} 2>/dev/null
+fi
+
+/sbin/ip link add dev ${Dev} ${DevDefArgs} type wireguard
+/sbin/ip addr add dev ${Dev} ${IpCIDR}
+
+[[ -n "${DevAddArgs}" ]] && /sbin/ip link set ${Dev} ${DevAddArgs}
+
+####################################################
+## Set the Wireguard configuration
+##echo "${WGCONF}"
+WG_TMP_CONF="/tmp/wg_$$.conf"
+echo "${WGCONF}" > ${WG_TMP_CONF}
+
+/bin/wg setconf ${Dev} ${WG_TMP_CONF} && rm -rf ${WG_TMP_CONF}
+
+## activate link
+/sbin/ip link set up dev ${Dev}
+
+####################################################
+## Apply the Routing Rules
+##echo "${ROUTESDEF}"
+eval "${ROUTESDEF}"
+
+ROUTES=$(compgen -v | grep WG_ROUTE)
+
+for r in ${ROUTES}; do
+    line=$(eval echo \$${r})
+    echo /sbin/ip route add ${line} dev ${Dev}
+done
+
+/bin/wg showconf ${Dev} > ${DEV}_$(date +%Y%m%d_%H%M%S).conf
+
