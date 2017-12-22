@@ -71,8 +71,8 @@ ROUTES=$(compgen -v | grep WG_ROUTE)
 
 for r in ${ROUTES}; do
     line=$(eval echo \$${r})
-    echo /sbin/ip route add ${line} dev ${Dev}
+    /sbin/ip route add ${line} dev ${Dev}
 done
 
-/bin/wg showconf ${Dev} > ${DEV}_$(date +%Y%m%d_%H%M%S).conf
+/bin/wg showconf ${Dev} > ${Dev}_$(date +%Y%m%d_%H%M%S).conf
 
