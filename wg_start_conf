@@ -1,8 +1,6 @@
 #!/bin/bash
 
-[[ -z "$1" ]] && { echo "Usage : $0 CONF_FILE" && exit; }
-
-[[ "$1" == "save" ]] && { /bin/wg showconf ${Dev} > ${Dev}_$(date +%Y%m%d_%H%M%S).conf && exit; }
+[[ -z "$1" ]] && { echo "Usage : $0 CONF_FILE" && exit 1; }
 
 FILE=$1
 
@@ -18,7 +16,7 @@ is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard)
 is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard)
 [[ -z "${is_module_loaded}" ]] && { echo "wireguard module could not be loaded. check the dkms or the loading of the module" && exit; }
 
-echo ${is_module_loaded}
+#echo ${is_module_loaded}
 echo "OK : module is loaded"
 
 ## keep configuration in memory and strip the comments
@@ -38,8 +36,10 @@ WGCONF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=0; next} /\[/{flag=1} 
 ##echo "${DEVICEDEF}"
 eval "${DEVICEDEF}"
 
-[[ -z "${Dev}" ]] && { echo "Device name not defined! check contents of conf file" && exit; }
-[[ -z "${IpCIDR}" ]] && { echo "Device IP not defined! check contents of conf file" && exit; }
+[[ -z "${Dev}" ]] && { echo "Device name not defined! check contents of conf file" && exit 1; }
+[[ -z "${IpCIDR}" ]] && { echo "Device IP not defined! check contents of conf file" && exit 1; }
+
+[[ "$1" == "save" ]] && { /bin/wg showconf ${Dev} > ${Dev}_$(date +%Y%m%d_%H%M%S).conf && exit 0; }
 
 WG_IFACES=$(ip -o -d link show | /bin/awk -F": " '/wireguard/ {print $2}')
 
@@ -47,6 +47,9 @@ WG_IFACES=$(ip -o -d link show | /bin/awk -F": " '/wireguard/ {print $2}')
 if [[ "${WG_IFACES}" =~ "${Dev}" ]] ; then
     /sbin/ip link del dev ${Dev} 2>/dev/null
 fi
+
+## we delete the IF anyway before re-configuration
+[[ "$2" == "down" ]] && exit 0
 
 /sbin/ip link add dev ${Dev} ${DevDefArgs} type wireguard
 /sbin/ip addr add dev ${Dev} ${IpCIDR}
