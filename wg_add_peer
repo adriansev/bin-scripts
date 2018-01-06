@@ -1,0 +1,38 @@
+#!/bin/bash
+
+help () {
+echo "Usage : $0 DEV PEER_PUB_KEY ENDPOINT_IP:PORT ALLOWED_IPS WG_DIRECTIVES"
+echo "WG directives are :"
+echo "[ [remove] [preshared-key <file path>] [persistent-keepalive <interval seconds>] ...]"
+}
+
+[[ -z "$1" ]] && { help && exit; }
+
+DEV="${1}"
+shift
+PUBKEY="${1}"
+shift
+IP_PORT="${1}"
+shift
+ALLOWED_IPS="${1}"
+shift
+WG_DIRECTIVES="$*"
+
+IP_ARR=(${IP_PORT//:/ })
+IP=${IP_ARR[0]}
+PORT=${IP_ARR[1]}
+
+[[ -z "${DEV}" ]] && { echo "Device name not defined!" && help && exit 1; }
+[[ -z "${PUBKEY}" ]] && { echo "Pubkey not defined!" && help && exit 1; }
+[[ -z "${IP}" ]] && { echo "Endpoint IP not defined!" && help && exit 1; }
+[[ -z "${PORT}" ]] && { echo "Endpoint PORT not defined!" && help && exit 1; }
+
+DEV_PRESENT=$(wg show ${DEV} 2>/dev/null)
+
+## if already setup
+[[ -z "${DEV_PRESENT}" ]] && { echo "Device ${DEV} not found; first init the device"; exit;}
+
+[[ -n "${ALLOWED_IPS}" ]] && ALLOWED_IPS_ARG="allowed-ips ${ALLOWED_IPS}"
+
+wg set ${DEV} peer ${PUBKEY} endpoint "${IP}:${PORT}" ${ALLOWED_IPS_ARG} ${WG_DIRECTIVES}
+

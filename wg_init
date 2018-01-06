@@ -1,0 +1,45 @@
+#!/bin/bash
+
+help () {
+echo "Usage : $0 DEV IP_CIDR:PORT PRIV_KEY_FILE_PATH WG_DIRECTIVES"
+echo "WG directives are :"
+echo "[fwmark <mark>] [peer <base64 public key> [remove] [preshared-key <file path>] [endpoint <ip>:<port>] [persistent-keepalive <interval seconds>] [allowed-ips <ip1>/<cidr1>[,<ip2>/<cidr2>]...] ]..."
+}
+
+[[ -z "$1" ]] && { help && exit; }
+
+DEV="${1}"
+shift
+IP_CIDR_PORT="${1}"
+shift
+PRIV_KEY="${1}"
+shift
+WG_DIRECTIVES="$*"
+
+IP_ARR=(${IP_CIDR_PORT//:/ })
+IP_CIDR=${IP_ARR[0]}
+PORT=${IP_ARR[1]}
+
+[[ -z "${DEV}" ]] && { echo "Device name not defined!" && help && exit 1; }
+[[ -z "${IP_CIDR}" ]] && { echo "Device IP not defined!" && help && exit 1; }
+[[ -z "${PORT}" ]] && { echo "Listening Port not defined!" && help && exit 1; }
+[[ ! -e "${PRIV_KEY}" ]] && { echo "Private Key file not found!" && help && exit 1; }
+
+__dev_is_present () { /sbin/ip -o link show ${1} type wireguard 2>/dev/null | awk -F": " '{print $2}'; }
+DEV_PRESENT=$( __dev_is_present ${DEV} )
+
+## if already setup
+if [[ -n "${DEV_PRESENT}" ]] ; then
+    echo "Interface ${DEV} already created"
+    echo "to remove it use :"
+    echo "ip link del dev ${DEV} 2>/dev/null"
+    exit
+fi
+
+ip link add dev ${DEV} txqueuelen 20000 mtu 9000 type wireguard
+ip addr add dev ${DEV} ${IP_CIDR}
+ip link set up dev ${DEV}
+
+wg set ${DEV} private-key ${PRIV_KEY} listen-port ${PORT} ${WG_DIRECTIVES}
+
+
