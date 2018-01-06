@@ -7,25 +7,59 @@ ARG="start"
 [[ "$2" == "restart" ]] && ARG="restart"
 [[ "$2" == "reload" ]] && ARG="reload"
 
+help () {
+echo "Usage : $0 CONF_FILE ARGS"
+echo "CONF_FILE should point to a Wireguard configuration file"
+echo "ARGS are one of : start | no option ; save ; status | show ; down | stop ; restart ; reload"
+}
+
+[[ -z "$1" ]] && { help && exit 1; }
+[[ ( ! -e "$1" ) || ( ! -f "$1" ) ]] && { help && exit 1; }
+
 # Check if wireguard module is loaded
-is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard)
-[[ -z "${is_module_loaded}" ]] && /sbin/modprobe wireguard
+is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard) ;
+[[ -z "${is_module_loaded}" ]] && { /sbin/modprobe wireguard ; is_module_loaded=$(/sbin/lsmod | /bin/grep ^wireguard); }
 [[ -z "${is_module_loaded}" ]] && { echo "wireguard module could not be loaded. check the dkms or the loading of the module"; /usr/sbin/dkms status; exit 1; }
-
-[[ -z "$1" ]] && { echo "Usage : $0 CONF_FILE ARGS" && exit 1; }
-
-[[ ( ! -e "$1" ) || ( ! -f "$1" ) ]] && { echo "First argument must be the configuration file"; echo "Usage : $0 CONF_FILE ARGS" && exit 1; }
 
 FILE=$1
 
-## take as argument configuration files
-__process_routes () {(
-local CONF=$( cat ${1} | /bin/awk '!/^#/' )
+############################
+## assumes that ${Dev} ${IpCIDR} ${DevDefArgs} ${DevAddArgs} are already present in environment
+__setup_device () {
+local REZ=0
+
+## add device with type wireguard
+/sbin/ip link add dev ${Dev} ${DevDefArgs} type wireguard
+REZ=$?
+[[ "${REZ}" != "0" ]] && { echo "Could not add device ${Dev}"; return ${REZ}; }
+
+## add ip/cidr to setup dev
+/sbin/ip addr add dev ${Dev} ${IpCIDR}
+REZ=$?
+[[ "${REZ}" != "0" ]] && { echo "Could not set ${IpCIDR} to ${Dev}"; return ${REZ}; }
+
+if [[ -n "${DevAddArgs}" ]]; then
+    /sbin/ip link set ${Dev} ${DevAddArgs}
+    REZ=$?
+    [[ "${REZ}" != "0" ]] && { echo "Could not set aditional args to ${Dev}"; return ${REZ}; }
+fi
+
+## activate device
+/sbin/ip link set up dev ${Dev}
+REZ=$?
+[[ "${REZ}" != "0" ]] && { echo "Could activate device ${Dev}"; return ${REZ}; }
+
+return ${REZ};
+}
+
+############################
+## take as argument configuration files ; it assumes that ${Dev} is defined in envirnoment
+__process_routes () {
+local CONF=$(cat ${1} | /bin/awk '!/^#/' )
 [[ -z "${CONF}" ]] && return 1;
 
-local ROUTESDEF=$( echo "${CONF}" | /bin/awk '/\[Routes\]/{flag=1; next} /\[/{flag=0} flag')
+local ROUTESDEF=$(echo "${CONF}" | /bin/awk '/\[Routes\]/{flag=1; next} /\[/{flag=0} flag')
 [[ -z "${ROUTESDEF}" ]] && return 1;
-
 eval "${ROUTESDEF}"
 
 local ROUTES=$(compgen -v | grep WG_ROUTE)
@@ -41,127 +75,84 @@ for r in ${ROUTES}; do
 done
 
 return 0;
-)}
+}
 
-__process_peers () {(
-local DEV="${1}"
-
-local CONF=$( cat ${2} | /bin/awk '!/^#/' )
+############################
+## it assumes ${Dev} present in environment
+__process_peers () {
+local CONF=$(cat ${1} | /bin/awk '!/^#/' )
 [[ -z "${CONF}" ]] && return 1;
 
-local PEERCONF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=0; next} /\[/{flag=1} flag' | /bin/awk '/\[Routes\]/{flag=0; next} /\[/{flag=1} flag' )
+local PEERCONF=$(echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=0; next} /\[/{flag=1} flag' | /bin/awk '/\[Routes\]/{flag=0; next} /\[/{flag=1} flag' )
 [[ -z "${PEERCONF}" ]] && return 1;
 
-local PEER_TMP_CONF="/tmp/_peer_wg_${DEV}.conf"
+local PEER_TMP_CONF="/tmp/_peer_wg_${Dev}.conf"
 echo "${PEERCONF}" > ${PEER_TMP_CONF}
 
-/bin/wg addconf ${DEV} ${PEER_TMP_CONF}
+/bin/wg addconf ${Dev} ${PEER_TMP_CONF}
 local REZ=$?
 
-rm -rf ${PEER_TMP_CONF}
+/bin/rm -rf ${PEER_TMP_CONF}
 return ${REZ};
-)}
+}
 
-__setup_device () {(
-local CONF=$( cat ${1} | /bin/awk '!/^#/' )
-[[ -z "${CONF}" ]] && return 1;
-
-local DEVICEDEF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=1; next} /\[/{flag=0} flag')
-[[ -z "${DEVICEDEF}" ]] && return 1;
-eval "${DEVICEDEF}"
-
-local REZ=0
-
-/sbin/ip link add dev ${Dev} ${DevDefArgs} type wireguard
-REZ=$?
-[[ "${REZ}" != "0" ]] && { echo "Could not setup device ${Dev}"; return ${REZ}; }
-
-/sbin/ip addr add dev ${Dev} ${IpCIDR}
-REZ=$?
-[[ "${REZ}" != "0" ]] && { echo "Could not set ${IpCIDR} to ${Dev}"; return ${REZ}; }
-
-if [[ -n "${DevAddArgs}" ]]; then
-    /sbin/ip link set ${Dev} ${DevAddArgs}
-    REZ=$?
-    [[ "${REZ}" != "0" ]] && { echo "Could not set aditional args to ${Dev}"; return ${REZ}; }
-fi
-
-return ${REZ};
-)}
-
-__dev_is_present () { /sbin/ip -o -d link show $1 type wireguard 2>/dev/null | awk -F": " '{print $2}'; }
+############################
+__dev_is_present () { /sbin/ip -o link show ${1} type wireguard 2>/dev/null | awk -F": " '{print $2}'; }
 
 ## keep configuration in memory and strip the comments
 CONF=$(cat ${FILE} | /bin/awk '!/^#/' )
+CONF_NAME=$(/bin/basename ${FILE} .conf)
 
-## Content of DeviceDef section
-DEVICEDEF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=1; next} /\[/{flag=0} flag')
-
-## Content of Routing Section
-ROUTESDEF=$( echo "${CONF}" | /bin/awk '/\[Routes\]/{flag=1; next} /\[/{flag=0} flag')
-
-## Extract the Wireguard portion of configuration
-WGCONF=$( echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=0; next} /\[/{flag=1} flag' | /bin/awk '/\[Routes\]/{flag=0; next} /\[/{flag=1} flag' )
-
-####################################################
-## Set the network device
-##echo "${DEVICEDEF}"
+## Export to environment the content of DeviceDef section
+DEVICEDEF=$(echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=1; next} /\[/{flag=0} flag')
 eval "${DEVICEDEF}"
 
 [[ -z "${Dev}" ]] && { echo "Device name not defined! check contents of conf file" && exit 1; }
 [[ -z "${IpCIDR}" ]] && { echo "Device IP not defined! check contents of conf file" && exit 1; }
+export Dev IpCIDR DevDefArgs DevAddArgs
 
-WG_IFACES=$(/bin/wg show interfaces)
+####################################################
 DEV_PRESENT=$( __dev_is_present ${Dev} )
 
-[[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" == "save" ) ]] && { /bin/wg showconf ${Dev} > ${Dev}_$(date +%Y%m%d_%H%M%S).conf; exit $?; }
-[[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" == "status" ) ]] && { /bin/wg show ${Dev}; exit $?; }
-
 ## for STOP just delete the interface and exit
-[[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" == "stop" ) ]] && { /sbin/ip link del dev ${Dev}; exit $?; }
+[[ "${ARG}" == "stop" ]] && { /sbin/ip link del dev ${Dev} 2>/dev/null ; exit $?; }
+
+[[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" == "save" ) ]] && { /bin/wg showconf ${Dev} > ${CONF_NAME}_$(date +%Y%m%d_%H%M%S).conf; exit $?; }
+[[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" == "status" ) ]] && { /bin/wg show ${Dev}; exit $?; }
 
 ## if re-starting we delete the interface before re-configuration
 [[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" == "restart" ) ]] && { /sbin/ip link del dev ${Dev}; DEV_PRESENT=$( __dev_is_present ${Dev} ); }
 
-## if already setup and not reload-ing then exit
+## if already setup and not reload-ing then exit ; if restarting the inteface is already deleted
 if [[ ( -n "${DEV_PRESENT}" ) && ( "${ARG}" != "reload" ) ]] ; then
     echo "Interface ${Dev} already present!"
     echo "to delete run : /sbin/ip link del dev ${Dev}"
     echo "OR : ${0} <config_file> stop"
+    echo "OR : ${0} <config_file> restart"
     exit 1
 fi
 
 ## if not reloading then setup device
 if [[ "${ARG}" != "reload" ]] ; then
-    __setup_device ${FILE}
-    [[ $? != 0 ]] && exit $?
+    __setup_device ## ${Dev} ${DevDefArgs} ${IpCIDR} ${DevAddArgs} should be already in script environment
+    [[ $? != 0 ]] && { echo "Error setting up the device ${Dev}" ; exit $?; }
 fi
 
 ####################################################
 ## Set the Wireguard configuration
-##echo "${WGCONF}"
-WG_TMP_CONF="/tmp/wg_$$.conf"
-echo "${WGCONF}" > ${WG_TMP_CONF}
+WG_TMP_CONF="/tmp/wg_${Dev}.conf"
 
-/bin/wg addconf ${Dev} ${WG_TMP_CONF} && rm -rf ${WG_TMP_CONF}
+## extract the Wireguard configuration from file and write to a temp file
+echo "${CONF}" | /bin/awk '/\[DeviceDef\]/{flag=0; next} /\[/{flag=1} flag' | /bin/awk '/\[Routes\]/{flag=0; next} /\[/{flag=1} flag' > ${WG_TMP_CONF}
 
-## aditional conf files place in peers sub-directory relative to main configuration file will be parsed
-PEERS_DIR="$(/usr/bin/dirname ${FILE})/peers_${Dev}"
-for peer in ${PEERS_DIR}/*.conf; do
-    __process_peers ${Dev} ${peer}
-done
-
-## activate link
-if [[ "$2" != "reload" ]] ; then
-    /sbin/ip link set up dev ${Dev}
-fi
+## use addconf instead of setconf as we might do a reload instead of restart - the expectation is that it is a reunion operation
+/bin/wg addconf ${Dev} ${WG_TMP_CONF} && /bin/rm -rf ${WG_TMP_CONF}
 
 #################################################
 ## Apply the Routing Rules
 __process_routes ${FILE}
 
-PEERS_DIR="$(/usr/bin/dirname ${FILE})/peers_${Dev}"
-for peer in ${PEERS_DIR}/*.conf; do
-    __process_routes ${peer}
-done
+## aditional conf files placed in peers sub-directory relative to main configuration file will be parsed - peers_<CONF NAME>
+PEERS_DIR="$(/usr/bin/dirname ${FILE})/peers_${CONF_NAME}"
+for peer in ${PEERS_DIR}/*.conf; do __process_peers  ${peer} ; __process_routes ${peer} ; done
 
