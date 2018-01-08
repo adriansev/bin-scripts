@@ -2,13 +2,16 @@
 ###   ALIEN   ###
 #################
 
+export DEBUG_GCLIENT=0
+export DEBUG_GBBOX=0
+
 export ALIEN_INSTALLER_PREFIX=${tools}/alien
 export ALIEN_ROOT=${ALIEN_INSTALLER_PREFIX}
 export ALIEN=${ALIEN_INSTALLER_PREFIX}
 
 alias aliensh='bash --rcfile ${ALIEN_ROOT}/api/bin/alien_Shell'
 alias alien_cd='. ${ALIEN_ROOT}/bin/alien_cd dummy'
-alias alien_pwd=' ${ALIEN_ROOT}/api//bin/alien_pwd -1'
+alias alien_pwd=' ${ALIEN_ROOT}/api/bin/alien_pwd -1'
 
 export GSHELL_ROOT=${ALIEN_ROOT}/api/
 export GAPI_LOCATION=${ALIEN_ROOT}/api/
