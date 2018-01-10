@@ -1,0 +1,31 @@
+#!/bin/bash
+
+CURL="/usr/bin/curl -fSLk"
+
+VER=$(${CURL} http://download.virtualbox.org/virtualbox/LATEST.TXT)
+
+DIR="http://download.virtualbox.org/virtualbox/${VER}/"
+
+EXTPACK="${DIR}/Oracle_VM_VirtualBox_Extension_Pack-${VER}.vbox-extpack"
+GUESTADD="${DIR}/VBoxGuestAdditions_${VER}.iso"
+SUMS="${DIR}/SHA256SUMS"
+
+EXTPACK_NAME=$(basename ${EXTPACK})
+GUESTADD_NAME=$(basename ${GUESTADD})
+SUMS_NAME=$(basename ${SUMS})
+
+${CURL} -O ${SUMS} -O ${EXTPACK} -O ${GUESTADD}
+grep "${EXTPACK_NAME}\|${GUESTADD_NAME}" ${SUMS_NAME} > MYSHA256SUMS && rm -rf ${SUMS_NAME}
+
+echo
+sha256sum -c MYSHA256SUMS
+echo
+
+echo "Now run :"
+echo "sudo VBoxManage extpack install ${EXTPACK_NAME}"
+
+7z e -y ${GUESTADD_NAME} VBoxLinuxAdditions.run && chmod +x VBoxLinuxAdditions.run
+
+echo "Now run :"
+echo "./VBoxLinuxAdditions.run"
+
