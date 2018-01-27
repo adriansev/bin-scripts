@@ -112,7 +112,7 @@ local branch_name=$(git symbolic-ref --short -q HEAD)
 git checkout master
 git fetch -t --all
 git pull --rebase
-git checkout $branch_name
+git checkout ${branch_name}
 git pull --rebase . master
 }
 

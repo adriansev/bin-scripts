@@ -29,6 +29,8 @@
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
     pwhatis = show -s --pretty='tformat:%h, %s, %ad' --date=short
 
+    remotes = remote -v show
+
 [core]
     editor = mcedit
 
