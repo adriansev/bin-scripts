@@ -1,5 +1,7 @@
 ######################################
 os_ver=$(lsb_release -sr)
+IFS=. ; arr=(${OS_VER})
+maj_os_ver=${arr[0]}
 ######################################
 
 ###############
@@ -17,27 +19,16 @@ insert_item_2var LD_LIBRARY_PATH ${VDT_DIR}/lib
 ################
 ##   libRS   ###
 ################
-#export RS_HOME=$tools/heplibs/librs
-#export RS_INC_DIR=$RS_HOME/include
-#export RS_LIB_DIR=$RS_HOME/lib
-#export PATH=$PATH:$RS_HOME/bin
-## export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$RS_LIB_DIR
-
-############
-##  CGAL  ##
-############
-if [[ "$os_ver" -lt 23 ]] ; then
-    export CGAL_DIR=${tools}/heplibs/CGAL
-    export CGAL_LIB=${CGAL_DIR}/lib
-    insert_item_2var LD_LIBRARY_PATH ${CGAL_LIB}
-    ## export C_INCLUDE_PATH=$C_INCLUDE_PATH:$CGAL_DIR/include
-    ## export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$CGAL_DIR/include
-fi
+export RS_HOME=${tools}/heplibs/librs
+export RS_INC_DIR=${RS_HOME}/include
+export RS_LIB_DIR=${RS_HOME}/lib
+export PATH=$PATH:${RS_HOME}/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$RS_LIB_DIR
 
 ################
 ##   HepMC   ###
 ################
-if [[ "$os_ver" -lt 23 ]] ; then
+if [[ "${maj_os_ver}" -lt 23 ]] ; then
   export HEPMC_DIR=${tools}/heplibs/HepMC
   export HEPINSTALLDIR=${HEPMC_DIR}
   insert_item_2var LD_LIBRARY_PATH ${HEPMC_DIR}/lib
@@ -84,7 +75,7 @@ export LHAPATH=${tools}/lhapdf-data
 ###########
 ## CLHEP ##
 ###########
-if [[ "$os_ver" -lt 23 ]] ; then
+if [[ "${maj_os_ver}" -lt 23 ]] ; then
   export CLHEP_BASE_DIR=${tools}/heplibs/clhep
   export CLHEP_ROOT_DIR=$CLHEP_BASE_DIR
 
