@@ -60,7 +60,7 @@ CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 ##(( GCC_MAJOR >= 6 )) && CXXFLAGS="${CXXFLAGS} -fopt-info-vec"
 
 ROOT6_CMAKE_OPT="-Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON -Dbuiltin_veccore=1 "
-ROOT5_CMAKE_OPT="-Dbuiltin_tbb=0 -Dtbb=1"
+ROOT5_CMAKE_OPT="-Dbuiltin_tbb=1 -Dtbb=1"
 
 ROOT_INSTALL=$tools/root/root
 
@@ -76,8 +76,8 @@ fi
 cmake \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} ${ADDITIONAL_CMAKE_OPT} \
 -DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -Dcxx11=1 \
--Dbuiltin_afterimage=0 -Dbuiltin_cfitsio=0 -Dbuiltin_freetype=0 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_gsl=0 \
--Dbuiltin_lz4=1 -Dbuiltin_lzma=0 -Dbuiltin_openssl=0 -Dbuiltin_pcre=0 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dbuiltin_zlib=0 \
+-Dbuiltin_afterimage=1 -Dbuiltin_cfitsio=1 -Dbuiltin_freetype=1 -Dbuiltin_ftgl=1 -Dbuiltin_glew=1 -Dbuiltin_gsl=1 \
+-Dbuiltin_lz4=1 -Dbuiltin_lzma=1 -Dbuiltin_openssl=1 -Dbuiltin_pcre=1 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dbuiltin_zlib=1 \
 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Dbuiltin_davix=0 \
 -Dsoversion=1 -Dgsl_shared=1 -Droofit=1 -Dminuit2=1 -Dtable=1 -Dunuran=1 -Dgdml=1 -Dqt=1 -Dqtgsi=1 -Dhttp=1 \
 -Dpythia6_nolink=1 \
