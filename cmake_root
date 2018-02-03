@@ -82,7 +82,7 @@ ${CMAKE} \
 -Dbuiltin_lz4=0 -Dbuiltin_lzma=0 -Dbuiltin_pcre=0 -Dbuiltin_zlib=0 -Dbuiltin_afterimage=0 -Dbuiltin_freetype=0 \
 -Dsoversion=1 -Dgsl_shared=1 -Droofit=1 -Dminuit2=1 -Dtable=1 -Dunuran=1 -Dgdml=1 -Dqt=1 -Dqtgsi=1 -Dhttp=1 \
 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=0 -Dvc=0 -DVC_IMPL=Scalar \
--Dbuiltin_openssl=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Ddavix=0 -Dbuiltin_davix=0 -Dkrb5=0 -Dldap=0 -Dodbc=0 \
+-Doracle=0 -Dbuiltin_openssl=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Ddcache=0 -Ddavix=0 -Dbuiltin_davix=0 -Dkrb5=0 -Dldap=0 -Dodbc=0 \
 -Dpythia6_nolink=1 \
 -DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
