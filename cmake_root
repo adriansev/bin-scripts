@@ -33,11 +33,6 @@ OS_MAJOR_VER=$(awk -F. '{print $1}' <<< "${OS_VER}")
 ## choose system xrd
 [[ "$2" == "xrdsys" ]] && XRD=${XRD_SYS}
 
-echo
-echo "XRD is :"
-echo $XRD
-echo
-
 ## GCC version
 GCCVERSION=$( gcc -dumpversion )
 GCC_MAJOR=$( echo ${GCCVERSION}| cut -f1 -d. )
@@ -52,18 +47,19 @@ if [[ "${FQDN}" != "issaf.spacescience.ro"  ]] ; then
   avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
   [[ "${avx_enable}" == "yes" ]] && AVX="-mavx"
 else
-  ISSAF_OPT="-DVC_IMPL=SSE -D_last_target_arch=generic -DTARGET_ARCHITECTURE=generic "
+  ISSAF_OPT="-D_last_target_arch=generic -DTARGET_ARCHITECTURE=generic "
   GCCARCH="-march=core2"
 fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 ##(( GCC_MAJOR >= 6 )) && CXXFLAGS="${CXXFLAGS} -fopt-info-vec"
 
-ROOT6_CMAKE_OPT="-Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON -Dbuiltin_veccore=1 "
+ROOT6_CMAKE_OPT="-Droot7=0 -Dbuiltin_llvm=1 -Dimt=ON -Dvecgeom=1 -DVecGeom_DIR=${tools}/heplibs/VecGeom -Dveccore=1 -Dbuiltin_veccore=1 -Dbuiltin_fftw3=0 -Dbuiltin_gl2ps=0 -Dbuiltin_unuran=0"
 ROOT5_CMAKE_OPT="-Dbuiltin_tbb=0 -Dtbb=1"
 
 ROOT_INSTALL=$tools/root/root
 
+CMAKE=cmake
 # if ROOT 5 disable ROOT 6 options
 if (( ROOT_VER_MAJOR == 5 )) ; then
   switch_root r5
@@ -71,15 +67,22 @@ if (( ROOT_VER_MAJOR == 5 )) ; then
 else
   switch_root r6
   ADDITIONAL_CMAKE_OPT="${ROOT6_CMAKE_OPT}"
+  CMAKE=cmake3
+  XRD=${XRD_SYS}
 fi
 
-cmake \
+echo
+echo "XRD is : ${XRD}"
+echo
+
+${CMAKE} \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} ${ADDITIONAL_CMAKE_OPT} \
 -DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -Dcxx11=1 \
--Dbuiltin_afterimage=0 -Dbuiltin_cfitsio=0 -Dbuiltin_freetype=0 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_gsl=0 \
--Dbuiltin_lz4=1 -Dbuiltin_lzma=0 -Dbuiltin_openssl=0 -Dbuiltin_pcre=0 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dbuiltin_zlib=0 \
--Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Dbuiltin_davix=0 \
+-Dbuiltin_cfitsio=0 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_gsl=0 \
+-Dbuiltin_lz4=0 -Dbuiltin_lzma=0 -Dbuiltin_pcre=0 -Dbuiltin_zlib=0 -Dbuiltin_afterimage=0 -Dbuiltin_freetype=0 \
 -Dsoversion=1 -Dgsl_shared=1 -Droofit=1 -Dminuit2=1 -Dtable=1 -Dunuran=1 -Dgdml=1 -Dqt=1 -Dqtgsi=1 -Dhttp=1 \
+-Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=0 -Dvc=0 -DVC_IMPL=Scalar \
+-Dbuiltin_openssl=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Dbuiltin_davix=0 \
 -Dpythia6_nolink=1 \
 -DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
