@@ -9,44 +9,21 @@ functions_show_def () { declare -f $1; }
 
 SourceIfValid () { [[ -f $1 ]] && source $1; }
 
-append_item_2var () {
-[[ -z "$1" || -z "$2" ]] && return 1
-local VAR=$1
-local STR=$2
-VAR_CONT=$(env | grep ^${VAR}= | sed "s/${VAR}=//" | sed "s/^://")
-export ${VAR}=${VAR_CONT} ## clean up the beginning ":"
+__PATH_INS () { [[ "$PATH" =~ "$1" ]] && return 0; [[ -z $PATH ]] && export PATH=$1 || export PATH=$1:$PATH; }
+__PATH_ADD () { [[ "$PATH" =~ "$1" ]] && return 0; [[ -z $PATH ]] && export PATH=$1 || export PATH=$PATH:$1; }
 
-[[ "${VAR_CONT}" == *"${STR}"* ]] && return ## if path present return
+__LDLIB_INS () { [[ "$LD_LIBRARY_PATH" =~ "$1" ]] && return 0; [[ -z $LD_LIBRARY_PATH ]] && export LD_LIBRARY_PATH=$1 || export LD_LIBRARY_PATH=$1:$LD_LIBRARY_PATH ; }
+__LDLIB_ADD () { [[ "$LD_LIBRARY_PATH" =~ "$1" ]] && return 0; [[ -z $LD_LIBRARY_PATH ]] && export LD_LIBRARY_PATH=$1 || export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$1 ; }
 
-if [[ -z "${VAR_CONT}" ]]; then
-    export ${VAR}="${STR}" ## add path
-else
-    export ${VAR}="${VAR_CONT}:${STR}" ## add path
-fi
-}
+__PYPATH_INS () { [[ "$PYTHONPATH" =~ "$1" ]] && return 0; [[ -z $PYTHONPATH ]] && export PYTHONPATH=$1 || export PYTHONPATH=$1:$PYTHONPATH; }
+__PYPATH_ADD () { [[ "$PYTHONPATH" =~ "$1" ]] && return 0; [[ -z $PYTHONPATH ]] && export PYTHONPATH=$1 || export PYTHONPATH=$PYTHONPATH:$1; }
 
-insert_item_2var () {
-[[ -z "$1" || -z "$2" ]] && return 1
-local VAR=$1
-local STR=$2
-VAR_CONT=$(env | grep ^${VAR}= | sed "s/${VAR}=//" | sed "s/^://")
-export ${VAR}=${VAR_CONT} ## clean up the beginning ":"
+__MANPATH_INS () { [[ "$MANPATH" =~ "$1" ]] && return 0; [[ -z $MANPATH ]] && export MANPATH=$1 || export MANPATH=$1:$MANPATH; }
+__MANPATH_ADD () { [[ "$MANPATH" =~ "$1" ]] && return 0; [[ -z $MANPATH ]] && export MANPATH=$1 || export MANPATH=$MANPATH:$1; }
 
-[[ "${VAR_CONT}" == *"${STR}"* ]] && return ## if path present return
-
-if [[ -z "${VAR_CONT}" ]]; then
-    export ${VAR}="${STR}" ## add path
-else
-    export ${VAR}="${STR}:${VAR_CONT}" ## add path
-fi
-}
-
-cvmfs_alice_load () { eval $(alienv printenv VO_ALICE@$1); }
-
-cvmfs_alicephys_load () { eval $(alienv printenv VO_ALICE@AliPhysics::$1); }
-
-cvmfs_alice_enter () { alienv enter VO_ALICE@$1; }
-
+cvmfs_alice_load ()      { eval $(alienv printenv VO_ALICE@$1); }
+cvmfs_alicephys_load ()  { eval $(alienv printenv VO_ALICE@AliPhysics::$1); }
+cvmfs_alice_enter ()     { alienv enter VO_ALICE@$1; }
 cvmfs_alicephys_enter () { alienv enter VO_ALICE@AliPhysics::$1; }
 
 cvmfs_alicephys_load_latest () {
