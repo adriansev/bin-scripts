@@ -34,7 +34,7 @@ export XrdSecSSLCADIR
 
 export GSHELL_NO_GCC=1
 
-insert_item_2var MANPATH ${ALIEN_ROOT}/api/share/man
-insert_item_2var PATH ${ALIEN_ROOT}/api/bin
-insert_item_2var LD_LIBRARY_PATH ${ALIEN_ROOT}/api/lib
+export MANPATH=$MANPATH:${ALIEN_ROOT}/api/share/man
+__PATH_ADD ${ALIEN_ROOT}/api/bin
+__LDLIB_ADD ${ALIEN_ROOT}/api/lib
 

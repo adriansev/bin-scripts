@@ -1,6 +1,6 @@
 ######################################
 os_ver=$(lsb_release -sr)
-IFS=. ; arr=(${OS_VER})
+IFS=. ; arr=(${os_ver})
 maj_os_ver=${arr[0]}
 ######################################
 
@@ -8,13 +8,13 @@ maj_os_ver=${arr[0]}
 ##    Vc    ###
 ###############
 export VC_DIR=${tools}/heplibs/vc
-insert_item_2var LD_LIBRARY_PATH ${VC_DIR}/lib
+__LDLIB_ADD ${VC_DIR}/lib
 
 ################
 ##     Vdt   ###
 ################
 export VDT_DIR=${tools}/heplibs/vdt
-insert_item_2var LD_LIBRARY_PATH ${VDT_DIR}/lib
+__LDLIB_ADD ${VDT_DIR}/lib
 
 ################
 ##   libRS   ###
@@ -22,8 +22,20 @@ insert_item_2var LD_LIBRARY_PATH ${VDT_DIR}/lib
 export RS_HOME=${tools}/heplibs/librs
 export RS_INC_DIR=${RS_HOME}/include
 export RS_LIB_DIR=${RS_HOME}/lib
-export PATH=$PATH:${RS_HOME}/bin
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$RS_LIB_DIR
+
+__PATH_ADD ${RS_HOME}/bin
+__LDLIB_ADD $RS_LIB_DIR
+
+#####################
+##     LHAPDF6     ##
+#####################
+export LHAPDF6DIR=${tools}/heplibs/LHAPDF-6
+
+__PATH_ADD ${LHAPDF6DIR}/bin
+__LDLIB_ADD ${LHAPDF6DIR}/lib
+__PYPATH_ADD ${LHAPDF6DIR}/lib64/python2_7/site-packages
+
+export LHAPATH=${tools}/heplibs/LHAPDF-DATA
 
 ################
 ##   HepMC   ###
@@ -31,24 +43,23 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$RS_LIB_DIR
 if [[ "${maj_os_ver}" -lt 23 ]] ; then
   export HEPMC_DIR=${tools}/heplibs/HepMC
   export HEPINSTALLDIR=${HEPMC_DIR}
-  insert_item_2var LD_LIBRARY_PATH ${HEPMC_DIR}/lib
+  __LDLIB_ADD ${HEPMC_DIR}/lib
 fi
+
+#################
+##   HepMC3   ###
+#################
+#if [[ "${maj_os_ver}" -lt 23 ]] ; then
+#  export HEPMC_DIR=${tools}/heplibs/HepMC
+#  export HEPINSTALLDIR=${HEPMC_DIR}
+#  insert_item_2var LD_LIBRARY_PATH ${HEPMC_DIR}/lib
+#fi
 
 ################
 ##   HepPDT  ###
 ################
 export HEPPDT_DIR=${tools}/heplibs/HepPDT
-insert_item_2var LD_LIBRARY_PATH ${HEPPDT_DIR}/lib
-
-#####################
-##     CERNLIB     ##
-#####################
-#export CERN=$tools/heplibs/cernlib
-#export CERN_LEVEL=2006b
-#export CERN_ROOT=$CERN
-
-#export PATH=$PATH:${CERN_ROOT}/bin/
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CERN_ROOT/lib
+__LDLIB_ADD ${HEPPDT_DIR}/lib
 
 #####################
 ##     PYTHIA6     ##
@@ -62,29 +73,29 @@ insert_item_2var LD_LIBRARY_PATH ${HEPPDT_DIR}/lib
 #####################
 ##     PYTHIA8     ##
 #####################
-##export PYTHIA8=${tools}/heplibs/pythia8
-##export PYTHIA8_HOME=${PYTHIA8}
-##export PYTHIA8DATA=${PYTHIA8}/xmldoc
-export LHAPATH=${tools}/lhapdf-data
+export PYTHIA8=${tools}/heplibs/pythia8
+export PYTHIA8_HOME=${PYTHIA8}
+export PYTHIA8DATA=${PYTHIA8}/xmldoc
 
-## insert_item_2var PATH ${PYTHIA8}/bin
+__PATH_ADD ${PYTHIA8}/bin
 
 ##     PYTHIA8 LIBS
-## insert_item_2var LD_LIBRARY_PATH ${PYTHIA8}/lib
+__LDLIB_ADD ${PYTHIA8}/lib
+
 
 ###########
 ## CLHEP ##
 ###########
-if [[ "${maj_os_ver}" -lt 23 ]] ; then
-  export CLHEP_BASE_DIR=${tools}/heplibs/clhep
-  export CLHEP_ROOT_DIR=$CLHEP_BASE_DIR
+#if [[ "${maj_os_ver}" -lt 23 ]] ; then
+#  export CLHEP_BASE_DIR=${tools}/heplibs/clhep
+#  export CLHEP_ROOT_DIR=$CLHEP_BASE_DIR
 
-  export CLHEP_INCLUDE_DIR=${CLHEP_BASE_DIR}/include
-  export CLHEP_LIB_DIR=${CLHEP_BASE_DIR}/lib
+#  export CLHEP_INCLUDE_DIR=${CLHEP_BASE_DIR}/include
+#  export CLHEP_LIB_DIR=${CLHEP_BASE_DIR}/lib
 
-  insert_item_2var PATH ${CLHEP_BASE_DIR}/bin
-  insert_item_2var LD_LIBRARY_PATH ${CLHEP_LIB_DIR}
-fi
+#  insert_item_2var PATH ${CLHEP_BASE_DIR}/bin
+#  insert_item_2var LD_LIBRARY_PATH ${CLHEP_LIB_DIR}
+#fi
 
 
 #####################
@@ -94,14 +105,13 @@ export FASTJET=${tools}/alice/fastjet
 export FASTJET_ROOT=${FASTJET}
 
 ##     FASTJET PATHS
-insert_item_2var PATH ${FASTJET}/bin
+__PATH_ADD ${FASTJET}/bin
 
 ##     FASTJET LIBS
-insert_item_2var LD_LIBRARY_PATH ${FASTJET}/lib
+__LDLIB_ADD ${FASTJET}/lib
 
 ## insert_item_2var C_INCLUDE_PATH ${FASTJET}/include
 ## insert_item_2var CPLUS_INCLUDE_PATH ${FASTJET}/include
-
 
 #####################
 ##     DPMJET      ##
@@ -109,8 +119,8 @@ insert_item_2var LD_LIBRARY_PATH ${FASTJET}/lib
 export DPMJET_ROOT=${tools}/heplibs/DPMJET
 
 ##     DPMJET PATHS
-insert_item_2var PATH ${DPMJET_ROOT}/bin
+__PATH_ADD ${DPMJET_ROOT}/bin
 
 ##     DPMJET LIBS
-insert_item_2var LD_LIBRARY_PATH ${DPMJET_ROOT}/lib
+__LDLIB_ADD ${DPMJET_ROOT}/lib
 

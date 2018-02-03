@@ -17,17 +17,16 @@ ROOTVER="root"
 ROOTSYS=${ROOTMAINDIR}/${ROOTVER}
 export ROOTSYS
 
-insert_item_2var MANPATH ${ROOTSYS}/man
-export MANPATH=:${MANPATH}
+__MANPATH_ADD ${ROOTSYS}/man
 
 ##     ROOT PATHS
-insert_item_2var PATH ${ROOTSYS}/bin
+__PATH_ADD ${ROOTSYS}/bin
 
 ##     PYTHON ROOT LIBS
-insert_item_2var PYTHONPATH ${ROOTSYS}/lib
+__PYPATH_ADD ${ROOTSYS}/lib
 
 ##     ROOT LIBS
-insert_item_2var LD_LIBRARY_PATH ${ROOTSYS}/lib
+__LDLIB_ADD ${ROOTSYS}/lib
 
 ## insert_item_2var C_INCLUDE_PATH ${ROOTSYS}/include
 ## insert_item_2var CPLUS_INCLUDE_PATH ${ROOTSYS}/include

@@ -11,19 +11,11 @@ export ALICE_PHYSICS=${ALICE}/aliphysics
 export ALIROOT_OCDB_ROOT=${ALICE}/AliRootOCDB
 
 ##     AliROOT PATHS
-insert_item_2var PATH ${ALICE_ROOT}/bin
-insert_item_2var PATH ${ALICE_PHYSICS}/bin
+__PATH_ADD ${ALICE_ROOT}/bin
+__PATH_ADD ${ALICE_PHYSICS}/bin
 
 ##     AliROOT LIBS
-insert_item_2var LD_LIBRARY_PATH ${GEANT3DIR}/lib64
-insert_item_2var LD_LIBRARY_PATH ${ALICE_ROOT}/lib
-insert_item_2var LD_LIBRARY_PATH ${ALICE_PHYSICS}/lib
-
-## insert_item_2var C_INCLUDE_PATH ${GEANT3DIR}/include
-## insert_item_2var C_INCLUDE_PATH ${ALICE_ROOT}/include
-## insert_item_2var C_INCLUDE_PATH ${ALICE_PHYSICS}/include
-
-## insert_item_2var CPLUS_INCLUDE_PATH ${GEANT3DIR}/include
-## insert_item_2var CPLUS_INCLUDE_PATH ${ALICE_ROOT}/include
-## insert_item_2var CPLUS_INCLUDE_PATH ${ALICE_PHYSICS}/include
+__LDLIB_ADD ${GEANT3DIR}/lib64
+__LDLIB_ADD ${ALICE_ROOT}/lib
+__LDLIB_ADD ${ALICE_PHYSICS}/lib
 
