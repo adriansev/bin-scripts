@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cmake \
+cmake3 \
 -DCMAKE_INSTALL_PREFIX="${tools}/heplibs/geant4_vmc" \
 -DGEANT4_CONFIG_EXECUTABLE="$tools/geant4/bin/geant4-config" \
 -DGeant4VMC_INSTALL_EXAMPLES="0" \

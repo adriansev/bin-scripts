@@ -10,7 +10,7 @@ g4_version=`grep geant4 $1/source/GNUmakefile | awk '{print $6}'`
 echo $g4_version
 
 
-cmake \
+cmake3 \
 -DCMAKE_INSTALL_PREFIX=$g4install \
 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
 -DGEANT4_BUILD_MULTITHREADED=1 \

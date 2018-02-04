@@ -4,7 +4,7 @@ echo "This should be run in BUILD directory;"
 echo "the argument should be the path to the source"
 
 #--debug-output 
-cmake -Wno-dev -DCMAKE_INSTALL_PREFIX=/home/physics-tools/AUGER_Offline_trunk \
+cmake3 -Wno-dev -DCMAKE_INSTALL_PREFIX=/home/physics-tools/AUGER_Offline_trunk \
 -DAUGER_SQLITE_ENABLED="1" \
 -DAUGER_RADIO_ENABLED="1" \
 -DAUGER_EINSPLINE_ENABLED="1" \
