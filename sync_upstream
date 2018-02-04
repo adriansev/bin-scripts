@@ -2,6 +2,4 @@
 
 git checkout master
 git fetch -t --all
-git merge --ff upstream/master
-
 echo "now push to origin (git push --all) and then start development"
