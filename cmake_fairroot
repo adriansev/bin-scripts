@@ -3,7 +3,7 @@
 echo "This should be run in BUILD directory;"
 echo "the argument should be the path to the source"
 
-cmake -DCMAKE_INSTALL_PREFIX=$tools/FAIR/FairROOT \
+cmake3 -DCMAKE_INSTALL_PREFIX=$tools/FAIR/FairROOT \
 -DUSE_PATH_INFO="1" \
 -DCLHEP_BASE_DIR="$tools/heplibs/clhep" \
 -DCLHEP_CONFIG_EXE="$tools/heplibs/clhep/bin/clhep-config" \

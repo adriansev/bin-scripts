@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cmake -DCMAKE_INSTALL_PREFIX=/home/physics-tools/CRPropa3_trunk \
+cmake3 -DCMAKE_INSTALL_PREFIX=/home/physics-tools/CRPropa3_trunk \
 -DCMAKE_BUILD_TYPE="Release" \
 -DENABLE_OPENMP=ON -DENABLE_OPENMP=ON -DENABLE_ROOT=ON \
 -DCFITSIO_INCLUDE_DIR="/usr/include/cfitsio" \

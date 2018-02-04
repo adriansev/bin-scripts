@@ -24,7 +24,7 @@ fi
 
 CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
-cmake \
+cmake3 \
 -DCMAKE_INSTALL_PREFIX=$tools/alice/aliroot \
 -DCMAKE_BUILD_TYPE=$BUILDTYPE \
 -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
