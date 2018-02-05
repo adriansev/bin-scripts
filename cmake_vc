@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cmake3 -DCMAKE_INSTALL_PREFIX=${tools}/heplibs/vc -DTARGET_ARCHITECTURE=core -DBUILD_EXAMPLES=0 -DBUILD_TESTING=0 -DENABLE_MIC=0 -DUSE_CCACHE=0 ${tools}/heplibs/vc-src
+
+
