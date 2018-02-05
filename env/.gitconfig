@@ -36,6 +36,7 @@
 
 [merge]
     tool = kdiff3
+	ff = true
 
 [color]
     ui = true
