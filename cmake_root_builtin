@@ -79,10 +79,11 @@ ${CMAKE} \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} ${ADDITIONAL_CMAKE_OPT} \
 -DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" -Dcxx11=1 \
 -Dbuiltin_cfitsio=1 -Dbuiltin_ftgl=1 -Dbuiltin_glew=1 -Dbuiltin_gsl=1 \
--Dbuiltin_lz4=1 -Dbuiltin_lzma=1 -Dbuiltin_pcre=1 -Dbuiltin_zlib=1 -Dbuiltin_afterimage=1 -Dbuiltin_freetype=1 \
+-Dbuiltin_lz4=1 -Dbuiltin_lzma=1 -Dbuiltin_pcre=1 -Dbuiltin_zlib=1 -Dbuiltin_afterimage=0 -Dbuiltin_freetype=0 \
 -Dsoversion=1 -Dgsl_shared=1 -Droofit=1 -Dminuit2=1 -Dtable=1 -Dunuran=1 -Dgdml=1 -Dqt=1 -Dqtgsi=1 -Dhttp=1 \
--Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=0 -Dvc=0 -DVC_IMPL=Scalar \
--Doracle=0 -Dbuiltin_openssl=0 -Dbonjour=0 -Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Ddcache=0 -Ddavix=0 -Dbuiltin_davix=0 -Dkrb5=0 -Dldap=0 -Dodbc=0 \
+-Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=0 -Dvc=0 \
+-Doracle=0 -Dbuiltin_openssl=0 -Dbonjour=0 -Ddavix=0 -Dbuiltin_davix=0 -Dkrb5=0 -Dldap=0 -Dodbc=0 \
+-Drfio=0 -Dcastor=0 -Dglobus=0 -Dgfal=0 -Ddcache=0 -Dchirp=0 -Dglite=0 -Dhdfs=0 -Dpch=0 -Dsapdb=0 -Dsrp=0 \
 -Dpythia6_nolink=1 \
 -DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
 -DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
