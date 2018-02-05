@@ -14,7 +14,7 @@ if [[ "$FQDN" != "issaf.spacescience.ro"  ]] ; then
   avx_enable=`grep avx /proc/cpuinfo &> /dev/null && echo yes`
   [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
 else
-  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
+##  ISSAF_OPT="-DVC_IMPL="SSE" -D_last_target_arch="generic" -DTARGET_ARCHITECTURE="generic" "
   GCCARCH="-march=core2"
 fi
 
@@ -25,7 +25,7 @@ CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 ROOT_DIR=$(root-config --prefix)
 
 cmake3 \
--DCMAKE_INSTALL_PREFIX=$ALICE/aliphysics \
+-DCMAKE_INSTALL_PREFIX=${ALICE}/aliphysics \
 -DCMAKE_BUILD_TYPE=${BUILDTYPE} ${ISSAF_OPT} -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
 -DALIEN="$ALIEN_ROOT" \
 -DFASTJET="$ALICE/fastjet" \
