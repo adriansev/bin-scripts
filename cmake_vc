@@ -1,5 +1,24 @@
 #!/bin/bash
 
-cmake3 -DCMAKE_INSTALL_PREFIX=${tools}/heplibs/vc -DTARGET_ARCHITECTURE=core -DBUILD_EXAMPLES=0 -DBUILD_TESTING=0 -DENABLE_MIC=0 -DUSE_CCACHE=0 ${tools}/heplibs/vc-src
+FQDN=$(hostname -f)
+DOMAIN=$(hostname -d)
+if [[ "$FQDN" == "issaf.spacescience.ro"  || "$DOMAIN" == "issaf" ]]; then
+  TARGET="core"
+  GCCARCH="-march=core2"
+else
+  TARGET="auto"
+  GCCARCH="-march=native"
+fi
 
+CXXFLAGS="-std=c++11 ${GCCARCH}"
+
+cmake3 \
+-DCMAKE_INSTALL_PREFIX=${tools}/heplibs/vc \
+-DCMAKE_CXX_FLAGS=${CXXFLAGS} \
+-DTARGET_ARCHITECTURE=${TARGET} \
+-DBUILD_EXAMPLES=0 \
+-DBUILD_TESTING=0 \
+-DENABLE_MIC=0 \
+-DUSE_CCACHE=0 \
+${tools}/heplibs/vc-src | tee cmake_out.txt
 
