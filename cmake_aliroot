@@ -13,30 +13,30 @@ ROOT_DIR=$(root-config --prefix)
 FQDN=$(hostname -f)
 DOMAIN=$(hostname -d)
 if [[ "$FQDN" == "issaf.spacescience.ro"  || "$DOMAIN" == "issaf" ]]; then
-  ##OPT="-DTARGET_ARCHITECTURE=penryn"
+  TARGET="core"
   GCCARCH="-march=core2"
 else
-  ##OPT="-DTARGET_ARCHITECTURE=auto"
-  GCCARCH="-march=native -mtune=native"
+  TARGET="auto"
+  GCCARCH="-march=native"
 
   avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
   [[ ${avx_enable} == "yes" ]] && AVX="-mavx"
 fi
 
-CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
+CXXFLAGS="-std=c++11 ${PEDANTIC} ${GCCARCH} ${AVX}"
 
-##-DVc_DIR="${tools}/heplibs/vc/lib/cmake/Vc" \
 ##${OPT} \
 
 cmake3 \
 -DCMAKE_INSTALL_PREFIX=$tools/alice/aliroot \
 -DCMAKE_BUILD_TYPE=$BUILDTYPE \
 -DCMAKE_CXX_FLAGS=${CXXFLAGS} \
+-DVc_DIR="${tools}/heplibs/vc/lib/cmake/Vc" \
+-DTARGET_ARCHITECTURE=${TARGET} \
 -DGIT_EXECUTABLE=/usr/bin/git \
 -DROOTSYS=${ROOT_DIR} \
 -DALIEN=${ALIEN_ROOT} \
 -DFASTJET=${FASTJET_ROOT} \
 -DDPMJET=${DPMJET_ROOT} \
--DOCDB_INSTALL=PLACEHOLDER \
 $1 | tee cmake_out.txt
 
