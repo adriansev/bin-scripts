@@ -1,19 +1,25 @@
 #!/bin/bash
 
 libs_path="/usr/lib64 /usr/lib"
+SYM=$1
 
 for libdir in ${libs_path} ; do
     [[ ! -e "${libdir}" ]] && continue
     liblist=$(find ${libdir} -type f -name *.so* | sort)
     for file in ${liblist} ; do
-        symbol=$(nm -D -A -a -s ${file} 2>/dev/null | grep $1)
+        symbol=$(nm -D -A -a -s ${file} 2>/dev/null | grep ${SYM})
         [[ -z ${symbol} ]] && continue
 
         while read -r item; do
             sym_type=$(echo "${item}" | awk '{print $2}')
             entry=$(echo "${item}" | awk '{ split($1,a,":"); print a[2]; }')
 
-            demangled_name=$(nm -C -D -A -a -s ${file} | grep ${entry} | cut -d' ' -f3-)
+            if [[ -n ${entry}  ]] ; then
+                demangled_name=$(nm -C -D -A -a -s ${file} | grep ${entry} | sort -u | cut -d' ' -f3-)
+            else
+                demangled_name="Unknown"
+            fi
+
             case ${sym_type} in
             A)
                 desc="The symbol's value is absolute, and will not be changed by further linking."
