@@ -295,6 +295,9 @@ alias jetfinder='cd $work/jets/jetfinder'
 alias g4work='export G4WORKDIR=`pwd`'
 alias scoala='ssh iwsgc15@glite-tutor.ct.infn.it'
 
-
 alias load_nvidia='LD_LIBRARY_PATH=/usr/lib64/nvidia '
+
+# Python
+alias pip2_install_user='pip2 install --upgrade --user'
+alias pip3_install_user='pip3 install --upgrade --user'
 
