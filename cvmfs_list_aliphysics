@@ -1,3 +1,4 @@
 #!/bin/bash
-cvmfs_list_alice | grep AliPhysics | tail -n 10
+
+/cvmfs/alice.cern.ch/bin/alienv q | grep AliPhysics | tail -n 10
 
