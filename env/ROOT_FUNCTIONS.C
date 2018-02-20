@@ -1,4 +1,4 @@
-#if !( defined  (__CINT__) || defined (__CLING__) )
+#if !defined(__CINT__) || defined(__MAKECINT__) || defined(__CLING__) || defined(__ROOTCLING__)
 
 #include <iostream>
 #include <sstream>
@@ -56,6 +56,11 @@ using namespace std;
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
+//______________________________________________________________
+void val2bin (unsigned int val) {
+for ( unsigned short i = 0; i <= 31; ++i) { std::cout << ((val >> i) & 1); };
+cout << endl;
+}
 //______________________________________________________________
 char* ObjGetPtr ( void* ptr /*or if on stack use &obj */) {
   if (!ptr) {return NULL;}
@@ -158,7 +163,8 @@ static void PadToLogScale_AutoScale() {
       if ( obj->InheritsFrom("TH2") ) { return; }
       (dynamic_cast<TH1*>(obj))->SetMinimum();
       Double_t min=0, max=999999999;
-      (dynamic_cast<TH1*>(obj))->GetMinimumAndMaximum(min,max);
+      min = (dynamic_cast<TH1*>(obj))->GetMinimum();
+      max = (dynamic_cast<TH1*>(obj))->GetMaximum();
       (dynamic_cast<TH1*>(obj))->GetYaxis()->SetRangeUser(min, max);
       }
     }
