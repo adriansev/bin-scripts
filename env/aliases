@@ -298,6 +298,7 @@ alias scoala='ssh iwsgc15@glite-tutor.ct.infn.it'
 alias load_nvidia='LD_LIBRARY_PATH=/usr/lib64/nvidia '
 
 # Python
+alias pip_install_user='pip install --upgrade --user'
 alias pip2_install_user='pip2 install --upgrade --user'
 alias pip3_install_user='pip3 install --upgrade --user'
 
