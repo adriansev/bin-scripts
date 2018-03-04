@@ -32,6 +32,8 @@
 
     remotes = remote -v show
 
+    find = log --pretty=\"format:%Cgreen%H %Cblue%s\n%b%Creset\" --name-status --grep
+
 [core]
     editor = mcedit
 
