@@ -1,7 +1,12 @@
 #!/bin/bash
 
 git checkout master
-git fetch upstream
+
 git fetch -t --all
+git pull --rebase
+
+git fetch -t upstream
+
 git pull --rebase upstream master
 echo "now push to origin (git push --all) and then start development"
+
