@@ -1,6 +1,0 @@
-#!/bin/bash
-
-for list in "$@" ; do
-    nohup download_alien_home "${list}" &> "${list}".out &
-done
-
