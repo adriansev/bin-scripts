@@ -1,0 +1,11 @@
+#!/bin/bash
+
+LIST_RUNS=$1
+SELECT_RUNS=$2
+
+RUNS=$(/usr/bin/sed '/^#/d; s/,/ /g; s/ /\n/g;' ${SELECT_RUNS})
+
+for run in ${RUNS} ; do
+  /usr/bin/grep ${run} ${LIST_RUNS}
+done
+
