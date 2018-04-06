@@ -1,1 +1,1 @@
-ssh -C2qTnNf -D 50010 acasa_ruter
+proxy_ssh acasa_ruter 50010

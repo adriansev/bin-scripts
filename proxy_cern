@@ -1,1 +1,1 @@
-ssh -C2qTnNf -D 50020 lxplus
+proxy_ssh lxplus 50020

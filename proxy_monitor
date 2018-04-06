@@ -1,1 +1,1 @@
-ssh -C2qTnNf -D 50005 monitor_ml
+proxy_ssh monitor_ml 50005
