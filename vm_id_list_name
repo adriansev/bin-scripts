@@ -1,9 +1,7 @@
 #!/bin/bash
 
-uuid_list=`VBoxManage list vms | awk -F"\" " '{ gsub("{|}","",$2); print $2}'`
-
-for uuid in ${uuid_list} ; do
-  eval `VBoxManage showvminfo --machinereadable ${uuid} | grep ^name`
+for uuid in $(vm_id_list) ; do
+  eval $(VBoxManage showvminfo --machinereadable ${uuid} | grep ^name)
   echo "UUID : " ${uuid} " ; VM Name : " ${name}
 done
 
