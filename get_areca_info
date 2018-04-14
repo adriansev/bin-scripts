@@ -1,0 +1,69 @@
+#!/bin/bash -e
+
+[[ -z ${1} ]] && { echo "Usage is : $0 <opt> where <opt> is : cfg, smart or info"; exit 1; }
+
+SCRIPT=$(/bin/readlink -f ${0})
+ARC_PATH=$(/usr/bin/dirname ${SCRIPT})
+
+CLI="${ARC_PATH}/cli64"
+
+get_smart_drv () { ${CLI} disk smart drv=$1 | tail -n +4 | head -n -2; }
+get_disk_info () { ${CLI} disk info drv=$1 | grep "Type\|Location\|Model\|Number\|Rev\|Disk"; }
+
+SAVE_PATH="/home/raid_info"
+[[ -e "/export/home" && -d "/export/home" ]] && SAVE_PATH="/export${SAVE_PATH}"
+
+ARC_CONF_PATH="${SAVE_PATH}/arc_cfg"
+ARC_SMART_PATH="${SAVE_PATH}/smart"
+ARC_INFO_PATH="${SAVE_PATH}/info"
+
+/bin/mkdir -p ${ARC_CONF_PATH} ${ARC_SMART_PATH} ${ARC_INFO_PATH}
+
+if [[ "${1}" == "cfg" ]] ; then
+    [[ -z ${ARECA_PASS} ]] && { echo "ARECA_PASS not defined! Required for configuration saving"; exit 1; }
+    ${CLI} set password=${ARECA_PASS}
+
+    echo "Savecfg :"
+    ${CLI} set savecfg path=${ARC_CONF_PATH}
+
+    CFG_FILE="$(/bin/hostname -s)_arc.cfg"
+    [[ -e ${ARC_CONF_PATH}/${CFG_FILE} ]] && rm -rf ${ARC_CONF_PATH}/${CFG_FILE}
+    echo "Savebin :"
+    ${CLI} sys savebin path=${ARC_CONF_PATH}/${CFG_FILE}
+
+    oldfile=Controller01.txt
+    prefix=${NAME}
+    x="_"
+    newfile=${NAME}${x}${oldfile}
+
+    mv -f ${ARC_CONF_PATH}/${oldfile} ${ARC_CONF_PATH}/${newfile}
+
+elif [[ "${1}" == "smart" ]] ; then
+    LOCK=/tmp/areca_cli_ops.lock
+    [[ -e "${LOCK}" ]] && exit
+    /bin/touch ${LOCK}
+
+    disk_list=$(${CLI} disk info | grep -v "N.A." | tail -n +3 | head -n -2)
+
+    while read HDDLINE; do 
+        NR=$(/bin/awk '{print $1}' <<< "${HDDLINE}")
+        get_smart_drv ${NR} > ${ARC_SMART_PATH}/disk_${NR}.smart
+    done <<< "${disk_list}"
+
+    /bin/rm -rf ${LOCK}
+
+elif [[ "${1}" == "info" ]] ; then
+    LOCK=/tmp/areca_cli_ops.lock
+    [[ -e "${LOCK}" ]] && exit
+    /bin/touch ${LOCK}
+
+    disk_list=$(${CLI} disk info | grep -v "N.A." | tail -n +3 | head -n -2)
+
+    while read HDDLINE; do 
+        NR=$(/bin/awk '{print $1}' <<< "${HDDLINE}")
+        get_disk_info ${NR} > ${ARC_INFO_PATH}/disk_${NR}.info
+    done <<< "${disk_list}"
+
+    /bin/rm -rf ${LOCK}
+fi
+
