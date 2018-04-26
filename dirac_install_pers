@@ -6,7 +6,7 @@ DIRACDIR=$HOME/DIRAC
 cd ${DIRACDIR}
 
 echo "Start install script"
-$HOME/bin/dirac-install -r ${VER} -t client -e COMDIRAC -V auger -P ${DIRACDIR}
+$HOME/bin/dirac-install -r ${VER} -t client -i 27 -e COMDIRAC:v0r17 -g v14r0 -V auger -P ${DIRACDIR}
 echo -e '\ninstall done!\n'
 
 source ${DIRACDIR}/bashrc
