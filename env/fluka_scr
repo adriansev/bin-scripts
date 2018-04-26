@@ -1,6 +1,12 @@
 ##     FLUKA
-export FLUPRO=${tools}/fluka
 
+if [[ -e /usr/local/flukagfor ]] && [[ -d /usr/local/flukagfor ]] ; then
+  FLUPRO=/usr/local/flukagfor
+else
+  FLUPRO=${tools}/fluka
+fi
+
+export FLUPRO
 export FLUFOR=gfortran
 
 ##     FLUKA PATHS
