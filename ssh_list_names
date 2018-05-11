@@ -1,0 +1,29 @@
+#!/bin/bash
+
+[[ -n "${1}" ]] && GREP=" | grep ${1}"
+
+CFG="$HOME/.ssh/config"
+
+names_list=""
+found=$(awk '/Host / {printf("%s\n",$2);}' ${CFG}) #'
+names_list="${names_list} ${found}" #'
+
+
+includes_list=$(awk '/Include/ {gsub("~","$HOME",$2);print $2;}' ${CFG}) #'
+
+for subconf in ${includes_list}; do
+  if ! [[ "${subconf}" =~ ^\~.*|^\/.* ]]; then
+    [[ "${CFG}" =~ ^\/etc\/ssh.* ]] && subconf="/etc/ssh/${subconf}" || subconf="$HOME/.ssh/${subconf}"
+  fi
+
+  found=$(awk '/Host / {printf("%s\n",$2);}' ${subconf}) #'
+  names_list="${names_list} ${found}" #'
+
+done
+
+if [[ -n "${1}" ]]; then
+  echo "${names_list}" | grep ${1}
+else
+  echo "${names_list}"
+fi
+
