@@ -97,8 +97,6 @@ alias devtoolset='source scl_source enable devtoolset-3'
 alias mc='. /usr/libexec/mc/mc-wrapper.sh'
 alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
 
-alias fuck='sudo $(history -p \!\!)'
-
 # reboot / halt / poweroff
 alias reboot='sudo /usr/sbin/reboot'
 alias poweroff='sudo /usr/sbin/poweroff'
@@ -141,7 +139,6 @@ alias iptlistin='sudo /usr/sbin/iptables -L INPUT -n -v --line-numbers'
 alias iptlistout='sudo /usr/sbin/iptables -L OUTPUT -n -v --line-numbers'
 alias iptlistfw='sudo /usr/sbin/iptables -L FORWARD -n -v --line-numbers'
 alias firewall=iptlist
-
 
 # Parenting changing perms on / #
 alias chown='chown --preserve-root'
@@ -282,7 +279,7 @@ alias g++root='g++ $(root-config --libs) $(root-config --cflags)'
 
 alias tutorials='cd $ROOTSYS/tutorials'
 
-alias makej8='nohup time -p make -j8 >`basename $PWD`.out 2>`basename $PWD`.err &'
+alias makej8='nohup time -p make -j8 >$(basename ${PWD}).out 2>$(basename ${PWD}).err &'
 
 alias watch_file="watch -n 1 tail -n 30"
 
