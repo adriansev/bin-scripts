@@ -36,10 +36,11 @@
 
 [core]
     editor = mcedit
+    autocrlf = input
 
 [merge]
     tool = kdiff3
-	ff = true
+    ff = true
 
 [color]
     ui = true
@@ -52,6 +53,7 @@
 
 [sendemail]
     smtpencryption = tls
+    smtpsslcertpath = ""
     smtpserver = smtp.cern.ch
     smtpuser = asevcenc
     smtpserverport = 587
