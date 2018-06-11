@@ -1,4 +1,4 @@
 #!/bin/bash
 
-du -xb --max-depth=3 "$@"  | sort -nr | awk '{ kbyte=int($1/1024); if (kbyte==0) {print $1, $2; next;}; mbyte=int($1/(1024*1024)); if (mbyte==0) {print kbyte "KB",$2; next;}; gbyte=int($1/(1024*1024*1024)); if (gbyte==0) {print mbyte "MB",$2; next;}; print gbyte "GB",$2; }'   #'
+du -xb --max-depth=3 "$@"  | sort -nr | awk '{ bytes=$1; $1=""; kbyte=int(bytes/1024); if (kbyte==0) {print bytes, $0; next;}; mbyte=int(bytes/(1024*1024)); if (mbyte==0) {print kbyte "KB",$0; next;}; gbyte=int(bytes/(1024*1024*1024)); if (gbyte==0) {print mbyte "MB",$0; next;}; print gbyte "GB",$0; }'   #'
 
