@@ -40,6 +40,12 @@ __cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
 
 __cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
 
+alibuild_list_inits  () { ls -1 --hide=sw ${ALICE_WORK_DIR}/.. ;}
+alibuild_list_builds () { /usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n"; }
+alibuild_list_links  () { /usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type l -printf "%f -> %l\n"; }
+alibuild_list_labels () { /usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";}
+alibuild_init        () { aliBuild init AliRoot,AliPhysics -z; }
+
 qstat_slr_f () { scontrol show jobid -dd $1; }
 
 slr_job_r_stat () { sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j $1 --allsteps; }
