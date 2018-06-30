@@ -1,0 +1,8 @@
+#!/bin/bash
+
+HN=$(hostname -f)
+[[ "${HN}" == "sev.spacescience.ro" ]] && { echo "This is ISS machine!"; exit0; }
+
+CONFDIR="$HOME/.ssh/conf.d/"
+/usr/bin/rsync -ahHAXW -e ssh iss:${CONFDIR} ${CONFDIR}
+
