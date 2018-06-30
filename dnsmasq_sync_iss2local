@@ -1,0 +1,15 @@
+#!/bin/bash
+
+HN=$(hostname -f)
+[[ "${HN}" == "sev.spacescience.ro" ]] && { echo "This is ISS machine!"; exit0; }
+
+CONFDIR="/etc/dnsmasq.d/"
+TMPDIR="/tmp${CONFDIR}"
+
+mkdir -p ${TMPDIR}
+/usr/bin/rsync -ahuHAXW -e ssh iss:${CONFDIR} ${TMPDIR}
+
+sudo /usr/bin/rsync -ahuHAXW ${TMPDIR} ${CONFDIR}
+
+rm -rf ${TMPDIR}
+
