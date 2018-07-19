@@ -1,0 +1,9 @@
+#!/bin/bash
+
+IP=$1
+NAME=$(sed 's#/#_#g' <<< "${IP}")
+
+sudo -- sh -c "
+nmap -n -Pn -T4 -sU -p1-65535 ${IP} -oN ${NAME}_udp.txt -oG ${NAME}_udp.nmap
+chown -R adrian:adrian ${NAME}_udp.txt ${NAME}_udp.nmap
+"
