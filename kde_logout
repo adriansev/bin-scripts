@@ -1,0 +1,7 @@
+# https://api.kde.org/4.x-api/kde-workspace-apidocs/plasma-workspace/libkworkspace/html/namespaceKWorkSpace.html
+# enum ShutdownConfirm { ShutdownConfirmDefault = -1, ShutdownConfirmNo = 0, ShutdownConfirmYes = 1 }
+# enum ShutdownType { ShutdownTypeDefault = -1, ShutdownTypeNone = 0, ShutdownTypeReboot = 1, ShutdownTypeHalt = 2, ShutdownTypeLogout = 3 }
+# enum ShutdownMode { ShutdownModeDefault = -1, ShutdownModeSchedule = 0, ShutdownModeTryNow = 1, ShutdownModeForceNow = 2, ShutdownModeInteractive = 3 }
+
+qdbus org.kde.ksmserver /KSMServer logout 0 3 2
+
