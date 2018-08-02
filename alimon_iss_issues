@@ -1,8 +1,8 @@
 #!/bin/bash
 
-ISSUES=$(curl -fsSLk 'http://alimonitor.cern.ch/siteinfo/issues.jsp?level=7&showall=&name=ISS' | xmllint --html --xpath '//td[@class = "table_row"]' - 2>/dev/null | html2text --ignore-links  --ignore-tables -b 0)
+ISSUES=$(/usr/bin/curl -fsSLk 'http://alimonitor.cern.ch/siteinfo/issues.jsp?level=7&showall=&name=ISS' | /usr/bin/xmllint --html --xpath '//td[@class = "table_row"]' - 2>/dev/null | /usr/bin/html2text --ignore-links  --ignore-tables -b 0)
 
-NOW=$(date)
+NOW=$(/usr/bin/date)
 
 echo "From: Adrian Sevcenco <adrian.sevcenco@spacescience.ro>
 To: glite <glite@spacescience.ro>
