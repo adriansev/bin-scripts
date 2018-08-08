@@ -1,3 +1,11 @@
-wget -q -O - http://hwaddress.com/?q=$1 | html2text -ascii -nobs -width 140 | tail -n 1
+#!/bin/bash
 
+MAC="${1}"
+
+TOKEN='eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJtYWN2ZW5kb3JzIiwiZXhwIjoxODQ4MjIzNzY5LCJpYXQiOjE1MzM3Mjc3NjksImlzcyI6Im1hY3ZlbmRvcnMiLCJqdGkiOiI4ZjhhZGM5OC0wNGU4LTQ1OWMtOTBiOC1hYzRiZjU3NmU4NzMiLCJuYmYiOjE1MzM3Mjc3NjgsInN1YiI6IjYxNyIsInR5cCI6ImFjY2VzcyJ9.qeby85dPQwBA4oty6dGDv3v2Ij72nrYM10W_n4wGBbty1rOD76MGk739f83Ja8KkjDgyStNUOz7_lwCCkkqCUw'
+
+CURLCMD="curl -fsSlk "
+LINK="https://api.macvendors.com/v1/lookup/${MAC}"
+
+${CURLCMD} -G "${LINK}" -H "Authorization: Bearer ${TOKEN}" -H "Accept: text/plain"
 
