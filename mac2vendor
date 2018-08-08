@@ -7,5 +7,6 @@ TOKEN='eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJtYWN2ZW5kb3JzIiwiZXhwIjox
 CURLCMD="curl -fsSlk "
 LINK="https://api.macvendors.com/v1/lookup/${MAC}"
 
-${CURLCMD} -G "${LINK}" -H "Authorization: Bearer ${TOKEN}" -H "Accept: text/plain"
+VENDOR=$(${CURLCMD} -G "${LINK}" -H "Authorization: Bearer ${TOKEN}" -H "Accept: text/plain")
+echo "${VENDOR}"
 
