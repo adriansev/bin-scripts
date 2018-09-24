@@ -1,0 +1,11 @@
+#!/bin/bash
+
+HN=$(hostname -s)
+RETRANS=$(netstat -s | awk '/segments retransmit/ {print $1}')
+UPTIME_PROC=$(< /proc/uptime)
+UPTIME=${UPTIME_PROC%% *}
+
+echo -ne "${HN}\t${RETRANS}\t${UPTIME}\n"
+
+
+
