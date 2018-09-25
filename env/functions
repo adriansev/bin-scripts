@@ -3,9 +3,9 @@
 ###   FUNCTIONS   ###
 #####################
 
-functions_list () { declare -f; }
+functions_list ()      { declare -f; }
 functions_list_name () { declare -F; }
-functions_show_def () { declare -f $1; }
+functions_show_def ()  { declare -f $1; }
 
 SourceIfValid () { [[ -f $1 ]] && source $1; }
 
@@ -21,30 +21,88 @@ __PYPATH_ADD () { [[ "$PYTHONPATH" =~ "$1" ]] && return 0; [[ -z $PYTHONPATH ]] 
 __MANPATH_INS () { [[ "$MANPATH" =~ "$1" ]] && return 0; [[ -z $MANPATH ]] && export MANPATH=$1 || export MANPATH=$1:$MANPATH; }
 __MANPATH_ADD () { [[ "$MANPATH" =~ "$1" ]] && return 0; [[ -z $MANPATH ]] && export MANPATH=$1 || export MANPATH=$MANPATH:$1; }
 
-cvmfs_alice_load ()      { eval $(alienv printenv VO_ALICE@$1); }
-cvmfs_alicephys_load ()  { eval $(alienv printenv VO_ALICE@AliPhysics::$1); }
-cvmfs_alice_enter ()     { alienv enter VO_ALICE@$1; }
-cvmfs_alicephys_enter () { alienv enter VO_ALICE@AliPhysics::$1; }
+## CVMFS ALICE functions
+cvmfs_alice_list ()      { /cvmfs/alice.cern.ch/bin/alienv q; }
+cvmfs_alice_load ()      { eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@${1}); }
+cvmfs_alicephys_load ()  { eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@AliPhysics::${1}); }
+cvmfs_alice_enter ()     { /cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@${1}; }
+cvmfs_alicephys_enter () { /cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@AliPhysics::${1}; }
 
 cvmfs_alicephys_load_latest () {
-local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
-eval $(alienv printenv VO_ALICE@AliPhysics::$latest)
+local latest
+latest=$(/cvmfs/alice.cern.ch/bin/alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
+eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@AliPhysics::${latest})
 }
 
 cvmfs_alicephys_enter_latest () {
-local latest=$(alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
-alienv enter VO_ALICE@AliPhysics::$latest
+local latest
+latest=$(/cvmfs/alice.cern.ch/bin/alienv -t avail AliPhysics 2>&1 | awk -F"/" '/vAN-/ {print $2}' | tail -n 1)
+/cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@AliPhysics::${latest}
 }
 
 __cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
-
 __cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
 
-alibuild_list_inits  () { ls -1 --hide=sw ${ALICE_WORK_DIR}/.. ;}
-alibuild_list_builds () { /usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n"; }
-alibuild_list_links  () { /usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type l -printf "%f -> %l\n"; }
-alibuild_list_labels () { /usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";}
-alibuild_init        () { aliBuild init AliRoot,AliPhysics -z; }
+## aliBuild ALICE functions
+alibuild_list_inits  () {
+[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+ls -1 --hide=sw ${ALICE_WORK_DIR}/..
+}
+
+alibuild_list_builds () {
+[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+
+local ALIBUILD_ARCH
+ALIBUILD_ARCH=$(aliBuild architecture);
+[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
+/usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n";
+}
+
+alibuild_list_links  () {
+[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+
+local ALIBUILD_ARCH
+ALIBUILD_ARCH=$(aliBuild architecture);
+[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
+/usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type l -printf "%f -> %l\n";
+}
+
+alibuild_list_labels () {
+[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+
+local ALIBUILD_ARCH
+ALIBUILD_ARCH=$(aliBuild architecture);
+[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
+
+/usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";
+}
+
+alibuild_init        () {
+[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+
+[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
+
+cd ${ALICE_WORK_DIR}/..
+
+aliBuild init AliRoot,AliPhysics -z ${1};
+}
+
+alibuild_build        () {
+[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
+local BUILDNAME
+BUILDNAME=$1
+shift
+
+cd ${ALICE_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name directory"; return 1; }
+
+aliBuild --force-unknown-architecture -z -w ../sw -d build AliPhysics "$@"
+}
+
+alibuild_load_latest ()    { alienv load AliPhysics/ali-latest-1;    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib ;}
+alibuild_load_latest_r6 () { alienv load AliPhysics/ali-latest-r6-1; export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib ;}
+
+###########################################################
 
 qstat_slr_f () { scontrol show jobid -dd $1; }
 
