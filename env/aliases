@@ -273,8 +273,6 @@ alias rq='root.exe -l -b -q -x'
 alias aliroot='aliroot -l'
 alias alirq='aliroot -l -b -q -x'
 
-alias cvmfs_list_alice='/cvmfs/alice.cern.ch/bin/alienv q'
-
 alias g++root='g++ $(root-config --libs) $(root-config --cflags)'
 
 alias tutorials='cd $ROOTSYS/tutorials'
@@ -298,4 +296,7 @@ alias load_nvidia='LD_LIBRARY_PATH=/usr/lib64/nvidia '
 alias pip_install_user='pip install --upgrade --user'
 alias pip2_install_user='pip2 install --upgrade --user'
 alias pip3_install_user='pip3 install --upgrade --user'
+
+# Fix recreate ld lib path when is overwritten
+alias ldlib_fix='export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib'
 
