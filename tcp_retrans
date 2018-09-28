@@ -5,7 +5,7 @@ HN=$(hostname -f)
 NETSTAT=$(netstat -s)
 
 SEG_RETRANS=$(awk '/segments retransmit/ {print $1}' <<< "${NETSTAT}" )
-SEG_OUT=$(awk '/segments sent out/ {print $1}' <<< "${NETSTAT}" )
+SEG_OUT=$(awk '/segments sen/ {print $1}' <<< "${NETSTAT}" )
 
 UPTIME_PROC=$(< /proc/uptime)
 UPTIME=${UPTIME_PROC%% *}
