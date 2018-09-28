@@ -1,11 +1,17 @@
 #!/bin/bash
 
-HN=$(hostname -s)
-RETRANS=$(netstat -s | awk '/segments retransmit/ {print $1}')
+HN=$(hostname -f)
+
+NETSTAT=$(netstat -s)
+
+SEG_RETRANS=$(awk '/segments retransmit/ {print $1}' <<< "${NETSTAT}" )
+SEG_OUT=$(awk '/segments sent out/ {print $1}' <<< "${NETSTAT}" )
+
 UPTIME_PROC=$(< /proc/uptime)
 UPTIME=${UPTIME_PROC%% *}
+FREQ=$(echo "scale=4; ${SEG_RETRANS}/${UPTIME}" | bc -l)
+RETRANS_PERC=$(printf '%.2f' $(echo "scale=2; ${SEG_RETRANS}/${SEG_OUT}" | bc -l) )
+SEG_OUT_FREQ=$(echo "scale=2; ${SEG_OUT}/${UPTIME}" | bc -l)
 
-echo -ne "${HN}\t${RETRANS}\t${UPTIME}\n"
-
-
+echo -ne "${HN}\t${SEG_RETRANS}\t${RETRANS_PERC} retrans%\t${FREQ} retran/s\t\t${SEG_OUT_FREQ} seg_out/s\n"
 
