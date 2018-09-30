@@ -13,7 +13,8 @@ CURDIR=$(pwd)
 
 USRDIR="/alice/cern.ch/user"
 
-download_file () { {
+download_file () {
+(
 while read -r line; do
     [[ "${line}" =~ ^#.*$ ]] && continue
     [[ -z "${line}" ]] && continue
@@ -48,13 +49,14 @@ while read -r line; do
     mkdir -p ${local_path}
     alien_cp alien://${line} ${local_path}/
 
-done < "${1}"
-} &> ${1}.log }
+done < "${1}" ) &> ${1}.log
+}
 
 /usr/bin/split -a 3 -e -d -n l/${ALIEN_DOWNLOAD_THREADS} ${inputf} "${inputf}_"
 
 for f in ${inputf}_* ; do
-    download_file ${inputf} &
+    download_file ${f} &
 done
 wait
-rm -rf ${inputf}_*
+
+[[ -n "${inputf}" ]] && rm -rf ${inputf}_*
