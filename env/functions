@@ -116,8 +116,25 @@ cd ${ALICE_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name direc
 aliBuild --force-unknown-architecture -z -w ../sw -d build AliPhysics "$@"
 }
 
-alibuild_load_latest ()    { alienv load AliPhysics/ali-latest-1;    export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib ;}
-alibuild_load_latest_r6 () { alienv load AliPhysics/ali-latest-r6-1; export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib ;}
+alibuild_load_latest ()    {
+alienv load AliPhysics/ali-latest-1;
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib;
+
+if [[ "${1}" == "inc" ]]; then
+    export C_INCLUDE_PATH=${VC_ROOT}/include:${GSL_ROOT}/include:${CGAL_ROOT}/include:${FASTJET_ROOT}/include:${ROOTSYS}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
+    export CPLUS_INCLUDE_PATH=${C_INCLUDE_PATH}
+fi
+}
+
+alibuild_load_latest_r6 () {
+alienv load AliPhysics/ali-latest-r6-1;
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib;
+
+if [[ "${1}" == "inc" ]]; then
+    export C_INCLUDE_PATH=${VC_ROOT}/include:${GSL_ROOT}/include:${CGAL_ROOT}/include:${FASTJET_ROOT}/include:${ROOTSYS}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
+    export CPLUS_INCLUDE_PATH=${C_INCLUDE_PATH}
+fi
+}
 
 ###########################################################
 
