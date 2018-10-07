@@ -2,13 +2,13 @@
 ##       ALIROOT
 ##
 
-export ALICE=${tools}/alice
-export GEANT3DIR=${ALICE}/geant3
+export ALICEDIR=${tools}/alice
+export GEANT3DIR=${ALICEDIR}/geant3
 
-export ALICE_ROOT=${ALICE}/aliroot
-export ALICE_PHYSICS=${ALICE}/aliphysics
+export ALICE_ROOT=${ALICEDIR}/aliroot
+export ALICE_PHYSICS=${ALICEDIR}/aliphysics
 
-export ALIROOT_OCDB_ROOT=${ALICE}/AliRootOCDB
+export ALIROOT_OCDB_ROOT=${ALICEDIR}/AliRootOCDB
 
 ##     AliROOT PATHS
 __PATH_ADD ${ALICE_ROOT}/bin
