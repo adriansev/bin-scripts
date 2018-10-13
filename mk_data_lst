@@ -1,9 +1,17 @@
 #!/bin/bash
 
-DIR=$1
+if [[ "${1}" == "check" ]]; then
+    CHECK="true"
+    shift
+fi
+
+DIR="${1}"
+shift
+
 CURDIR=$(pwd)
 
-file_arg=$2
+file_arg="${2}"
+shift
 
 prefix="file://"
 
@@ -30,10 +38,14 @@ FILES_LIST="/tmp/file_list_$(now_str)"
 
 while read -r line; do
     size=$(/usr/bin/stat -c %s ${line})
-    [[ $size == "0" ]] && { echoerr "File with size 0 .. will be deleted"; rm -rfv ${line};  continue; }
+    (( "${size}" == 0 )) && { echoerr "File with size 0 .. will be deleted"; rm -rfv ${line};  continue; }
+
+    if [[ "${CHECK}" == "true" ]]; then
+        alien_size=$(alien_ls -l ${line} | awk '{print $4}')
+        (("${size}" <= "${alien_size}")) && { echoerr "Local size different from alien size .. will be deleted"; rm -rfv ${line};  continue; }
+    fi
 
     [[ "${FILE}" == "${ZIPFILE}" ]] && sufix="#AliAOD.root"
-
     echo ${prefix}${line}${sufix}
 
 done < ${FILES_LIST}
