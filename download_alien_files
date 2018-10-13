@@ -33,12 +33,11 @@ while read -r line; do
     local local_path=${CURDIR}/${path}
     local local_file=${local_path}/${filename}
 
-    if [[ ( -e ${local_file} ) && ( -f ${local_file} ) ]] ; then
+    if [[ -e ${local_file} ]] ; then
       local fsize=$(/usr/bin/stat -c %s ${local_file})
-      local alien_size=$(alien_ls -l ${line} | awk '{print $4}')
 
-      if [[ ( "${fsize}" -eq "0" ) || ( ! "${fsize}" -eq "${alien_size}" )  ]] ; then
-        echo -ne "File is 0 size or different size from alien. Removing ... "
+      if (( "${fsize}" == 0 )) ; then
+        echo -ne "File is 0 size. Removing ... "
         rm -rf ${local_file}
         echo "Done!"
       else
