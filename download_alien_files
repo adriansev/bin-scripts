@@ -37,11 +37,11 @@ while read -r line; do
       local fsize=$(/usr/bin/stat -c %s ${local_file})
 
       if (( "${fsize}" == 0 )) ; then
-        echo -ne "File is 0 size. Removing ... "
+        echo -ne "File ${local_file} is 0 size. Removing ... "
         rm -rf ${local_file}
         echo "Done!"
       else
-        echo "File exists in ${local_path}" && continue
+        echo "File ${local_file} exists in ${local_path}" && continue
       fi
     fi
 
