@@ -59,3 +59,4 @@ done
 wait
 
 [[ -n "${inputf}" ]] && rm -rf ${inputf}_*
+
