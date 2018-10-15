@@ -1,6 +1,6 @@
 {
-gSystem->AddIncludePath("-Wno-deprecated -I$. -I/usr/include -I$FASTJET/include -I$ALICE_ROOT/include -I$ALICE_PHYSICS/include");
-gSystem->AddDynamicPath("/usr/lib64/ $FASTJET/lib/ $ROOTSYS/lib/ $ALICE_ROOT/lib/ $ALICE_PHYSICS/lib/");
+gSystem->AddIncludePath("-Wno-deprecated -I$. -I$ALICE_PHYSICS/include -I$ALICE_ROOT/include -I$FASTJET/include -I/usr/include");
+//gSystem->AddDynamicPath("$ALICE_PHYSICS/lib:$ALICE_ROOT/lib:$ROOTSYS/lib:$FASTJET/lib:/usr/lib64");
 
 //gSystem->Load("/usr/lib64/libCGAL");
 //gSystem->Load("libfastjet");
@@ -9,8 +9,10 @@ gSystem->AddDynamicPath("/usr/lib64/ $FASTJET/lib/ $ROOTSYS/lib/ $ALICE_ROOT/lib
 //gSystem->Load("libfastjetplugins");
 //gSystem->Load("libfastjettools");
 //gSystem->Load("libfastjetcontribfragile");
-gSystem->Load("libPWGJE");
+//gSystem->Load("libPWGJE");
 gSystem->Load("libPWGJEEMCALJetTasks");
 //gSystem->ListLibraries();
 }
+
+
 
