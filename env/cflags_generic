@@ -1,0 +1,4 @@
+## disable these gcc flags
+export CFLAGS="-Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder"
+export CXXFLAGS="${CFLAGS}"
+
