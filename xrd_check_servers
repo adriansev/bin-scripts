@@ -1,0 +1,24 @@
+#!/bin/bash
+
+SE_NAME="${1}"
+[[ -z "${SE_NAME}" ]] && { echo "SE_NAME required! is in the form of ALICE::<SITE>::<FILE/SE>" ; exit 1; }
+
+CURLCMD="/usr/bin/curl -m 1 -fsSLk"
+ALIMON_SE_URL='"http://alimonitor.cern.ch/services/se.jsp?se='"${SE_NAME}"'&ml_ip=true&resolve=true"' #'
+
+SE_INFO=$(eval "${CURLCMD}" "${ALIMON_SE_URL}";)
+[[ -z "${SE_INFO}" ]] && { sleep 1; SE_INFO=$(eval "${CURLCMD}" "${ALIMON_SE_URL}";); }
+[[ -z "${SE_INFO}" ]] && { sleep 2; SE_INFO=$(eval "${CURLCMD}" "${ALIMON_SE_URL}";); }
+[[ "${SE_INFO}" == "null" ]] || [[ -z "${SE_INFO}" ]] && { echo "The stated SE name ${SE_NAME} is not found - either bad conectivity or wrong SE name"; exit 1; }
+
+## XROOTD Manager info
+MANAGER_HOST_PORT=$( /bin/awk -F": " '/seioDaemons/ { gsub ("root://","",$2); print $2 }' <<< "${SE_INFO}" ) #'
+
+echo "Registered xrootd data servers to redirector"
+xrdmapc --list s --quiet --refresh "${MANAGER_HOST_PORT}" | tail -n +2 | sort
+echo
+
+echo "Status of / on data servers"
+xrdfs "${MANAGER_HOST_PORT}" locate -d -r / | sort
+echo
+
