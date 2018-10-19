@@ -1,3 +1,2 @@
 ###   PATHS   ###
-export PATH=${HOME}/bin:${HOME}/.local/bin:/usr/lib/qtchooser:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin
-
+export PATH=${HOME}/bin:${HOME}/.local/bin:/usr/lib/qtchooser:/usr/lib64/ccache:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
