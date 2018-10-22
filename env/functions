@@ -121,8 +121,8 @@ aliBuild --force-unknown-architecture -z -w ../sw -d build AliPhysics "$@"
 cd "${CURDIR}"
 }
 
-alibuild_build_latest    () { alibuild_build ali-latest    --defaults user       "$@"; }
-alibuild_build_latest_r6 () { alibuild_build ali-latest-r6 --defaults user-root6 "$@"; }
+alibuild_build_latest    () { alibuild_build ali-latest    --defaults user       "$@"; aliBuild clean --aggressive-cleanup; }
+alibuild_build_latest_r6 () { alibuild_build ali-latest-r6 --defaults user-root6 "$@"; aliBuild clean --aggressive-cleanup; }
 
 alibuild_load_latest ()    {
 alienv load AliPhysics/ali-latest-1;
@@ -158,7 +158,7 @@ slr_joball_c_stat () { sacct -u $(id -un) --format=JobID,JobName,MaxRSS,Elapsed;
 ##   GIT
 git_push2master_current () {
 local branch_name=$(git symbolic-ref --short -q HEAD)
-git push origin $branch_name:master
+git push origin ${branch_name}:master
 }
 
 git_push2master_byname () {
@@ -167,27 +167,15 @@ git_push2master_byname () {
 local branch_list=$(git branch -l)
 [[ !( "$branch_list" =~ "$1" ) ]] && echo "The argument need to be a valid branch name" && return
 
-git push origin $1:master
+git push origin ${1}:master
 }
 
 git_branch_name () { git symbolic-ref --short -q HEAD; }
 
-git_l () {
-git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
-}
-
-git_list () {
-git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
-}
-
-git_whatis () {
-git show -s --pretty='tformat:%h (%s, %ad)' --date=short
-}
-
-git_pwhatis () {
-git show -s --pretty='tformat:%h, %s, %ad' --date=short
-}
-
+git_l () { git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset' ; }
+git_list () { git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short ; }
+git_whatis () { git show -s --pretty='tformat:%h (%s, %ad)' --date=short ; }
+git_pwhatis () { git show -s --pretty='tformat:%h, %s, %ad' --date=short ; }
 git_update () { git fetch -t --all && git pull --rebase; }
 
 git_rebase_local () {
@@ -269,8 +257,8 @@ nohup time -p make --stop -j${CPUS} >$(basename $PWD).out 2>$(basename $PWD).err
 eth_irq () {
         if [ "$1" = "all" ]; then
             local list_of_eth=$(ip link | grep -E -o "eth[0-99]");
-            for eth in $list_of_eth; do
-               grep --color $eth /proc/interrupts | cut -d \: -f 1 | awk '{print $1}'
+            for eth in ${list_of_eth}; do
+               grep --color ${eth} /proc/interrupts | cut -d \: -f 1 | awk '{print $1}'
             done;
         elif [ -n "$1" ]; then
             grep --color $1 /proc/interrupts | cut -d \: -f 1 | awk '{print $1}';
