@@ -112,9 +112,11 @@ BUILDNAME=$1
 shift
 
 cd ${ALICE_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name directory"; return 1; }
-
 aliBuild --force-unknown-architecture -z -w ../sw -d build AliPhysics "$@"
 }
+
+alibuild_build_latest    () { alibuild_build ali-latest    --defaults user       "$@"; }
+alibuild_build_latest_r6 () { alibuild_build ali-latest-r6 --defaults user-root6 "$@"; }
 
 alibuild_load_latest ()    {
 alienv load AliPhysics/ali-latest-1;
