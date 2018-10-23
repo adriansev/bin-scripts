@@ -20,6 +20,7 @@
 
     lognice = log --graph --decorate --pretty=oneline --abbrev-commit --all
     logbranch = log --graph --decorate --pretty=oneline --abbrev-commit --first-parent --no-merges
+    branchlog = logbranch
 
     l = log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
     ll = log --stat --abbrev-commit
@@ -37,7 +38,6 @@
 [core]
     editor = mcedit
     autocrlf = input
-	pager = cat
 
 [merge]
     tool = kdiff3
