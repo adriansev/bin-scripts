@@ -37,6 +37,7 @@
 [core]
     editor = mcedit
     autocrlf = input
+	pager = cat
 
 [merge]
     tool = kdiff3
