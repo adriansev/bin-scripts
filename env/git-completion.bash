@@ -943,6 +943,7 @@ __git_complete_remote_or_refspec ()
 			*) ;;
 			esac
 			;;
+		--multiple) no_complete_refspec=1; break ;;
 		-*) ;;
 		*) remote="$i"; break ;;
 		esac
@@ -2566,6 +2567,9 @@ _git_stash ()
 			;;
 		drop,--*)
 			__gitcomp "--quiet"
+			;;
+		list,--*)
+			__gitcomp "--name-status --oneline --patch-with-stat"
 			;;
 		show,--*|branch,--*)
 			;;

@@ -2,10 +2,11 @@
 
 cd $HOME/bin
 
-wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O ~/bin/env/git-completion.bash
-wget https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O ~/bin/env/git-prompt.sh && chmod +x ~/bin/env/git-prompt.sh
-wget https://raw.githubusercontent.com/git/git/master/contrib/workdir/git-new-workdir -O ~/bin/git-new-workdir && chmod +x ~/bin/git-new-workdir
-wget https://raw.githubusercontent.com/git/git/master/contrib/git-resurrect.sh -O ~/bin/git-resurrect && chmod +x ~/bin/git-resurrect
-wget https://raw.githubusercontent.com/git/git/master/contrib/remotes2config.sh -O ~/bin/git-remotes2cfg && chmod +x ~/bin/git-remotes2cfg
-wget https://raw.githubusercontent.com/git/git/master/contrib/git-jump/git-jump -O ~/bin/git-jump && chmod +x ~/bin/git-jump
-wget https://raw.githubusercontent.com/git/git/master/git-sh-setup.sh -O ~/bin/git-sh-setup.sh && chmod +x ~/bin/git-sh-setup.sh && ln -s git-sh-setup.sh git-sh-setup
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash -O ~/bin/env/git-completion.bash
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh -O ~/bin/env/git-prompt.sh && chmod +x ~/bin/env/git-prompt.sh
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/contrib/workdir/git-new-workdir -O ~/bin/git-new-workdir    && chmod +x ~/bin/git-new-workdir
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/contrib/git-resurrect.sh -O ~/bin/git-resurrect             && chmod +x ~/bin/git-resurrect
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/contrib/remotes2config.sh -O ~/bin/git-remotes2cfg          && chmod +x ~/bin/git-remotes2cfg
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/contrib/git-jump/git-jump -O ~/bin/git-jump                 && chmod +x ~/bin/git-jump
+wget --no-check-certificate https://raw.githubusercontent.com/git/git/master/git-sh-setup.sh -O ~/bin/git-sh-setup.sh                    && { chmod +x ~/bin/git-sh-setup.sh ; ln -s git-sh-setup.sh git-sh-setup; }
+
