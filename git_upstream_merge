@@ -1,0 +1,30 @@
+#!/bin/bash
+
+FULLCMD="${0}"
+CMD="$(basename ${FULLCMD})"
+
+METHOD="merge"
+[[ "${CMD}" =~ pull ]] && METHOD="pull"
+
+REPO_NAME=$(basename $(git remote get-url origin) .git)
+
+git checkout master
+git fetch -t --all
+git fetch -t upstream
+git pull --rebase
+
+if [[ "${METHOD}" == "pull" ]]; then
+  git pull --rebase upstream master
+else
+  git merge upstream/master
+fi
+
+echo "doing push --all ..."
+git push --all
+echo "done"
+
+if [[ "${REPO_NAME}" == "alidist" ]]; then
+  git checkout myflags
+  git merge origin/master
+fi
+

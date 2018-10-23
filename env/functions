@@ -176,7 +176,6 @@ git_l () { git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(
 git_list () { git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short ; }
 git_whatis () { git show -s --pretty='tformat:%h (%s, %ad)' --date=short ; }
 git_pwhatis () { git show -s --pretty='tformat:%h, %s, %ad' --date=short ; }
-git_update () { git fetch -t --all && git pull --rebase; }
 
 git_rebase_local () {
 local branch_name=$(git symbolic-ref --short -q HEAD)
