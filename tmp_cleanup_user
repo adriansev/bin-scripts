@@ -1,0 +1,6 @@
+#!/bin/bash
+
+rm -rf ${HOME}/tmp/.org.chromium.Chromium.* ${HOME}/tmp/.com.google.Chrome.*
+
+
+
