@@ -16,7 +16,7 @@ git pull --rebase
 if [[ "${METHOD}" == "pull" ]]; then
   git pull --rebase upstream master
 else
-  git merge upstream/master
+  git merge --ff-only upstream/master
 fi
 
 echo "doing push --all ..."
@@ -25,6 +25,6 @@ echo "done"
 
 if [[ "${REPO_NAME}" == "alidist" ]]; then
   git checkout myflags
-  git merge origin/master
+  git merge --ff-only origin/master
 fi
 
