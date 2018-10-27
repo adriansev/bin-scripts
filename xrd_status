@@ -2,14 +2,15 @@
 
 redir=$1
 
-#xrdinfo=`echo -ne "query config version\nspaceinfo /\nexit\n" |/usr/bin/xrdfs rd.spacescience.ro:1094`
+[[ -z "${redir}" ]] && redir="rd.spacescience.ro"
 
 xrdinfo=$(echo -ne "query stats i\nspaceinfo /\nexit\n" | xrdfs ${redir}:1094)
-# get xrd space info; Reported size in bytes; convert to GiB with 2 decimals
-totsp=$(echo "$xrdinfo" | grep Total | awk -F: '{printf "%.2f\n",$2/1073741824}')
-freesp=$(echo "$xrdinfo" | grep Free | awk -F: '{printf "%.2f\n",$2/1073741824}')
 
-stats=$(echo "$xrdinfo" | grep statistics | awk -F'[<>]' '{print $2}')
+# get xrd space info; Reported size in bytes; convert to GiB with 2 decimals
+totsp=$(echo "${xrdinfo}" | awk -F: '/Total/ {printf "%.2f\n",$2/1073741824}')
+freesp=$(echo "${xrdinfo}" | awk -F: '/Free/ {printf "%.2f\n",$2/1073741824}')
+
+stats=$(echo "${xrdinfo}" | grep statistics | awk -F'[<>]' '{print $2}')
 arrstats=($stats)
 eval ${arrstats[2]}
 eval ${arrstats[8]}
@@ -23,7 +24,7 @@ echo
 for srv in $(xrdmapc --list s -r ${redir}:1094 | awk '/Srv/ {print $2}' | sort); do
   xrdinfo=$(echo -ne "query stats i\nspaceinfo /\nexit\n" | xrdfs ${srv})
 
-  stats=$(echo "$xrdinfo" | grep statistics | awk -F'[<>]' '{print $2}')
+  stats=$(echo "${xrdinfo}" | grep statistics | awk -F'[<>]' '{print $2}')
   arrstats=($stats)
   eval ${arrstats[2]}
   eval ${arrstats[8]}
@@ -31,8 +32,8 @@ for srv in $(xrdmapc --list s -r ${redir}:1094 | awk '/Srv/ {print $2}' | sort);
   echo "Xrootd server cluster name is : $site and is running xrootd version $ver"
 
   # get xrd space info; Reported size in bytes; convert to GiB with 2 decimals
-  totsp=$(echo "$xrdinfo" | grep Total | awk -F: '{printf "%.2f\n",$2/1073741824}')
-  freesp=$(echo "$xrdinfo" | grep Free | awk -F: '{printf "%.2f\n",$2/1073741824}')
+  totsp=$(echo "${xrdinfo}" | awk -F: '/Total/ {printf "%.2f\n",$2/1073741824}')
+  freesp=$(echo "${xrdinfo}" | awk -F: '/Free/ {printf "%.2f\n",$2/1073741824}')
 
   echo "xrootd storage server : ${srv}"
   echo -e "Total space (GiB) :\t${totsp}"
