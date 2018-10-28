@@ -1,0 +1,7 @@
+#!/bin/bash
+
+OUTDIR=trim
+[[ -n "${1}" ]] && OUTDIR="${1}"
+
+find $(pwd) -name "*.png" -exec convert {} -trim ${OUTDIR}/{} \;
+
