@@ -5,5 +5,5 @@ OUTDIR=trim
 
 mkdir -p ${OUTDIR}
 
-find $(pwd) -name "*.png" -exec convert {} -trim ${OUTDIR}/{} \;
+find . -name "*.png" -exec convert {} -trim ${OUTDIR}/{} \;
 
