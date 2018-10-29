@@ -3,5 +3,7 @@
 OUTDIR=trim
 [[ -n "${1}" ]] && OUTDIR="${1}"
 
+mkdir -p ${OUTDIR}
+
 find $(pwd) -name "*.png" -exec convert {} -trim ${OUTDIR}/{} \;
 
