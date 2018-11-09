@@ -1,0 +1,20 @@
+#!/bin/bash
+
+count=10
+[[ -n "${1}" ]] && count="${1}"
+
+((i=0));
+((realt_sum=0)); 
+
+while ( (("${i}" < "${count}" ))  ); do 
+    ((i++));
+    /usr/bin/time -f %e -o /tmp/xrdfs_test -- ~/bin/xrdfs_test
+    realt=$(< /tmp/xrdfs_test)
+    realt_sum=$( bc -l <<< "scale=2; ${realt_sum} + ${realt}" )
+done
+
+average_time=$(bc -l <<< "scale=2; ${realt_sum}/${count}" )
+printf 'Average time : %3.2f\n' "${average_time}"
+
+rm -rf /tmp/xrdfs_test
+

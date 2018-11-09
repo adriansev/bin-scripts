@@ -1,0 +1,3 @@
+#!/bin/bash
+exec xrdfs rd.spacescience.ro:1094 stat /home/aliprod/data/10/03013/29759f50-e385-11e8-871a-0242266c4d21 1>/dev/null;
+
