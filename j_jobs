@@ -1,0 +1,58 @@
+#!/bin/bash
+
+jobs_all="ps -A"
+jobs_all_l="ps -L -A"
+
+jobs_master="ps -A -M"
+jobs_master_l="ps -L -A -M"
+
+jobs_wait="ps -W"
+jobs_wait_l="ps -L -W"
+
+jobs_err="ps -E"
+jobs_err_l="ps -L -E"
+
+case "${1}" in
+  "all")
+    CMD="${jobs_all}"
+    ;;
+
+  "all_l")
+    CMD="${jobs_all_l}"
+    ;;
+
+  "master")
+    CMD="${jobs_master}"
+    ;;
+
+  "master_l")
+    CMD="${jobs_master_l}"
+    ;;
+
+  "wait")
+    CMD="${jobs_wait}"
+    ;;
+
+  "wait_l")
+    CMD="${jobs_wait_l}"
+    ;;
+
+  "err")
+    CMD="${jobs_err}"
+    ;;
+
+  "err_l")
+    CMD="${jobs_err_l}"
+    ;;
+
+  *)
+    echo "one argument of : all, all_l, master, master_l, wait, wait_l, err, err_l"
+    exit 1
+    ;;
+esac
+
+JEXIT="\nexit\n"
+
+JCMD="${CMD}${JEXIT}"
+echo -ne "${JCMD}" | jalien | tail -n +7 | head -n -2
+

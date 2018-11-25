@@ -1,0 +1,9 @@
+#!/bin/bash
+
+CMD="$@"
+
+JEXIT="\nexit\n"
+
+JCMD="${CMD}${JEXIT}"
+echo -ne "${JCMD}" | jalien | tail -n +7 | head -n -2
+
