@@ -25,6 +25,7 @@ echo "done"
 
 if [[ "${REPO_NAME}" == "alidist" ]]; then
   git checkout myflags
-  git merge --ff-only origin/master
+  git pull --rebase origin master
+  git push -f
 fi
 
