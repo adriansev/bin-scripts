@@ -335,3 +335,5 @@ alias pip3_install_user='pip3 install --upgrade --user'
 # Fix recreate ld lib path when is overwritten
 alias ldlib_fix='export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib'
 
+alias clang-format='clang-format -assume-filename=~/.clang-format'
+
