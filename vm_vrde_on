@@ -1,0 +1,5 @@
+#!/bin/bash
+
+vm_control ${1} vrde on
+vm_control ${1} vrdeport 5000-5100
+

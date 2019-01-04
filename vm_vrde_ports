@@ -1,6 +1,7 @@
 #!/bin/bash
 
 for vm in $(vm_id_list_active); do
-    VBoxManage showvminfo ${vm} | grep "Name:\|VRDE port:" | head -n -1
+    echo ${vm}
+    VBoxManage showvminfo ${vm} | grep "Name:\|VRDE port:"
     echo
 done

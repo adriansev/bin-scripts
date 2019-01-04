@@ -1,0 +1,4 @@
+#!/bin/bash
+
+vm_modify_all --vrde on --vrdeport 5000-5100 --vrdemulticon on --vrdereusecon on
+
