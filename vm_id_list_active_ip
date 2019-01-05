@@ -1,4 +1,0 @@
-#!/bin/bash
-
-for uuid in $(vm_id_list_active) ; do vm_id_active_ip ${uuid} ; done
-

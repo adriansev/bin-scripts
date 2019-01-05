@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for uuid in $(vm_id_list_active) ; do
+for uuid in $(vm_list) ; do
   eval $(VBoxManage showvminfo --machinereadable ${uuid} | grep ^name)
   echo "UUID : " ${uuid} " ; VM Name : " ${name}
 done
