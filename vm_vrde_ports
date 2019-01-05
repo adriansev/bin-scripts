@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for vm in $(vm_id_list_active); do
+for vm in $(vm_list_active); do
     echo ${vm}
     VBoxManage showvminfo ${vm} | grep "Name:\|VRDE port:"
     echo
