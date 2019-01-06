@@ -1,0 +1,28 @@
+#!/bin/bash
+
+help () {
+echo "Usage :"
+echo "vm_state <uuid|vmname> start|reset|poweroff|poweroff_acpi"
+}
+
+UUID=${1}
+shift
+[[ -z "${UUID}" ]] && { echo "first argument should be the UUID of vm"; help; exit 1; }
+
+ARG2=${1}
+shift
+[[ -z "${ARG2}" ]] && { echo "second argument should be the power state of vm"; help; exit 1; }
+
+if [[ "${ARG2}" == "start" ]]; then
+  vboxmanage startvm ${UUID} --type headless
+  exit 0;
+fi
+
+
+[[ "${ARG2}" == "reset" ]] && STATE=${ARG2}
+[[ "${ARG2}" == "poweroff" ]] && STATE=${ARG2}
+[[ "${ARG2}" == "poweroff_acpi" ]] && STATE="acpipowerbutton"
+
+##VBoxManage controlvm  <uuid|vmname> pause|resume|reset|poweroff|savestate| acpipowerbutton|acpisleepbutton
+VBoxManage controlvm ${UUID} ${STATE}
+
