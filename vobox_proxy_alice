@@ -1,0 +1,8 @@
+#!/bin/bash
+
+voms-proxy-info --exists --valid 00:05 &> /dev/null || voms-proxy-init --voms alice:/alice/Role=lcgadmin -valid 48:00
+
+vobox-proxy -s myproxy.cern.ch --email glite@spacescience.ro --proxy-safe 3600 --myproxy-safe 864000 --lifetime 48 \
+--vo alice --voms alice:/alice/Role=lcgadmin \
+register
+
