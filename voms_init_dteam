@@ -1,1 +1,1 @@
-voms-proxy-init --voms dteam:/dteam/NGI_RO/Role=lcgadmin --voms dteam:/dteam/NGI_RO/Role=operator --voms dteam:/dteam/NGI_RO/Role=production -valid 48:00
+voms-proxy-init --bits 2048 --rfc --voms dteam:/dteam/NGI_RO/Role=lcgadmin --voms dteam:/dteam/NGI_RO/Role=operator --voms dteam:/dteam/NGI_RO/Role=production -valid 48:00 "$@"

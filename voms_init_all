@@ -1,9 +1,8 @@
-voms-proxy-init \
+voms-proxy-init --bits 2048 --rfc -valid 48:00 \
 --voms alice:/alice/Role=lcgadmin \
 --voms dteam:/dteam/NGI_RO/Role=lcgadmin \
 --voms dteam:/dteam/NGI_RO/Role=operator \
 --voms dteam:/dteam/NGI_RO/Role=production \
 --voms auger:/auger \
--valid 48:00
-
+"$@"
 
