@@ -1,2 +1,1 @@
-voms-proxy-init --voms alice:/alice/Role=lcgadmin -valid 48:00
-
+voms-proxy-init --bits 2048 --rfc --voms alice:/alice/Role=lcgadmin -valid 48:00 "$@"
