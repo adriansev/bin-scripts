@@ -1,0 +1,5 @@
+#!/bin/bash
+
+export GT_PROXY_MODE="rfc"
+myproxy-init -s myproxy.cern.ch --dn_as_username --no_passphrase --proxy_lifetime 48 --cred_lifetime 8640 "$@"
+
