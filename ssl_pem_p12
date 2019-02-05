@@ -1,0 +1,13 @@
+#!/bin/bash
+
+CERT="${1}"
+KEY="${2}"
+
+name=$(basename ${CERT} .pem)
+
+txt=$3
+[[ -z "${3}" ]] txt="${name}"
+
+openssl pkcs12 -export -in "${CERT}" -inkey "${KEY}" -out ${name}.p12 -name ${txt}
+
+
