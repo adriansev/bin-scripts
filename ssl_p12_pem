@@ -1,0 +1,10 @@
+#!/bin/bash
+
+P12CERT="${1}"
+PREFIX="${2}"
+
+[[ -z "${2}" ]] && PREFIX="user"
+
+openssl pkcs12 -clcerts -nokeys -out "${PREFIX}cert.pem" -in "${P12CERT}"
+openssl pkcs12 -nocerts -out "${PREFIX}key.pem" -in "${P12CERT}"
+
