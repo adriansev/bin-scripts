@@ -1,0 +1,21 @@
+#!/bin/bash
+
+cert=${1}
+[[ ! -e "${cert}" ]] && { echo "Certificate not found!"; exit 1; }
+exitcode=''
+
+SUBJECT=$(openssl x509 -in ${cert} -noout -subject 2> /dev/null)
+exitcode=$?;
+
+[[ "${exitcode}" -eq "0" ]] && { echo "${SUBJECT}" | sed 's/subject= *//;s/\([A-Za-z0-9.]*\) = /\/\1=/;s/, \([A-Za-z0-9.]*\) = /\/\1=/g'; exit 0; }
+
+# reading the file as pem did not work
+#echo -n "Enter Import Password: ";
+read -s -p "Enter Import Password: " pkcs12pass;
+SUBJECT=$(openssl pkcs12 -in ${cert} -nokeys -clcerts -passin stdin <<< "${pkcs12pass}" | openssl x509 -noout -subject )
+exitcode=$?;
+[[ "${exitcode}" -eq "0" ]] && { echo; echo "${SUBJECT}" | sed 's/subject= *//;s/\([A-Za-z0-9.]*\) = /\/\1=/;s/, \([A-Za-z0-9.]*\) = /\/\1=/g'; exit 0; }
+
+[[ "${exitcode}" -ne "0" ]] && echo "Invalid cert"
+exit ${exitcode}
+
