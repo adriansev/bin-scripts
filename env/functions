@@ -446,47 +446,6 @@ date_baby () {
     echo $(( (d2 - d1) / 86400 )) days
 }
 
-###################
-###   OpenSSL   ###
-###################
-
-openssl_verify ()     { openssl verify -CApath $1 $2; }
-openssl_check_csr ()  { openssl req -text -noout -verify -in $1; }
-openssl_check_key ()  { openssl rsa -in $1 -check; }
-openssl_check_cert () { openssl x509 -in $1 -text -noout; }
-openssl_cert_txt ()   { openssl x509 -in $1 -text; }
-openssl_check_p12 ()  { openssl pkcs12 -info -in $1; }
-openssl_compare_key_cert () { diff -qs <(openssl rsa -in $1 -pubout) <(openssl x509 -in $2 -pubkey -noout); }
-
-openssl_pem_p12 () {
-local name=$(basename $1 .pem)
-local txt=$3
-openssl pkcs12 -export -in $1 -inkey $2 -out ${name}.p12 -name ${txt}
-}
-
-openssl_p12_pem () {
-openssl pkcs12 -clcerts -nokeys -out usercert.pem -in $1
-openssl pkcs12 -nocerts -out userkey.pem -in $1
-}
-
-openssl_DN () {
-local filename=$(basename "$1")
-local ext="${filename##*.}"
-if [[ "$ext" == "pem" ]] ; then
-    openssl x509 -in $1 -noout -subject | sed 's/subject= //';
-elif [[ "$ext" == "p12" ]] ; then
-    openssl pkcs12 -in $1 -nokeys -clcerts | openssl x509 -noout -subject | sed 's/subject= //';
-fi
-}
-
-openssl_key_nopass () {
-local priv1=$(basename "$1")
-local ext="${priv1##*.}"
-local filename="${priv1%.*}"
-local priv2="${filename}_nopass.${ext}"
-openssl rsa -in $1 -out ${priv2}
-}
-
 function __wget() {
     : ${DEBUG:=0}
     local URL=$1
