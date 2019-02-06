@@ -1,0 +1,19 @@
+#!/bin/bash
+
+USERCERT="${HOME}/.globus/usercert.pem"
+SSHPEM="${HOME}/.ssh/mycert.pem"
+
+cp "${USERCERT}" "${SSHPEM}"
+chmod u=rw "${SSHPEM}"
+openssl x509 -in "${USERCERT}" -pubkey -noout >> "${SSHPEM}"
+
+echo "Add in the remote ~/.ssh/authorized_keys"
+ssh-keygen -i -m PKCS8 -f "${SSHPEM}"
+
+echo -e "\nand use either like :
+ssh -i ${SSHPEM} remote_host
+or add in .ssh/config
+Host REMOTE
+   IdentityFile ${SSHPEM}"
+
+
