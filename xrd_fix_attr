@@ -1,0 +1,29 @@
+#!/bin/bash
+exec > xrd_ns_attr.log 2> xrd_ns_attr.err
+
+NS_LIST="${1}"
+[[ ! -e "${NS_LIST}" ]] && { echo "xrd namespace list not found"; exit 1; }
+
+/bin/split -a 2 -e -d -n l/8 ${NS_LIST} "${NS_LIST}_fixattr_"
+
+fix_attr () {
+local FILE="${1}"
+
+while read SYM; do
+  ## attr of data file
+  #FOUND_ATTR=$(getfattr --absolute-names --only-values --name="user.XrdFrm.Pfn" -- ${SYM} 2>/dev/null )
+
+  if [[ "${FOUND_ATTR}" != "${SYM}" ]] ; then
+      echo setfattr --name="user.XrdFrm.Pfn" --value="${SYM}" -- "${SYM}"
+      echo -e "FIXED : ${FOUND_ATTR}"
+  fi
+done < "${FILE}"
+}
+
+
+for f in ${NS_LIST}_fixattr_* ; do
+    fix_attr ${f} &
+done
+
+wait;
+
