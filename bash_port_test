@@ -1,0 +1,15 @@
+#!/bin/bash
+
+HOST=${1}
+shift
+[[ -z "${HOST}" ]] && { echo "1st argument should be the host/ip"; exit 1; }
+
+PORT=${1}
+shift
+[[ -z "${PORT}" ]] && { echo "2ndt argument should be the target port"; exit 1; }
+
+PROTO="tcp"
+[[ "${1}" == "udp" ]] &&  PROTO="udp"
+
+( echo > /dev/${PROTO}/${HOST}/${PORT}) &>/dev/null && echo "${HOST}:${PORT}/${PROTO} open" || echo "${HOST}:${PORT}/${PROTO} closed"
+
