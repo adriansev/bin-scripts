@@ -1,0 +1,68 @@
+#!/bin/bash
+
+kill_port () {
+local PORT
+PORT="${1}"
+PID=$(lsof -ti 4TCP:${PORT} -sTCP:LISTEN)
+[[ -n "${PID}" ]] && { kill -9 "${PID}" || { echo "Connection to local port >>> ${PORT} <<< could not be killed;"; exit 1;}; }
+}
+
+split_sshremote () {
+    local DEST USER HOSTPORT HOST PORT ARGLIST
+    DEST="${1}"
+    IFS='@' read -ra DEST_ARR <<< "${DEST}"
+    if [[ ${#DEST_ARR[@]} -eq "2" ]]; then
+        USER=${DEST_ARR[0]}
+        HOSTPORT=${DEST_ARR[1]}
+    else
+        HOSTPORT=${DEST_ARR[0]}
+    fi
+
+    IFS=':' read -ra HOSTPORT_ARR <<< "${HOSTPORT}"
+    HOST=${HOSTPORT_ARR[0]}
+    PORT=${HOSTPORT_ARR[1]}
+
+    ARGLIST=""
+    [[ -n "${USER}" ]] && ARGLIST="-l ${USER}"
+    [[ -n "${PORT}" ]] && ARGLIST="${ARGLIST} -p ${PORT}"
+    ARGLIST="${ARGLIST} ${HOST}"
+    ARGLIST=$(sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' <<< ${ARGLIST})
+    echo -ne "${ARGLIST}"
+}
+
+SSHREMOTE="${1}"
+[[ -z "${SSHREMOTE}" ]] && { echo "1st arg should be the remote host id or ssh alias OR <list|show> <|port> OR kill port"; exit 1; }
+shift
+
+if [[ "${SSHREMOTE}" == "kill" ]]; then
+    port_to_be_killed="${1}"
+    [[ -z "${port_to_be_killed}" ]] && { echo "2nd arg should be the local listening port"; exit 1; }
+    kill_port "${port_to_be_killed}"
+    exit $?
+fi
+
+if [[ "${SSHREMOTE}" == "list" || "${SSHREMOTE}" == "show" ]]; then
+    port_to_be_listed="${1}"
+    if [[ -z "${port_to_be_listed}" ]]; then
+        lsof -i 4TCP -Pn -sTCP:LISTEN
+    else
+        lsof -li 4TCP:${port_to_be_listed} -Pn -sTCP:LISTEN
+    fi
+    exit;
+fi
+
+PORT_REMOTE="${1}"
+[[ -z "${PORT_REMOTE}" ]] && { echo "2nd arg should be the remote port"; exit 1; }
+shift
+
+PORT_LOCAL="${1}"
+[[ -z "${PORT_LOCAL}" ]] && { echo "3rd arg should be the local port"; exit 1; }
+shift
+
+ARGUMENTS="${@}"
+[[ -n "${ARGUMENTS}" ]] && ARGUMENTS=$(sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' <<< ${ARGUMENTS})
+
+kill_port ${PORT_LOCAL}
+
+exec ssh -f -q -NTC ${ARGUMENTS} -o ServerAliveInterval=10 -o ServerAliveCountMax=6 -o ExitOnForwardFailure=no -L localhost:${PORT_LOCAL}:localhost:${PORT_REMOTE} $(split_sshremote "${SSHREMOTE}")
+
