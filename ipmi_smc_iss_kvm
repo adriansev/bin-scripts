@@ -1,0 +1,7 @@
+#!/bin/bash
+
+HOST="${1}"
+shift
+
+exec IPMIsmctool "${HOST}" ADMIN admin31415 ukvm
+
