@@ -2,5 +2,5 @@
 
 HOST="${1}"
 shift
-ipmitool -I lanplus -U ADMIN -P admin31415 -H "${HOST}" power "$@"
+ipmitool -I lanplus -U ADMIN -f ~/ipmipass -H "${HOST}" power "$@"
 
