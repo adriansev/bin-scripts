@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ipmitool -I lanplus -U ADMIN -P admin31415 -H "$@"
-
