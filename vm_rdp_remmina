@@ -1,0 +1,59 @@
+#!/bin/bash
+
+CONFDIR="${HOME}/.remmina"
+
+SSH_DEST="${1}"
+shift
+
+PORT_REMOTE="${1}"
+shift
+
+PORT_LOCAL="${1}"
+shift
+
+NAME="${SSH_DEST}_l${PORT_LOCAL}_r${PORT_REMOTE}"
+CONF="${CONFDIR}/${NAME}.remmina"
+
+split_sshremote () {
+    local DEST USER HOSTPORT HOST PORT ARGLIST
+    DEST="${1}"
+    IFS='@' read -ra DEST_ARR <<< "${DEST}"
+    if [[ ${#DEST_ARR[@]} -eq "2" ]]; then
+        USER=${DEST_ARR[0]}
+        HOSTPORT=${DEST_ARR[1]}
+    else
+        HOSTPORT=${DEST_ARR[0]}
+    fi
+
+    IFS=':' read -ra HOSTPORT_ARR <<< "${HOSTPORT}"
+    HOST=${HOSTPORT_ARR[0]}
+    PORT=${HOSTPORT_ARR[1]}
+
+    ARGLIST=""
+    [[ -n "${USER}" ]] && ARGLIST="-l ${USER}"
+    [[ -n "${PORT}" ]] && ARGLIST="${ARGLIST} -p ${PORT}"
+    ARGLIST="${ARGLIST} ${HOST}"
+    ARGLIST=$(sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' <<< ${ARGLIST})
+    echo -ne "${ARGLIST}"
+}
+
+SSH="$( split_sshremote ${SSH_DEST} )"
+
+cat > "${CONF}" <<EOF
+[remmina]
+name=${NAME}
+protocol=RDP
+server=localhost:${PORT_LOCAL}
+precommand=/usr/bin/ssh -qfNTC -o ServerAliveInterval=5 -o ServerAliveCountMax=6 -o ExitOnForwardFailure=yes -L localhost:${PORT_LOCAL}:localhost:${PORT_REMOTE} ${SSH}
+
+resolution_width=1024
+resolution_height=768
+colordepth=24
+window_width=1024
+window_height=768
+
+EOF
+
+echo "Now run :
+remmina -c ${CONF} &> /dev/null"
+
