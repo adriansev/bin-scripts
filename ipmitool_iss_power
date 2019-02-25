@@ -1,0 +1,6 @@
+#!/bin/bash
+
+HOST="${1}"
+shift
+ipmitool -I lanplus -U ADMIN -P admin31415 -H "${HOST}" power "$@"
+
