@@ -1,0 +1,12 @@
+#!/bin/bash
+##--display=DISPLAY
+exec nohup firefox --new-instance --profile $HOME/.mozilla/firefox/PAOSHIFT \
+--new-window http://10.10.10.180:10100/ \
+--new-window http://10.10.10.180:10101/ \
+--new-window http://10.10.10.180:10200/ \
+--new-window http://10.10.10.180:10201/ \
+--new-window http://10.10.10.180:10300/ \
+--new-window http://10.10.10.180:10301/ \
+--new-window http://10.10.10.180:10400/ \
+--new-window http://10.10.10.180:10401/ \
+"$@" </dev/null >${HOME}/firefox-pao-bg.log 2>&1 &
