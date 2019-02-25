@@ -3,5 +3,5 @@
 HOST="${1}"
 shift
 
-exec IPMIsmctool "${HOST}" ADMIN admin31415 ukvm
+exec IPMIsmctool "${HOST}" $( < ~/ipmismcpass ) ukvm
 
