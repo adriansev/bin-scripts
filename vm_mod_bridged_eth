@@ -1,0 +1,16 @@
+#!/bin/bash
+
+UUID=${1}
+shift
+
+[[ -z "${UUID}" ]] && { echo "first argument should be the UUID of vm"; exit 1; }
+
+#vm_list_uuid="$(vm_list)"
+
+ETH=${1}
+shift
+
+[[ -z "${ETH}" ]] && { echo "second argument should be the eth name of bridged interface"; exit 1; }
+
+vm_modify ${UUID} --bridgeadapter1 ${ETH}
+
