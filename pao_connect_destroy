@@ -1,0 +1,3 @@
+#!/bin/bash
+exec ssh -t paoshift /usr/local/bin/pao_connect destroy
+

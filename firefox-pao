@@ -1,0 +1,3 @@
+#!/bin/bash
+##--display=DISPLAY
+exec nohup firefox --new-instance --profile $HOME/.mozilla/firefox/PAOSHIFT "$@" </dev/null >${HOME}/firefox-pao.log 2>&1 &
