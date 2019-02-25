@@ -1,0 +1,4 @@
+#!/bin/bash
+
+for UUID in $( while read LINE; do ID=(${LINE}); UUID=$(echo ${ID[-1]} | sed 's/{\|}//g'); echo $UUID; done <<< $(VBoxManage list --sorted runningvms) ); do eval $(vboxmanage showvminfo ${UUID} --machinereadable | grep '^name=\|^UUID=\|vrdeport='); echo "${name};${UUID};${vrdeport}" ; done
+
