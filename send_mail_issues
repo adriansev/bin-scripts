@@ -1,0 +1,18 @@
+#!/bin/bash
+
+FILE="/tmp/iss_issues.txt"
+
+source ${HOME}/.mail_issues_secrets
+
+/home/adrian/bin/alimon_iss_issues > ${FILE}
+
+/usr/bin/curl --url 'smtp://mail2.spacescience.ro:587' \
+--ssl-reqd \
+--mail-from 'adrian.sevcenco@spacescience.ro' \
+--mail-rcpt 'glite@spacescience.ro' \
+--upload-file ${FILE}  \
+--user "${USER}:${PASS}" \
+--login-options AUTH=PLAIN
+
+/usr/bin/rm -f ${FILE}
+
