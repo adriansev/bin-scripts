@@ -1,0 +1,8 @@
+#!/bin/bash
+
+SRV="${1}"
+shift
+
+SSHCMD=$(/usr/bin/base64 -w0 ${HOME}/bin/vm_list_active_vrde)
+/usr/bin/ssh ${SRV} "echo ${SSHCMD} | /usr/bin/base64 -d | /bin/bash"
+
