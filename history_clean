@@ -1,3 +1,17 @@
-nl ~/.bash_history | sort -u -k2 | sort -n | cut -f 2- > ~/.bash_history2
-mv -f ~/.bash_history2 ~/.bash_history && rm -rf ~/.bash_history2
+#!/bin/bash
+
+now_str () { date +%Y%m%d_%H%M%S; }
+
+HIST="${HOME}/.bash_history"
+HIST2="${HOME}/.bash_history.clean"
+
+cp "${HIST}" "${HIST}_$(now_str)"
+
+sed 's/^[ \t]*//;s/[ \t]*$//' "${HIST}" > "${HIST2}"
+
+sort -b "${HIST2}" | uniq > "${HIST2}.tmp"
+mv -f "${HIST2}.tmp" "${HIST2}"
+
+sed -i '/^:>/d; /^cd /d; /^alias /d; /^cat /d; /^cp /d; /^diff /d; /^git checkout /d; /^git co /d; /^history /d; /^h /d; /^ll /d; /^ls /d; /^mkdir /d; /^mkcd /d;' "${HIST2}"
+sed -i '/^locate /d; /^man /d; /^mc&/d; /^mcedit /d; /^mv /d; /^which /d; /^make /d; /^kate /d; /^kdevelop /d; /^okular /d; /^rpm -qa/d; /^git clone /d; /^chmod +x /d;' "${HIST2}"
 
