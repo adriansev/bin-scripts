@@ -15,3 +15,5 @@ mv -f "${HIST2}.tmp" "${HIST2}"
 sed -i '/^:>/d; /^cd /d; /^alias /d; /^cat /d; /^cp /d; /^diff /d; /^git checkout /d; /^git co /d; /^history /d; /^h /d; /^ll /d; /^ls /d; /^mkdir /d; /^mkcd /d;' "${HIST2}"
 sed -i '/^locate /d; /^man /d; /^mc&/d; /^mcedit /d; /^mv /d; /^which /d; /^make /d; /^kate /d; /^kdevelop /d; /^okular /d; /^rpm -qa/d; /^git clone /d; /^chmod +x /d;' "${HIST2}"
 
+mv -f "${HIST2}" "${HIST}"
+
