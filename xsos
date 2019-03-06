@@ -1,8 +1,8 @@
 #!/bin/bash
-# xsos v0.7.13 last mod 2017/10/11
+# xsos v0.7.18 last mod 2018/10/18
 # Latest version at <http://github.com/ryran/xsos>
 # RPM packages available at <http://people.redhat.com/rsawhill/rpms>
-# Copyright 2012-2016 Ryan Sawhill Aroha <rsaw@redhat.com>
+# Copyright 2012-2018 Ryan Sawhill Aroha <rsaw@redhat.com>
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -183,15 +183,15 @@ fi
 
 # XSOS_ETHTOOL_ERR_REGEX (str: regular expression)
 #   Configures what ETHTOOL() uses to generate the data under the "Interface Errors" heading
-    : ${XSOS_ETHTOOL_ERR_REGEX:="Missing ethtool_-S file|(drop|disc|err|fifo|buf|fail|miss|OOB|fcs|full|frags|hdr|tso|pause).*: [^0]"}
+    : ${XSOS_ETHTOOL_ERR_REGEX:="Missing ethtool_-S file|(drop|disc|err|fifo|buf|fail|miss|OOB|fcs|full|frags|hdr|tso|pause|lost).*: [^0]"}
 
 # XSOS_LSPCI_NET_REGEX (str: regular expression)
 #   Configures what LSPCI() uses to search for peripherals under the "Net" heading
-    : ${XSOS_LSPCI_NET_REGEX:="(Ethernet controller|Network controller|InfiniBand):"}
+    : ${XSOS_LSPCI_NET_REGEX:="(Ethernet controller|Network controller|InfiniBand)( \[[0-9]{4}\])?:"}
 
 # XSOS_LSPCI_STORAGE_REGEX (str: regular expression)
 #   Configures what LSPCI() uses to search for peripherals under the "Storage" heading
-    : ${XSOS_LSPCI_STORAGE_REGEX:="(Fibre Channel|RAID bus controller|Mass storage controller|SCSI storage controller|SATA controller|Serial Attached SCSI controller):"}
+    : ${XSOS_LSPCI_STORAGE_REGEX:="(Fibre Channel|RAID bus controller|Mass storage controller|SCSI storage controller|SATA controller|Serial Attached SCSI controller)( \[[0-9]{4}\])?:"}
 
 # ==============================================================================
 
@@ -1027,7 +1027,7 @@ OSINFO() {
   else
     rhsm_hostname="${c[red]}(missing)${c[0]}"
   fi
-  
+
   # If running on localhost
   if [[ $1 == / ]]; then
     uname=$(uname -a | gawk '{printf "mach=%s  cpu=%s  platform=%s\n", $(NF-3), $(NF-2), $(NF-1)}')
@@ -1037,6 +1037,10 @@ OSINFO() {
     boottime=$(date --date=@$btime 2>/dev/null)
     [[ $(wc -w <<<"$boottime") == 6 ]] &&
       boottime=$(gawk -vH0="${c[0]}" -vH_IMP="${c[Imp]}" -vbtime=$btime '{if ($3 < 10) space=" "; printf "%s %s %s%s %s %s%s%s %s  (epoch: %s)\n", $1,$2,space,$3,$4,H_IMP,$5,H0,$6,btime}' <<<"$boottime")
+    [[ -r /etc/sysconfig/clock ]] &&
+      timezone=$(gawk -F= '/^ZONE=/{print $2}' "/etc/sysconfig/clock" 2>/dev/null | tr -d \")
+    [[ -x $(which timedatectl 2>/dev/null) ]] &&
+      timezone=$(timedatectl | gawk '/Time zone/ {print $3}' 2>/dev/null)
     uptime_input=$(uptime)
     runlevel=$(runlevel)
     initdefault=$(basename $(readlink -q /etc/systemd/system/default.target) 2>/dev/null) &&
@@ -1076,8 +1080,12 @@ OSINFO() {
     systime=$(gawk '!/\/.*bin/ && NF!=0' "$1/date" 2>/dev/null)
     [[ $(wc -w <<<"$systime") == 6 ]] &&
       systime=$(gawk -vH0="${c[0]}" -vH_IMP="${c[Imp]}" '{if ($3 < 10) space=" "; printf "%s %s %s%s %s %s%s%s %s\n", $1,$2,space,$3,$4,H_IMP,$5,H0,$6}' <<<"$systime")
-    
-    timezone=$(gawk -F= '/^ZONE=/{print $2}' "$1/etc/sysconfig/clock" 2>/dev/null | tr -d \")
+   
+    [[ -r "$1/etc/sysconfig/clock" ]] && 
+      timezone=$(gawk -F= '/^ZONE=/{print $2}' "$1/etc/sysconfig/clock" 2>/dev/null | tr -d \")
+    [[ -r "$1/sos_commands/systemd/timedatectl" ]] &&
+      timezone=$(gawk '/Time zone/ {print $3}' "$1/sos_commands/systemd/timedatectl" 2>/dev/null)
+
     [[ -n $timezone && -f /usr/share/zoneinfo/$timezone ]] &&
       boottime=$(echo -n $(TZ=$timezone date --date=@$btime 2>/dev/null)) ||
         boottime=$(echo -n $(TZ= date --date=@$btime 2>/dev/null))
@@ -1160,10 +1168,10 @@ OSINFO() {
   
   [[ -n $systime ]] &&
   echo -e "  ${c[H2]}Sys time:${c[0]}  $systime"
-  
+
   # Assuming have uptime input and detected num of cpus, print uptime, loadavg, etc
   [[ -n $uptime_input && -n $num_cpu ]] &&
-  gawk -vSYSTIME="$systime" -vBTIME="$boottime" -vNUM_CPU="$num_cpu" -vREDBOLD="${c[RED]}" -vRED="${c[red]}" -vORANGE="${c[orange]}" -vGREEN="${c[green]}" -vH2="${c[H2]}" -vH0="${c[0]}" -vH_IMP="${c[Imp]}" '
+  gawk -vSYSTIME="$systime" -vTIMEZONE="$timezone" -vBTIME="$boottime" -vNUM_CPU="$num_cpu" -vREDBOLD="${c[RED]}" -vRED="${c[red]}" -vORANGE="${c[orange]}" -vGREEN="${c[green]}" -vH2="${c[H2]}" -vH0="${c[0]}" -vH_IMP="${c[Imp]}" '
       !/load average/ { next }
       {
       Time = $1
@@ -1187,6 +1195,8 @@ OSINFO() {
       if (SYSTIME == "")
         printf "  %sSys time:%s  %s\n", H2, H0, Time
       printf   "  %sBoot time:%s %s\n", H2, H0, BTIME
+      if (TIMEZONE != "")
+        printf "  %sTime Zone:%s %s\n", H2, H0, TIMEZONE
       printf   "  %sUptime:%s    %s\n", H2, H0, Uptime
       printf   "  %sLoadAvg:%s   %s[%d CPU]%s %s (%s%.0f%%%s), %s (%s%.0f%%%s), %s (%s%.0f%%%s)\n",
         H2, H0, H_IMP, NUM_CPU, H0, Load[1], Color[1], LP[1], H0, Load[5], Color[5], LP[5], H0, Load[15], Color[15], LP[15], H0
@@ -1229,7 +1239,7 @@ OSINFO() {
 
 KDUMP() {
   # Local vars
-  local kexec_tools_vers kdump_initrd path kdump_cfg target MemTotal PathAvailableSpace ColorAvailable lsbootfile
+  local kexec_tools_vers kdump_initrd path kdump_cfg target MemTotal PathAvailableSpace ColorAvailable lsbootfile dfalfile
   
   # If the os module was called, grub config was already inspected; otherwise, we need to do it
   [[ -n $os ]] || _CHECK_GRUB "$1"
@@ -1330,9 +1340,12 @@ KDUMP() {
     __get_df_for_parent_fs_of_path() {
       local dfpath lastloop
       dfpath=$path
-      while [[ $(grep -v ^rootfs "$sosroot"/sos_commands/filesys/df_-al | gawk -vP=$dfpath '{if ($6==P || $5==P) n+=1} END{if (n>0) print 0; else print 255}') -eq 255 ]]; do
+      [[ -r "$sosroot"/sos_commands/filesys/df_-al ]] && dfalfile="$sosroot"/sos_commands/filesys/df_-al
+      [[ -r "$sosroot"/sos_commands/filesys/df_-al_-x_autofs ]] && dfalfile="$sosroot"/sos_commands/filesys/df_-al_-x_autofs
+
+      while [[ $(grep -v ^rootfs "$dfalfile" 2>/dev/null | gawk -vP=$dfpath '{if ($6==P || $5==P) n+=1} END{if (n>0) print 0; else print 255}') -eq 255 ]]; do
         if [[ $lastloop == y ]]; then
-          echo "DEBUG: This should never happen unless sos_commands/filesys/df_-al is missing an entry for '/'"
+          echo "DEBUG: This should never happen unless the df_-al file is missing an entry for '/'"
           return 2
         fi
         dfpath=${dfpath%/*}
@@ -1341,7 +1354,7 @@ KDUMP() {
           lastloop=y
         fi
       done
-      df_output=$(grep -v ^rootfs "$sosroot"/sos_commands/filesys/df_-al | gawk -vP=$dfpath '{if (NF==6 && $6==P) print; else if (NF==1) {dev=$1; getline; if ($5==P) print dev $0} }')
+      df_output=$(grep -v ^rootfs "$dfalfile" | gawk -vP=$dfpath '{if (NF==6 && $6==P) print; else if (NF==1) {dev=$1; getline; if ($5==P) print dev $0} }')
     }
   fi
   
@@ -2008,7 +2021,7 @@ LSPCI() {
         split($1, slot, ":")
         $1 = ""
         sub(" ", "")
-        split($0, type, ":")
+        split($0, type, ": ")
         dev[type[2]] ++
         if (!(slot[1] SUBSEP type[2] in slots)) {
           slots[slot[1], type[2]]
@@ -2028,7 +2041,7 @@ LSPCI() {
             else if (numports == 4) numports = "quad"
             ports = " "slotc " " numports "-port"
           }
-          printf "   %s%s (%s)%s%s\n", H_IMP, ports, typec, H0, devtype
+          printf "   %s%s (%s) %s%s\n", H_IMP, ports, typec, H0, devtype
         }
       }
     ' <<<"$lspci_input"
@@ -2043,7 +2056,7 @@ LSPCI() {
   _parse_periphs "${XSOS_LSPCI_STORAGE_REGEX}"
   
   echo -e "${c[H2]}  VGA:${c[0]}"
-  gawk '/VGA compatible controller:/ {$1=$2=$3=$4=""; print}' <<<"$lspci_input"
+  gawk '/VGA compatible controller( \[[0-9]{4}\])?:/ {$1=$2=$3=$4=""; gsub(/ \[[0-9]{4}\]:/,""); print}' <<<"$lspci_input"
   echo -en $XSOS_HEADING_SEPARATOR
 }
 
@@ -2224,7 +2237,7 @@ IPADDR() {
     ip_a_input=$(<"${1}")
   # Otherwise, use file from $sosroot
   else
-    ip_a_input=$(<"${1}/sos_commands/networking/ip_address")
+    ip_a_input=$(cat "${1}/sos_commands/networking/ip_address" 2>/dev/null || cat "${1}/sos_commands/networking/ip_-d_address" 2>/dev/null)
     brctl_show_input=$(cat "${1}/sos_commands/networking/brctl_show" 2>/dev/null)
   fi
   
@@ -2913,6 +2926,8 @@ SYSCTL() {
   __Pa vm.oom_kill_allocating_task "[bool] "  '{if ($1==0) printf "\"0\"%s  (scan tasklist)", H0; else printf "\"1\"%s  (kill OOM-triggering task)", H0}'
   __Pa vm.panic_on_oom "[0-2] "  '{if ($1==0) printf "\"0\"%s  (no panic)", H0; else if ($1==1) printf "\"1\"%s  (no panic if OOM-triggering task limited by mbind/cpuset)", H0; else if ($1==2) printf "\"2\"%s  (always panic)", H0}'
   __P vm.swappiness "[0-100] "
+  __P vm.min_free_kbytes ""
+  __P vm.vfs_cache_pressure "[0-100] "
   echo -en $XSOS_HEADING_SEPARATOR
 }
 
@@ -3269,7 +3284,8 @@ trap "rm -rf $TMPDIR 2>/dev/null" EXIT
     SOS_CHECKFILE softirq "proc/net/softnet_stat"              && SOFTIRQ   "$sosroot"
     SOS_CHECKFILE netdev  "proc/net/dev"                       && NETDEV    "$sosroot"
     SOS_CHECKFILE bonding "proc/net/bonding/"                  && BONDING   "$sosroot"
-    SOS_CHECKFILE ip      "sos_commands/networking/ip_address" && {
+    SOS_CHECKFILE ip      sos_commands/networking/ip_{,-d_}address \
+                                                               && {
                                                                   IPADDR    "$sosroot"
                                                                   XSOS_IP_VERSION=6
                                                                   IPADDR    "$sosroot"; }
@@ -3309,3 +3325,4 @@ trap "rm -rf $TMPDIR 2>/dev/null" EXIT
 
 # If output going to term (cat), print stderr tmp file contents to stderr
 [[ $XSOS_OUTPUT_HANDLER == cat ]] && cat $stderr_file >&2 || :
+
