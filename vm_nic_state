@@ -1,0 +1,19 @@
+#!/bin/bash
+
+UUID=${1}
+shift
+[[ -z "${UUID}" ]] && { echo "1st argument should be the UUID of vm"; exit 1; }
+
+NIC=${1}
+shift
+[[ -z "${NIC}" ]] && { echo "2nd argument should be the index of nic"; exit 1; }
+
+STATE=${1}
+shift
+[[ -z "${STATE}" ]] && STATE="on"
+
+CMD="setlinkstate${NIC} ${STATE}"
+
+##VBoxManage controlvm  <uuid|vmname> setlinkstate<1-N> on|off
+VBoxManage controlvm ${UUID} "${CMD}"
+

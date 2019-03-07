@@ -1,0 +1,35 @@
+#!/bin/bash
+
+UUID="${1}"
+shift
+
+[[ -z "${UUID}" ]] && { echo "UUID of machine is required" ; exit 1;}
+
+vminfo=$(VBoxManage showvminfo --machinereadable ${UUID} | grep -v "not set\|\"none\"" | head -n -4 )
+
+nics_present=$(echo "${vminfo}" | grep -oP 'nic\K\d+(?=\=)' | sed ':a;N;$!ba;s/\n/ /g') #'
+
+for i in ${nics_present}; do
+    NIC_NAME=$(echo "nic${i}")
+    TYPE_NAME=$(echo "nictype${i}")
+    MAC_NAME=$(echo "macaddress${i}")
+    CONNECT_NAME=$(echo "cableconnected${i}")
+
+    eval $(echo "${vminfo}" | grep ${NIC_NAME}=)
+    eval $(echo "${vminfo}" | grep ${TYPE_NAME}=)
+    eval $(echo "${vminfo}" | grep ${MAC_NAME}=)
+    eval $(echo "${vminfo}" | grep ${CONNECT_NAME}=)
+
+    if [[ "${!NIC_NAME}" == "bridged" ]]; then
+        DEV_NAME=$(echo "bridgeadapter${i}")
+        eval $(echo "${vminfo}" | grep ${DEV_NAME}=)
+    fi
+
+    if [[ "${!NIC_NAME}" == "intnet" ]]; then
+        DEV_NAME=$(echo "intnet${i}")
+        eval $(echo "${vminfo}" | grep ${DEV_NAME}=)
+    fi
+
+    echo -ne "$i ${!NIC_NAME}/${!TYPE_NAME} ${!DEV_NAME} ${!MAC_NAME} ${!CONNECT_NAME}\n"
+done | column -t
+
