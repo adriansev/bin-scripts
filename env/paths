@@ -1,2 +1,6 @@
 ###   PATHS   ###
-export PATH=${HOME}/bin:${HOME}/.local/bin:/usr/lib/qtchooser:/usr/lib64/ccache:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
+
+export PATH=${HOME}/.local/bin:${HOME}/bin:/usr/lib64/ccache:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/usr/lib/qtchooser
+
+[[ -f /etc/rocks-release ]] && export PATH=$PATH:/opt/openmpi/bin:/opt/ganglia/bin:/opt/ganglia/sbin:/opt/maui/bin:/opt/torque/bin:/opt/torque/sbin:/opt/rocks/bin:/opt/rocks/sbin
+
