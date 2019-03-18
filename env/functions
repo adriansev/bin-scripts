@@ -138,21 +138,15 @@ alias c++='distcc c++'
 alias gcc='distcc gcc'
 alias g++='distcc g++'
 
-local CURDIR
-CURDIR=$(pwd)
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
-[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
-local BUILDNAME
-BUILDNAME=$1
-shift
-
-cd ${ALICE_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name directory"; return 1; }
-aliBuild --force-unknown-architecture -z -w ../sw -d build -j $(distcc -j) AliPhysics "$@"
-cd "${CURDIR}"
+alibuild_build "$@"
 }
 
 alibuild_build_latest    () { alibuild_build ali-latest    build AliPhysics --defaults user "$@";}
 alibuild_build_latest_r6 () { alibuild_build ali-latest-r6 build AliPhysics --defaults user-root6 "$@"; }
+
+alibuild_build_latest_distcc    () { alibuild_build_distcc ali-latest    -j $(distcc -j) build AliPhysics --defaults user       "$@"; }
+alibuild_build_latest_r6_distcc () { alibuild_build_distcc ali-latest-r6 -j $(distcc -j) build AliPhysics --defaults user-root6 "$@"; }
+
 alibuild_build_roounfold () { alibuild_build ali-latest-r6 build RooUnfold  --defaults user-root6 "$@"; }
 
 alibuild_clean  () {
@@ -162,9 +156,6 @@ for ali in $(ls  --hide=sw $ALICE_WORK_DIR/..); do
 done;
 cd "${CURDIR}";
 }
-
-alibuild_build_latest_distcc    () { alibuild_build_distcc ali-latest    build AliPhysics --defaults user       "$@"; }
-alibuild_build_latest_r6_distcc () { alibuild_build_distcc ali-latest-r6 build AliPhysics --defaults user-root6 "$@"; }
 
 alibuild_load_latest ()    {
 alienv load AliPhysics/ali-latest-1;
