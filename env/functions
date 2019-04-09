@@ -61,6 +61,10 @@ __cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
 __cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
 
 ## aliBuild ALICE functions
+alias alibuild='aliBuild'
+
+loaded_aliphys () { alienv list 2>&1| sed -r 's#[0-9]+\) #\n#g;' | grep AliPhysics; }
+
 alibuild_list_inits  () {
 [[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 ls -1 --hide=sw ${ALIBUILD_WORK_DIR}/..
