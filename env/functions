@@ -62,46 +62,46 @@ __cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/
 
 ## aliBuild ALICE functions
 alibuild_list_inits  () {
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
-ls -1 --hide=sw ${ALICE_WORK_DIR}/..
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
+ls -1 --hide=sw ${ALIBUILD_WORK_DIR}/..
 }
 
 alibuild_list_builds () {
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 
 local ALIBUILD_ARCH
 ALIBUILD_ARCH=$(aliBuild architecture);
 [[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-/usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n";
+/usr/bin/find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n";
 }
 
 alibuild_list_links  () {
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 
 local ALIBUILD_ARCH
 ALIBUILD_ARCH=$(aliBuild architecture);
 [[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-/usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type l -printf "%f -> %l\n";
+/usr/bin/find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type l -printf "%f -> %l\n";
 }
 
 alibuild_list_labels () {
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 
 local ALIBUILD_ARCH
 ALIBUILD_ARCH=$(aliBuild architecture);
 [[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
 
-/usr/bin/find ${ALICE_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";
+/usr/bin/find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";
 }
 
 alibuild_init        () {
 local CURDIR
 CURDIR=$(pwd)
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 
 [[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
 
-cd ${ALICE_WORK_DIR}/..
+cd ${ALIBUILD_WORK_DIR}/..
 
 aliBuild init AliRoot,AliPhysics -z ${1};
 cd "${CURDIR}"
@@ -110,13 +110,13 @@ cd "${CURDIR}"
 alibuild_build        () {
 local CURDIR
 CURDIR=$(pwd)
-[[ -z "${ALICE_WORK_DIR}" ]] && { echo "ALICE_WORK_DIR not defined"; return 1; }
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 [[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
 local BUILDNAME
 BUILDNAME="${1}"
 shift
 
-cd ${ALICE_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name directory"; return 1; }
+cd ${ALIBUILD_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name directory"; return 1; }
 pwd
 ALIBUILD_ARCH=$(aliBuild architecture);
 ARCH_ARG="--force-unknown-architecture"
@@ -150,8 +150,8 @@ alibuild_build_roounfold_next () { alibuild_build ali-latest-r6-next build RooUn
 
 alibuild_clean  () {
 local CURDIR=$(pwd -P);
-for ali in $(ls  --hide=sw $ALICE_WORK_DIR/..); do
-    cd $ALICE_WORK_DIR/../${ali} && aliBuild clean --aggressive-cleanup;
+for ali in $(ls  --hide=sw $ALIBUILD_WORK_DIR/..); do
+    cd $ALIBUILD_WORK_DIR/../${ali} && aliBuild clean --aggressive-cleanup;
 done;
 cd "${CURDIR}";
 }
