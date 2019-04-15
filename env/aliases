@@ -296,17 +296,17 @@ alias rsync="rsync -ahuHAXW -e ssh"
 alias rsync_gsi="rsync -ahuHAXW -e gsissh"
 
 ## ROOT ALIASES
-alias root.exe='root.exe -l'
-alias rootn.exe='rootn.exe -l'
-alias root='root.exe -l'
-alias rootn='rootn.exe -l'
+alias root.exe="root.exe -l"
+alias rootn.exe="rootn.exe -l"
+alias root="root.exe -l"
+alias rootn="rootn.exe -l"
 
-alias rq='root.exe -l -b -q -x'
+alias rq="root.exe -l -b -q -x"
 
-alias aliroot='aliroot -l'
-alias alirq='aliroot -l -b -q -x'
+alias aliroot="aliroot -l"
+alias alirq="aliroot -l -b -q -x"
 
-alias g++root='g++ $(root-config --libs) $(root-config --cflags)'
+alias g++root="g++ $(root-config --libs) $(root-config --cflags)"
 
 alias tutorials='cd $ROOTSYS/tutorials'
 
