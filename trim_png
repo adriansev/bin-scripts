@@ -2,8 +2,7 @@
 
 OUTDIR=trim
 [[ -n "${1}" ]] && OUTDIR="${1}"
-
 mkdir -p ${OUTDIR}
 
-find . -name "*.png" -exec convert {} -trim ${OUTDIR}/{} \;
+find . -maxdepth 1 -name "*.png" -exec convert {} -trim ${OUTDIR}/{} \;
 
