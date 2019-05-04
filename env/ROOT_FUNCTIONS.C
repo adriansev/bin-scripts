@@ -70,62 +70,52 @@ char* ObjGetPtr ( void* ptr /*or if on stack use &obj */) {
 }
 
 //______________________________________________________________
-TString ObjGetName (TObject* obj) {
-  TString class_name ("");
-  TString* jagmrhmmpdjwikz_str_ptr = NULL;
-  TInterpreter* my_int = TInterpreter::Instance();
-
-  // get the class name
-  my_int->ProcessLine(Form( "jagmrhmmpdjwikz_str_ptr = reinterpret_cast<TString*>(%s) ; *jagmrhmmpdjwikz_str_ptr = ( (reinterpret_cast<TObject*>(%s))->ClassName() );" , ObjGetPtr(&class_name), ObjGetPtr(obj) )) ;
-  class_name.ReplaceAll("\"","");
-
-  jagmrhmmpdjwikz_str_ptr = NULL;
-  return class_name;
-}
-
-//______________________________________________________________
-void ObjGetPtr_howto () {
-  cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
-}
-
-//______________________________________________________________
-void ObjGetName_howto () {
-  cout << "my_int->ProcessLine(Form( \"(( reinterpret_cast<%s*>(%s) )->%s);\" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg )); " << endl;
-}
+const char* ObjGetName (TObject* ptr) {
+  return reinterpret_cast<TObject*>(ptr)->ClassName();
+  }
 
 //______________________________________________________________
 static TObject* Apply2Ptr (TObject* obj, const char* arg) {
   // apply the method (arg) to the object
   TInterpreter* my_int = TInterpreter::Instance();
-  my_int->ProcessLine(Form( "(( reinterpret_cast<%s*>(%s) )->%s);" , ObjGetName(obj).Data() , ObjGetPtr(obj), arg ));
+  my_int->ProcessLine(Form( "(( reinterpret_cast<%s*>(%s) )->%s);" , ObjGetName(obj) , ObjGetPtr(obj), arg ));
   return obj;
 }
 
 //______________________________________________________________
-static void ForEachH (const char* arg = "") {
-  if ( std::strlen(arg) == 0 ) {return;}
+static void ForEachH (const char* method, const char* params) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) {return;}
 
   TSeqCollection* list_canvases = gROOT->GetListOfCanvases();
   for (int i=0; i<list_canvases->GetEntries(); ++i) {
     TPad* canvas = dynamic_cast<TPad*> (list_canvases->At(i));
-    TList* glist = canvas->GetListOfPrimitives();
-
-    for (int i=0; i<glist->GetEntries(); ++i) {
-      TObject* obj = glist->At(i);
-
-      if ( obj->InheritsFrom("TH1") ) { Apply2Ptr (obj, arg ); canvas->Modified(); canvas->Update(); }
+    for(const auto&& obj: *(canvas->GetListOfPrimitives())) {
+      if ( obj->InheritsFrom("TH1") ) { obj->Execute(method, params); canvas->Modified(); canvas->Update(); }
 
       if ( obj->InheritsFrom("TPad") ) {
         TPad* pad = dynamic_cast<TPad*>(obj);
         TList* padlist = pad->GetListOfPrimitives();
         for (int i=0; i<padlist->GetEntries(); ++i) {
           TObject* h_in_padlist = padlist->At(i);
-          if ( h_in_padlist->InheritsFrom("TH1") ) { Apply2Ptr (h_in_padlist, arg ); pad->Modified(); pad->Update(); }
+          if ( h_in_padlist->InheritsFrom("TH1") ) { h_in_padlist->Execute(method, params); pad->Modified(); pad->Update(); }
           }
         }
+      }
     }
   }
+
+//______________________________________________________________
+static TH1D* ProjectY (TH2D* h, Option_t* option = "") {
+  TString new_name = h->GetName();
+  new_name += "_projY";
+  return h->ProjectionY(new_name.Data(), 0, -1, option );
+  }
+
+//______________________________________________________________
+static TH1D* ProjectX (TH2D* h, Option_t* option = "") {
+  TString new_name = h->GetName();
+  new_name += "_projX";
+  return h->ProjectionX(new_name.Data(), 0, -1, option );
 }
 
 //______________________________________________________________
@@ -135,9 +125,7 @@ static void PadToLogScale() {
 
   TPad* oldpad = dynamic_cast<TPad*> gPad;
   // Now loop through histos and find the extrema
-  TList* glist = oldpad->GetListOfPrimitives();
-  for (int i=0; i<glist->GetEntries(); ++i) {
-    TObject *obj = glist->At(i);
+  for(const auto&& obj: *(oldpad->GetListOfPrimitives())) {
     if ( obj->InheritsFrom("TH1") ) {
       // If there is a 2D histogram, don't do anything.
       if ( obj->InheritsFrom("TH2") ) { return; }
@@ -216,13 +204,13 @@ static void PadSetXaxis(Double_t r1, Double_t r2) {
 
 //______________________________________________________________
 TH1D* Rebin (TH1D* h, Int_t nbins, Double_t* xbins) {
-return dynamic_cast<TH1D*>( h->Rebin(nbins, Form("%s_rebin",h->GetName()), xbins) );
-}
+  return dynamic_cast<TH1D*>( h->Rebin(nbins, Form("%s_rebin",h->GetName()), xbins) );
+  }
 
 //______________________________________________________________
 TH1D* Clone (TH1D* h) {
 return dynamic_cast<TH1D*>(h->Clone( Form("%s_cl",h->GetName()) ));
-}
+  }
 
 //______________________________________________________________
 static TH1* NormH ( TH1* h, Option_t* option = "") {
