@@ -379,6 +379,10 @@ diff_wu_long () { diff -wu $1 $2; }
 diff_code   () { diff  -u "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
 diff_code_w () { diff -wu "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
 
+g++root () {
+g++ $(root-config --libs) $(root-config --cflags) "${@}"
+}
+
 root-module () {
   if [ $# -lt 1 ] ; then
     echo "root-module need exactly one argument"
