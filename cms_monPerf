@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# http://xrootd.org/doc/dev410/cms_config.htm#_Toc8247264
+# The specified program must write 5 white-space separated numbers to standard out.
+# The last number must be terminated by a new-line character (“\n”).
+# Each number must be normalized to 100, with 0 indicating no load and 100 indicating saturation. The numbers are in the order:
+# 1.      system load
+# 2.      cpu utilization
+# 3.      memory utilization
+# 4.      paging load, and
+# 5.      network utilization.
+
+max() {
+  printf "%d\n" "${@}" | sort -rn | head -1
+}
+
+NCPU=$(awk '/processor/ {nr++} END{print nr}' /proc/cpuinfo)
+LOADAVG=$(< /proc/loadavg)
+MEMINFO=$(< /proc/meminfo)
+
+LOAD_ARR=(${LOADAVG})
+LOAD5=$(echo "scale=0;${LOAD_ARR[1]}*100/${NCPU}" | bc -l)
+[[ "${LOAD5}" -gt "100" ]] && LOAD5="100"
+
+# procs -----------------------memory---------------------- ---swap-- -----io---- -system-- --------cpu--------
+#  r  b         swpd         free         buff        cache   si   so    bi    bo   in   cs  us  sy  id  wa  st
+CPU_UTIL_INFO=$(vmstat 1 2 | tail -n1)
+
+CPU=$(echo "${CPU_UTIL_INFO}" | awk '{print $(NF-3) + $(NF-4)  }') #'
+CPU_WA=$(echo "${CPU_UTIL_INFO}" | awk '{print $(NF-1)  }') #'
+
+MemTot=$(echo "${MEMINFO}" | awk '/MemTotal/ {print $(NF-1)}') #'
+MemFree=$(echo "${MEMINFO}" | awk '/MemFree/ {print $(NF-1)}') #'
+MemUsed=$((MemTot - MemFree))
+MEM=$(echo "scale=0;${MemUsed}*100/${MemTot}" | bc -l)
+
+# should be replaced by IOwait/NCPU ?
+PGIO=0
+
+NET_UTIL_LIST=""
+IFACE_DIR="/sys/class/net"
+for iface in $(ls -1 --hide lo ${IFACE_DIR}) ; do
+  IS_UP=$(grep up ${IFACE_DIR}/${iface}/operstate)
+  [[ -z "${IS_UP}" ]] && continue
+  SPEED=$(< ${IFACE_DIR}/${iface}/speed)
+  SPEED_BYTES=$(echo "scale=0; ${SPEED} * 1000000/8 " | bc -l)
+
+  SET1=$(cat ${IFACE_DIR}/${iface}/statistics/{rx,tx}_bytes | tr '\n' ' ')
+  SET1_ARR=(${SET1})
+  RX1=SET1_ARR[0]
+  TX1=SET1_ARR[1]
+
+  sleep 1
+  SET2=$(cat ${IFACE_DIR}/${iface}/statistics/{rx,tx}_bytes | tr '\n' ' ')
+  SET2_ARR=(${SET2})
+  RX2=SET2_ARR[0]
+  TX2=SET2_ARR[1]
+
+  RX_DIFF=$((RX2-RX1))
+  TX_DIFF=$((TX2-TX1))
+
+  RX_PERC=$(echo "scale=0;${RX_DIFF}*100/${SPEED_BYTES}" | bc -l)
+  TX_PERC=$(echo "scale=0;${TX_DIFF}*100/${SPEED_BYTES}" | bc -l)
+
+  NET_LOAD_IFACE=$(max ${RX_PERC} ${TX_PERC})
+  NET_UTIL_LIST="${NET_UTIL_LIST} ${NET_LOAD_IFACE}"
+done
+NET_LOAD=$(max ${NET_UTIL_LIST})
+
+echo -ne "${LOAD5} ${CPU} ${MEM} ${PGIO} ${NET_LOAD}\n"
+
