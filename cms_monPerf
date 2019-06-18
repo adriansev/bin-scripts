@@ -10,58 +10,63 @@
 # 4.      paging load, and
 # 5.      network utilization.
 
+INTERVAL="${1:-1}" # take as parameter the interval between runs, default to 1; NB! the loop take more than a few seconds to run
 NCPU=$(awk '/processor/ {nr++} END{print nr}' /proc/cpuinfo)
 
-LOAD5=$(awk '{print int($2*100/'${NCPU}')}' /proc/loadavg)
-[[ "${LOAD5}" -gt "100" ]] && LOAD5="100"
+# return highest load (integer percentage) of either RX or TX
+IFACE_LOAD () {
+    local iface="${1}"
+    SPEED=$(< "${iface}"/speed)
+    [[ "$?" -ne 0 || ! "${SPEED}" -gt 0 ]] && return 1 # bail out if speed is not valid
 
-# procs -----------------------memory---------------------- ---swap-- -----io---- -system-- --------cpu--------
-#  r  b         swpd         free         buff        cache   si   so    bi    bo   in   cs  us  sy  id  wa  st
-CPU_UTIL_INFO=$(vmstat 1 2 | tail -n1)
+    RX1=$(< "${iface}"/statistics/rx_bytes)
+    TX1=$(< "${iface}"/statistics/tx_bytes)
+    sleep 1
+    RX2=$(< "${iface}"/statistics/rx_bytes)
+    TX2=$(< "${iface}"/statistics/tx_bytes)
 
-CPU=$(echo "${CPU_UTIL_INFO}" | awk '{print $(NF-3) + $(NF-4)  }') #'
-#CPU_WA=$(echo "${CPU_UTIL_INFO}" | awk '{print $(NF-1)  }') #'
+    awk -v rx1="${RX1}" -v rx2="${RX2}"  -v tx1="${TX1}" -v tx2="${TX2}" -v speed="${SPEED}" 'BEGIN {
+        speed_bytes = int(speed * 1000000/8);
+        rx_diff = rx2 - rx1;
+        tx_diff = tx2 - tx1;
+        rx_perc = rx_diff*100/speed_bytes;
+        tx_perc = tx_diff*100/speed_bytes;
 
-MEM=$(awk '/MemTotal/{MEM_TOT=$(NF-1)}/MemFree/{MEM_FREE=$(NF-1)}END{print int((MEM_TOT-MEM_FREE)/MEM_TOT*100)}' /proc/meminfo)
+        max = rx_perc;
+        if ( tx_perc > rx_perc) max = tx_perc;
+        printf "%.0f",max;
+        }' # ' end of awk
+    } # end of function
 
-# should be replaced by IOwait/NCPU ?
-PGIO=0
+CPU_UTIL () {
+    # http://man7.org/linux/man-pages/man5/proc.5.html ; /proc/stat ; NB!! awk arrays start with 1
+    CPU_BEGIN=$(awk '/^cpu\s/ { printf "%d",$2 + $4 }' /proc/stat)
+    sleep 1
+    CPU_END=$(awk '/^cpu\s/ { printf "%d",$2 + $4 }' /proc/stat)
+    echo -ne $(( CPU_END - CPU_BEGIN))
+    }
 
-NET_LOAD="0"
-IFACE_DIR="/sys/class/net"
-for iface in ${IFACE_DIR}/*; do
-  IFACE_NAME=${iface##*/}
-  [ "${IFACE_NAME}" = "lo" ] && continue
-  OPERSTATE=$(< ${iface}/operstate)
-  [ "$OPERSTATE" != "up" ] && continue
-  SPEED=$(< ${iface}/speed)
-  if [ ! $? -eq 0 ]; then
-    SPEED=1000
-  elif [ ! ${SPEED} -gt 0 ]; then
-    SPEED=1000
-  fi
-  SPEED_BYTES=$(awk "BEGIN{print int(${SPEED} * 1000000/8)}")
+while(true); do # keep infinte loop
+    LOAD5=$(awk -v ncpu="${NCPU}" '{ LOAD_PERC = $2*100/ncpu; printf "%.0f",LOAD_PERC; }' /proc/loadavg) #'
+    [[ "${LOAD5}" -gt "100" ]] && LOAD5="100"
 
-  RX1=$(< ${iface}/statistics/rx_bytes)
-  TX1=$(< ${iface}/statistics/tx_bytes)
+    CPU=$(CPU_UTIL)
+    MEM=$(awk '/MemTotal/{ MEM_TOT=$(NF-1) } /MemFree/ { MEM_FREE=$(NF-1) } END{ MEM_PERC = (MEM_TOT - MEM_FREE)*100/MEM_TOT; printf "%.0f",MEM_PERC; }' /proc/meminfo) #'
 
-  sleep 1
-  RX2=$(< ${iface}/statistics/rx_bytes)
-  TX2=$(< ${iface}/statistics/tx_bytes)
+    # should be replaced by IOwait/NCPU ?
+    PGIO=0
 
-  RX_DIFF=$((RX2-RX1))
-  TX_DIFF=$((TX2-TX1))
+    NET_LOAD="0"
+    IFACE_DIR="/sys/class/net"
+    for iface in ${IFACE_DIR}/*; do
+        [[ $(realpath "${iface}") =~ virtual ]] && continue
+        OPERSTATE=$(< "${iface}"/operstate)
+        [[ "$OPERSTATE" != "up" ]] && continue
+        LOAD=$(IFACE_LOAD "${iface}" || continue) # if IFACE_LOAD returns with exit=1 lets bail out
+        [[ "${LOAD}" -gt "${NET_LOAD}" ]] && NET_LOAD="${LOAD}" # keep NET_LOAD as maximum of all interfaces
+    done
 
-  RX_PERC=$(awk "BEGIN{print int(${RX_DIFF}*100/${SPEED_BYTES})}")
-  TX_PERC=$(awk "BEGIN{print int(${TX_DIFF}*100/${SPEED_BYTES})}")
-
-  if [ ${RX_PERC} -gt ${NET_LOAD} ]; then
-    NET_LOAD=${RX_PERC}
-  fi
-  if [ ${TX_PERC} -gt ${NET_LOAD} ]; then
-    NET_LOAD=${TX_PERC}
-  fi
-done
-
-echo -ne "${LOAD5} ${CPU} ${MEM} ${PGIO} ${NET_LOAD}\n"
+    echo -ne "${LOAD5} ${CPU} ${MEM} ${PGIO} ${NET_LOAD}\n"
+    [[ "${INTERVAL}" -eq "0" ]] && break || sleep ${INTERVAL}
+done # end of while loop
 
