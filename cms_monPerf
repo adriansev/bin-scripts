@@ -59,7 +59,7 @@ while(true); do # keep infinte loop
     NET_LOAD="0"
     IFACE_DIR="/sys/class/net"
     for iface in ${IFACE_DIR}/*; do
-        [[ $(realpath "${iface}") =~ virtual ]] && continue
+        [[ $(readlink -f "${iface}") =~ virtual ]] && continue
         OPERSTATE=$(< "${iface}"/operstate)
         [[ "$OPERSTATE" != "up" ]] && continue
         LOAD=$(IFACE_LOAD "${iface}" || continue) # if IFACE_LOAD returns with exit=1 lets bail out
