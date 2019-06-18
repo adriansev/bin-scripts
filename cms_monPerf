@@ -51,7 +51,7 @@ while(true); do # keep infinte loop
     [[ "${LOAD5}" -gt "100" ]] && LOAD5="100"
 
     CPU=$(CPU_UTIL)
-    MEM=$(awk '/MemTotal/{ MEM_TOT=$(NF-1) } /MemFree/ { MEM_FREE=$(NF-1) } END{ MEM_PERC = (MEM_TOT - MEM_FREE)*100/MEM_TOT; printf "%.0f",MEM_PERC; }' /proc/meminfo) #'
+    MEM=$(awk '/MemTotal/{ MEM_TOT=$(NF-1) } /MemAvailable/ { MEM_AVAIL=$(NF-1) } END{ MEM_PERC = (MEM_TOT - MEM_AVAIL)*100/MEM_TOT; printf "%.0f",MEM_PERC; }' /proc/meminfo) #'
 
     # should be replaced by IOwait/NCPU ?
     PGIO=0
