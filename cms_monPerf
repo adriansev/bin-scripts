@@ -13,15 +13,22 @@
 INTERVAL="${1:-1}" # take as parameter the interval between runs, default to 1; NB! the loop take more than a few seconds to run
 NCPU=$(awk '/processor/ {nr++} END{print nr}' /proc/cpuinfo)
 
+# replace sleep subprocess
+snore() {
+    local IFS
+    [[ -n "${_snore_fd:-}" ]] || exec {_snore_fd}<> <(:)
+    read ${1:+-t "$1"} -u $_snore_fd || :
+}
+
 # return highest load (integer percentage) of either RX or TX
 IFACE_LOAD () {
     local iface="${1}"
     SPEED=$(< "${iface}"/speed)
-    [[ "$?" -ne 0 || ! "${SPEED}" -gt 0 ]] && return 1 # bail out if speed is not valid
+    [[ "$?" -ne 0 || ! "${SPEED}" -gt 0 ]] && { echo 0; return; } # just consider the interface load to be 0
 
     RX1=$(< "${iface}"/statistics/rx_bytes)
     TX1=$(< "${iface}"/statistics/tx_bytes)
-    sleep 1
+    snore 1
     RX2=$(< "${iface}"/statistics/rx_bytes)
     TX2=$(< "${iface}"/statistics/tx_bytes)
 
@@ -41,7 +48,7 @@ IFACE_LOAD () {
 CPU_UTIL () {
     # http://man7.org/linux/man-pages/man5/proc.5.html ; /proc/stat ; NB!! awk arrays start with 1
     CPU_BEGIN=$(awk '/^cpu\s/ { printf "%d",$2 + $4 }' /proc/stat)
-    sleep 1
+    snore 1
     CPU_END=$(awk '/^cpu\s/ { printf "%d",$2 + $4 }' /proc/stat)
     echo -ne $(( CPU_END - CPU_BEGIN))
     }
@@ -50,23 +57,34 @@ while(true); do # keep infinte loop
     LOAD5=$(awk -v ncpu="${NCPU}" '{ LOAD_PERC = $2*100/ncpu; printf "%.0f",LOAD_PERC; }' /proc/loadavg) #'
     [[ "${LOAD5}" -gt "100" ]] && LOAD5="100"
 
-    CPU=$(CPU_UTIL)
     MEM=$(awk '/MemTotal/{ MEM_TOT=$(NF-1) } /MemAvailable/ { MEM_AVAIL=$(NF-1) } END{ MEM_PERC = (MEM_TOT - MEM_AVAIL)*100/MEM_TOT; printf "%.0f",MEM_PERC; }' /proc/meminfo) #'
 
     # should be replaced by IOwait/NCPU ?
     PGIO=0
 
-    NET_LOAD="0"
     IFACE_DIR="/sys/class/net"
+    LIST_OF_ETH=""
     for iface in ${IFACE_DIR}/*; do
         [[ $(readlink -f "${iface}") =~ virtual ]] && continue
         OPERSTATE=$(< "${iface}"/operstate)
         [[ "$OPERSTATE" != "up" ]] && continue
-        LOAD=$(IFACE_LOAD "${iface}" || continue) # if IFACE_LOAD returns with exit=1 lets bail out
-        [[ "${LOAD}" -gt "${NET_LOAD}" ]] && NET_LOAD="${LOAD}" # keep NET_LOAD as maximum of all interfaces
+        [[ -z "${LIST_OF_ETH}" ]] && LIST_OF_ETH="${iface}" || LIST_OF_ETH="${LIST_OF_ETH} ${iface}"
     done
 
+    CPU_UTIL > /tmp/cpu.perf &
+
+    for iface in ${LIST_OF_ETH}; do
+        IFACE_LOAD "${iface}" > "/tmp/$(basename "${iface}").net.perf" &
+    done
+
+    wait # wait for the cpu and net load calculation to finish
+
+    CPU=$(< /tmp/cpu.perf)
+    NET_LOAD_LIST=$(for i in /tmp/*.net.perf; do echo -ne "$(< ${i}) \n"; done) #"
+    NET_LOAD="$(printf "%s\n" ${NET_LOAD_LIST} | sort -rn | head -n1)" # keep NET_LOAD as maximum of all interfaces
+
     echo -ne "${LOAD5} ${CPU} ${MEM} ${PGIO} ${NET_LOAD}\n"
-    [[ "${INTERVAL}" -eq "0" ]] && break || sleep ${INTERVAL}
+    [[ "${INTERVAL}" -eq "0" ]] && break || snore ${INTERVAL}
 done # end of while loop
+rm -f /tmp/*.perf
 
