@@ -71,20 +71,23 @@ while(true); do # keep infinte loop
         [[ -z "${LIST_OF_ETH}" ]] && LIST_OF_ETH="${iface}" || LIST_OF_ETH="${LIST_OF_ETH} ${iface}"
     done
 
-    CPU_UTIL > /tmp/cpu.perf &
+    exec {cpu_util}< <(CPU_UTIL)
 
+    LIST_OF_NET_FD=""
     for iface in ${LIST_OF_ETH}; do
-        IFACE_LOAD "${iface}" > "/tmp/$(basename "${iface}").net.perf" &
+        exec {iface_load}< <(IFACE_LOAD "${iface}")
+        [[ -z "${LIST_OF_NET_FD}" ]] && LIST_OF_NET_FD="${iface_load}" || LIST_OF_NET_FD="${LIST_OF_NET_FD} ${iface_load}"
     done
 
-    wait # wait for the cpu and net load calculation to finish
-
-    CPU=$(< /tmp/cpu.perf)
-    NET_LOAD_LIST=$(for i in /tmp/*.net.perf; do echo -ne "$(< ${i}) \n"; done) #"
-    NET_LOAD="$(printf "%s\n" ${NET_LOAD_LIST} | sort -rn | head -n1)" # keep NET_LOAD as maximum of all interfaces
+    CPU=$(cat <&${cpu_util})
+    NET_LOAD=0
+    for NET_FD in ${LIST_OF_NET_FD}; do
+        THIS_NET_LOAD=$(cat <&${NET_FD})
+        if [ ${THIS_NET_LOAD} -gt ${NET_LOAD} ]; then
+            NET_LOAD=${THIS_NET_LOAD}
+        fi
+    done
 
     echo -ne "${LOAD5} ${CPU} ${MEM} ${PGIO} ${NET_LOAD}\n"
     [[ "${INTERVAL}" -eq "0" ]] && break || snore ${INTERVAL}
 done # end of while loop
-rm -f /tmp/*.perf
-
