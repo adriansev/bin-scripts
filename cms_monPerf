@@ -47,9 +47,9 @@ IFACE_LOAD () {
 
 CPU_UTIL () {
     # http://man7.org/linux/man-pages/man5/proc.5.html ; /proc/stat ; NB!! awk arrays start with 1
-    CPU_BEGIN=$(awk '/^cpu\s/ { printf "%d",$2 + $4 }' /proc/stat)
+    CPU_BEGIN=$(awk -v ncpu="${NCPU}" '/^cpu\s/ { printf "%d",($2 + $4)/ncpu }' /proc/stat)
     snore 1
-    CPU_END=$(awk '/^cpu\s/ { printf "%d",$2 + $4 }' /proc/stat)
+    CPU_END=$(awk -v ncpu="${NCPU}" '/^cpu\s/ { printf "%d",($2 + $4)/ncpu }' /proc/stat)
     echo -ne $(( CPU_END - CPU_BEGIN))
     }
 
