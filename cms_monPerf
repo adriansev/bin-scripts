@@ -46,11 +46,13 @@ IFACE_LOAD () {
     } # end of function
 
 CPU_UTIL () {
-    # http://man7.org/linux/man-pages/man5/proc.5.html ; /proc/stat ; NB!! awk arrays start with 1
-    CPU_BEGIN=$(awk -v ncpu="${NCPU}" '/^cpu\s/ { printf "%d",($2 + $4)/ncpu }' /proc/stat)
+    # http://man7.org/linux/man-pages/man5/proc.5.html ; /proc/stat
+    read -a CPU_ARR_BEGIN < /proc/stat
     snore 1
-    CPU_END=$(awk -v ncpu="${NCPU}" '/^cpu\s/ { printf "%d",($2 + $4)/ncpu }' /proc/stat)
-    echo -ne $(( CPU_END - CPU_BEGIN))
+    read -a CPU_ARR_END   < /proc/stat
+    awk -v ncpu="${NCPU}" -v CPU_BEGIN_USR="${CPU_ARR_BEGIN[1]}" -v CPU_BEGIN_SYS="${CPU_ARR_BEGIN[3]}" -v CPU_END_USR="${CPU_ARR_END[1]}" -v CPU_END_SYS="${CPU_ARR_END[3]}" 'BEGIN {
+    printf "%d",  (CPU_END_USR + CPU_END_SYS - CPU_BEGIN_USR - CPU_BEGIN_SYS)/ncpu ;
+    }' # ' end of awk
     }
 
 while(true); do # keep infinte loop
@@ -59,33 +61,31 @@ while(true); do # keep infinte loop
 
     MEM=$(awk '/MemTotal/{ MEM_TOT=$(NF-1) } /MemAvailable/ { MEM_AVAIL=$(NF-1) } END{ MEM_PERC = (MEM_TOT - MEM_AVAIL)*100/MEM_TOT; printf "%.0f",MEM_PERC; }' /proc/meminfo) #'
 
-    # should be replaced by IOwait/NCPU ?
+    # legacy, let's default to 0
     PGIO=0
 
     IFACE_DIR="/sys/class/net"
     LIST_OF_ETH=""
-    for iface in ${IFACE_DIR}/*; do
+    for iface in ${IFACE_DIR}/*; do # create a list of valid,physical and UP network interfaces
         [[ $(readlink -f "${iface}") =~ virtual ]] && continue
         OPERSTATE=$(< "${iface}"/operstate)
         [[ "$OPERSTATE" != "up" ]] && continue
         [[ -z "${LIST_OF_ETH}" ]] && LIST_OF_ETH="${iface}" || LIST_OF_ETH="${LIST_OF_ETH} ${iface}"
     done
 
-    exec {cpu_util}< <(CPU_UTIL)
+    exec {cpu_util}< <( CPU_UTIL )
 
+    NET_LOAD=0
     LIST_OF_NET_FD=""
     for iface in ${LIST_OF_ETH}; do
-        exec {iface_load}< <(IFACE_LOAD "${iface}")
+        exec {iface_load}< <( IFACE_LOAD "${iface}" )
         [[ -z "${LIST_OF_NET_FD}" ]] && LIST_OF_NET_FD="${iface_load}" || LIST_OF_NET_FD="${LIST_OF_NET_FD} ${iface_load}"
     done
 
-    CPU=$(cat <&${cpu_util})
-    NET_LOAD=0
-    for NET_FD in ${LIST_OF_NET_FD}; do
-        THIS_NET_LOAD=$(cat <&${NET_FD})
-        if [ ${THIS_NET_LOAD} -gt ${NET_LOAD} ]; then
-            NET_LOAD=${THIS_NET_LOAD}
-        fi
+    CPU=$(< /dev/fd/${cpu_util})
+    for NET_FD in ${LIST_OF_NET_FD}; do # select from all network interfaces the one with the biggest load
+        THIS_NET_LOAD=$(< /dev/fd/${NET_FD})
+        [[ "${THIS_NET_LOAD}" -gt "${NET_LOAD}" ]] && NET_LOAD=${THIS_NET_LOAD}
     done
 
     echo -ne "${LOAD5} ${CPU} ${MEM} ${PGIO} ${NET_LOAD}\n"
