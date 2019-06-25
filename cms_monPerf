@@ -51,7 +51,7 @@ CPU_UTIL () {
     snore 1
     read -a CPU_ARR_END   < /proc/stat
     awk -v ncpu="${NCPU}" -v CPU_BEGIN_USR="${CPU_ARR_BEGIN[1]}" -v CPU_BEGIN_SYS="${CPU_ARR_BEGIN[3]}" -v CPU_END_USR="${CPU_ARR_END[1]}" -v CPU_END_SYS="${CPU_ARR_END[3]}" 'BEGIN {
-    printf "%d",  (CPU_END_USR + CPU_END_SYS - CPU_BEGIN_USR - CPU_BEGIN_SYS)/ncpu ;
+    printf "%.0f",  (CPU_END_USR + CPU_END_SYS - CPU_BEGIN_USR - CPU_BEGIN_SYS)/ncpu ;
     }' # ' end of awk
     }
 
