@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xrd_servers="storage02 storage03 storage04 storage05 storage06 storage07"
+xrd_servers="storage02 storage03 storage04 storage05 storage06 storage07 storage08"
 #xrd_servers="storage06"
 
 rm -f /tmp/*.xrdreport
