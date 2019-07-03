@@ -1,0 +1,26 @@
+#!/bin/bash
+
+CURDIR="$(pwd -P)"
+LIST="/tmp/merge_list"
+
+DIR="${1}"
+[[ -z "${DIR}" ]] && { echo "Which directory to search for inputs?"; exit 1; }
+shift
+cd "${DIR}" || { echo "Could not cd to ${DIR}"; exit 1; }
+
+INPUTFILE="${1}"
+[[ -z "${INPUTFILE}" ]] && { echo "Which file to search for merging?"; exit 1; }
+shift
+
+NOW=$(date +%Y%m%d_%H%M%S)
+OUTFILE="$(basename ${INPUTFILE} .root)_${NOW}_merge.root"
+
+IS_ABSOLUTE="${DIR:0:1}"
+[[ "${IS_ABSOLUTE}" != "/" ]] && DIR="${CURDIR}/${DIR}"
+
+find "${DIR}/" -type f -name "${INPUTFILE}" -printf '%p\n' > "${LIST}"
+
+alihadd -f6 -k -n 10 "$@" "${OUTFILE}" @"${LIST}"
+
+rm -rf "${LIST}"
+
