@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# DEFAULTS
+export XRD_CONNECTIONWINDOW="3"
+export XRD_CONNECTIONRETRY="1"
+export XRD_TIMEOUTRESOLUTION="1"
+export XRD_REQUESTTIMEOUT="60"
+export XRD_NETWORKSTACK="IPv4"
+
+DEST="rd.spacescience.ro:1094"
+
+if [ ! -f smallTestFile ]; then
+    curl -O alimonitor.cern.ch/download/smallTestFile || exit 1
+fi
+
+[[ ! -f lfn_data ]] && { echo "A file with the lfn and authz envelopes is required"; exit 1; }
+source lfn_data
+[[ -z "${LFN}" || -z "${ENVELOPE_RM}" || -z "${ENVELOPE_WRITE}" ]] && { echo "Could not find a defined variable LFN, ENVELOPE_RM, ENVELOPE_WRITE"; exit 1; }
+
+for i in "$@" ; do
+    case $i in
+        "rm"|"del")
+        JUST_RM=1
+        shift
+        ;;
+        [i,I][p,P][v,V]6)
+        XRD_NETWORKSTACK="IPv6"
+        shift
+        ;;
+        *:*)
+        DEST=${i}
+        shift
+        ;;
+        *)
+        # unknown option
+        ;;
+    esac
+done
+
+export XRD_NETWORKSTACK
+
+export XRD_LOGLEVEL=Dump
+export XRD_LOGFILE=put_$(date +%Y%m%d_%H%M%S).log
+
+xrdfs ${DEST} locate -r -d ${LFN} &> /dev/null
+FOUND=$?
+# if found then rm else { if just delete exit with success (because file not found) }
+[[ "${FOUND}" -eq "0" ]] && { xrdfs ${DEST} rm "${LFN}?authz=${ENVELOPE_RM}"; RM_EXIT="$?"; } || { [[ -n "${JUST_RM}" ]] && exit 0; }
+# if we are here then file was found, we already run delete
+[[ -n "${JUST_RM}" ]] && { echo "rm exit : ${RM_EXIT}" ; exit ${RM_EXIT}; }
+
+echo -ne "$(date +%Y%m%d_%H%M%S) : Uploading ---> "
+$(which time) -f "%E" xrdcp --nopbar --path --verbose --force --posc smallTestFile "root://${DEST}/${LFN}?authz=${ENVELOPE_WRITE}"
+echo -ne "$(date +%Y%m%d_%H%M%S) : xrdcp exit $?\n"
+
