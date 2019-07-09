@@ -208,7 +208,7 @@ slr_job_release () { scontrol release ${1}; }
 slr_job_requeue () { scontrol requeue ${1}; }
 
 slr_job_suspend_all () { squeue -ho %A -t R | xargs -n 1 scontrol suspend; }
-slr_job_resume_all ()  { squeue -o "%.18A %.18t" -u <username> | awk '{if ($2 =="S"){print $1}}' | xargs -n 1 scontrol resume ; }
+slr_job_resume_all ()  { squeue -o "%.18A %.18t" -u $(id -un) | awk '{if ($2 =="S"){print $1}}' | xargs -n 1 scontrol resume ; }
 
 
 ###########################################################
