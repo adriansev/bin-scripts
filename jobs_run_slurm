@@ -1,0 +1,18 @@
+#!/bin/bash
+
+JOB="job.slurm"
+JOB_SUBMIT="sbatch"
+
+[[ -z "${1}" ]] && { echo "Usage: $(basename ${0}) directory_with_jobs_subdirs"; exit 1;}
+
+CWD=$(pwd -P)
+DIR="${1}"
+[[ ${DIR:0:1} != "/" ]] && DIR="${CWD}/${DIR}"
+
+list_of_job_dirs=$(find "${DIR}" -type f -name "${JOB}" -printf '%h\n')
+
+for job_dir in ${list_of_job_dirs}; do
+    cd "${job_dir}"
+    ${JOB_SUBMIT} ${JOB}
+    cd "${CWD}"
+done
