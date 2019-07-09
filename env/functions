@@ -193,13 +193,23 @@ fi
 
 ###########################################################
 
-qstat_slr_f () { scontrol show jobid -dd $1; }
+slr_job_info ()       { scontrol show jobid -dd ${1}; }
+slr_job_r_stat ()     { sstat              --format=JobID,JobName,State,AveCPU,AveRSS,MaxRSS,Elapsed -j ${1} --allsteps; }
+slr_job_c_stat ()     { sacct -j ${1}      --format=JobID,JobName,State,AveCPU,AveRSS,MaxRSS,Elapsed; }
+slr_job_c_stat_all () { sacct -u $(id -un) --format=JobID,JobName,State,AveCPU,AveRSS,MaxRSS,Elapsed; }
 
-slr_job_r_stat () { sstat --format=AveCPU,AvePages,AveRSS,AveVMSize,JobID -j $1 --allsteps; }
+slr_job_del_all ()     { scancel -u  $(id -un); }
+slr_job_del_pending () { scancel -t PENDING   -u  $(id -un); }
+slr_job_del_running () { scancel -t RUNNING   -u  $(id -un); }
+slr_job_del_suspended () { scancel -t SUSPENDED -u  $(id -un); }
 
-slr_job_c_stat () { sacct -j $1 --format=JobID,JobName,MaxRSS,Elapsed; }
+slr_job_hold ()    { scontrol hold ${1}; }
+slr_job_release () { scontrol release ${1}; }
+slr_job_requeue () { scontrol requeue ${1}; }
 
-slr_joball_c_stat () { sacct -u $(id -un) --format=JobID,JobName,MaxRSS,Elapsed; }
+slr_job_suspend_all () { squeue -ho %A -t R | xargs -n 1 scontrol suspend; }
+slr_job_resume_all ()  { squeue -o "%.18A %.18t" -u <username> | awk '{if ($2 =="S"){print $1}}' | xargs -n 1 scontrol resume ; }
+
 
 ###########################################################
 ##   GIT
