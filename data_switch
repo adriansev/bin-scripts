@@ -1,0 +1,5 @@
+#!/bin/bash
+
+unlink data.txt
+ln -s "${1}" data.txt
+
