@@ -1,0 +1,10 @@
+#!/bin/bash
+
+BEGIN="${1}"
+STEP="${2}"
+END="${3}"
+
+echo -ne "Double_t xbins[] = {"
+for i in $(seq ${BEGIN} ${STEP} ${END}); do echo -ne "${i}, "; done
+echo -e " };"
+
