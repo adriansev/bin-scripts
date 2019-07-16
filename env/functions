@@ -549,6 +549,6 @@ function __wget() {
 wttr () {
     local request="wttr.in/${1-Bucharest}"
     [ "$(tput cols)" -lt 125 ] && request+='?n'
-    curl -H "Accept-Language: ${LANG%_*}" --compressed "${request}"
+    curl -H "Accept-Language: ${LANG%_*}" --compressed "${request}?F"
 }
 
