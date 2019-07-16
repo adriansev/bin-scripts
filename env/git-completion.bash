@@ -37,7 +37,8 @@
 #   GIT_COMPLETION_CHECKOUT_NO_GUESS
 #
 #     When set to "1", do not include "DWIM" suggestions in git-checkout
-#     completion (e.g., completing "foo" when "origin/foo" exists).
+#     and git-switch completion (e.g., completing "foo" when "origin/foo"
+#     exists).
 
 case "$COMP_WORDBREAKS" in
 *:*) : great ;;
@@ -400,7 +401,8 @@ __gitcomp_builtin ()
 	if [ -z "$options" ]; then
 		# leading and trailing spaces are significant to make
 		# option removal work correctly.
-		options=" $incl $(__git ${cmd/_/ } --git-completion-helper) "
+		options=" $incl $(__git ${cmd/_/ } --git-completion-helper) " || return
+
 		for i in $excl; do
 			options="${options/ $i / }"
 		done
@@ -1024,7 +1026,7 @@ __git_all_commands=
 __git_compute_all_commands ()
 {
 	test -n "$__git_all_commands" ||
-	__git_all_commands=$(git --list-cmds=main,others,alias,nohelpers)
+	__git_all_commands=$(__git --list-cmds=main,others,alias,nohelpers)
 }
 
 # Lists all set config variables starting with the given section prefix,
@@ -1501,7 +1503,8 @@ _git_diff ()
 }
 
 __git_mergetools_common="diffuse diffmerge ecmerge emerge kdiff3 meld opendiff
-			tkdiff vimdiff gvimdiff xxdiff araxis p4merge bc codecompare
+			tkdiff vimdiff gvimdiff xxdiff araxis p4merge bc
+			codecompare smerge
 "
 
 _git_difftool ()
@@ -1535,7 +1538,7 @@ _git_fetch ()
 		return
 		;;
 	--filter=*)
-		__gitcomp "blob:none blob:limit= sparse:oid= sparse:path=" "" "${cur##--filter=}"
+		__gitcomp "blob:none blob:limit= sparse:oid=" "" "${cur##--filter=}"
 		return
 		;;
 	--*)
@@ -1652,9 +1655,9 @@ _git_help ()
 	esac
 	if test -n "$GIT_TESTING_ALL_COMMAND_LIST"
 	then
-		__gitcomp "$GIT_TESTING_ALL_COMMAND_LIST $(git --list-cmds=alias,list-guide) gitk"
+		__gitcomp "$GIT_TESTING_ALL_COMMAND_LIST $(__git --list-cmds=alias,list-guide) gitk"
 	else
-		__gitcomp "$(git --list-cmds=main,nohelpers,alias,list-guide) gitk"
+		__gitcomp "$(__git --list-cmds=main,nohelpers,alias,list-guide) gitk"
 	fi
 }
 
@@ -2158,6 +2161,44 @@ _git_status ()
 	__git_complete_index_file "$complete_opt"
 }
 
+_git_switch ()
+{
+	case "$cur" in
+	--conflict=*)
+		__gitcomp "diff3 merge" "" "${cur##--conflict=}"
+		;;
+	--*)
+		__gitcomp_builtin switch
+		;;
+	*)
+		# check if --track, --no-track, or --no-guess was specified
+		# if so, disable DWIM mode
+		local track_opt="--track" only_local_ref=n
+		if [ "$GIT_COMPLETION_CHECKOUT_NO_GUESS" = "1" ] ||
+		   [ -n "$(__git_find_on_cmdline "--track --no-track --no-guess")" ]; then
+			track_opt=''
+		fi
+		# explicit --guess enables DWIM mode regardless of
+		# $GIT_COMPLETION_CHECKOUT_NO_GUESS
+		if [ -n "$(__git_find_on_cmdline "--guess")" ]; then
+			track_opt='--track'
+		fi
+		if [ -z "$(__git_find_on_cmdline "-d --detach")" ]; then
+			only_local_ref=y
+		else
+			# --guess --detach is invalid combination, no
+			# dwim will be done when --detach is specified
+			track_opt=
+		fi
+		if [ $only_local_ref = y -a -z "$track_opt" ]; then
+			__gitcomp_direct "$(__git_heads "" "$cur" " ")"
+		else
+			__git_complete_refs $track_opt
+		fi
+		;;
+	esac
+}
+
 __git_config_get_set_variables ()
 {
 	local prevword word config_file= c=$cword
@@ -2456,6 +2497,21 @@ _git_reset ()
 	__git_complete_refs
 }
 
+_git_restore ()
+{
+	case "$cur" in
+	--conflict=*)
+		__gitcomp "diff3 merge" "" "${cur##--conflict=}"
+		;;
+	--source=*)
+		__git_complete_refs --cur="${cur##--source=}"
+		;;
+	--*)
+		__gitcomp_builtin restore
+		;;
+	esac
+}
+
 __git_revert_inprogress_options="--continue --quit --abort"
 
 _git_revert ()
@@ -2610,7 +2666,7 @@ _git_submodule ()
 {
 	__git_has_doubledash && return
 
-	local subcommands="add status init deinit update summary foreach sync absorbgitdirs"
+	local subcommands="add status init deinit update set-branch summary foreach sync absorbgitdirs"
 	local subcommand="$(__git_find_on_cmdline "$subcommands")"
 	if [ -z "$subcommand" ]; then
 		case "$cur" in
@@ -2640,6 +2696,9 @@ _git_submodule ()
 			--recommend-shallow --no-recommend-shallow
 			--force --rebase --merge --reference --depth --recursive --jobs
 		"
+		;;
+	set-branch,--*)
+		__gitcomp "--default --branch"
 		;;
 	summary,--*)
 		__gitcomp "--cached --files --summary-limit"
@@ -2925,7 +2984,7 @@ __git_main ()
 			then
 				__gitcomp "$GIT_TESTING_PORCELAIN_COMMAND_LIST"
 			else
-				__gitcomp "$(git --list-cmds=list-mainporcelain,others,nohelpers,alias,list-complete,config)"
+				__gitcomp "$(__git --list-cmds=list-mainporcelain,others,nohelpers,alias,list-complete,config)"
 			fi
 			;;
 		esac
