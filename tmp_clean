@@ -1,0 +1,14 @@
+#!/bin/bash
+
+[[ -z "${TMP}" ]] && { echo "no TMP definet"; exit 1; }
+
+rm -rf ${TMP}/.*.Chrom*
+rm -rf ${TMP}/.dropbox*
+rm -rf ${TMP}/.gl*
+rm -rf ${TMP}/.gl*
+rm -rf ${TMP}/nsmail*
+rm -rf ${TMP}/preamble-*
+rm -rf ${TMP}/kdevelop.*
+
+
+
