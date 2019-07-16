@@ -1,0 +1,8 @@
+#!/bin/bash
+
+priv1=$(basename "${1}")
+ext="${priv1##*.}"
+filename="${priv1%.*}"
+priv2="${filename}_nopass.${ext}"
+openssl rsa -in ${1} -out ${priv2}
+
