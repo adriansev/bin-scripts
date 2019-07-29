@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PIC="${1}"
-[[ -e ${PIC} ]] & { echo "Input file not found"; exit 1; }
+[[ ! -e ${PIC} ]] && { echo "Input file not found"; exit 1; }
 
 PERC="${2:-50}"
 
