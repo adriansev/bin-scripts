@@ -1,0 +1,13 @@
+#!/bin/bash
+
+PIC="${1}"
+[[ -e ${PIC} ]] & { echo "Input file not found"; exit 1; }
+
+PERC="${2:-50}"
+
+NAME_FULL="$(basename ${PIC})"
+
+EXT="${NAME_FULL##*.}"
+NAME="${NAME_FULL%.*}"
+
+convert ${PIC} +repage -crop ${PERC}%x100% -trim -scene 1 ${NAME}-%d.${EXT}
