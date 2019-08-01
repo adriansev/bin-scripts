@@ -55,7 +55,7 @@ if [[ -z "${JARLIST}" ]]; then
   export CLASSPATH="${JAR_LIST_MAIN}:${JAR_LIST_LIB}"
 fi
 
-JALIEN_OPTS_DEFAULT="-server -Xms64m -Xmx256m -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+UseCompressedOops -XX:+AggressiveOpts -XX:+OptimizeStringConcat -XX:MaxTrivialSize=1K \
+JALIEN_OPTS_DEFAULT="-server -Xms64m -Xmx256m -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+UseCompressedOops -XX:+OptimizeStringConcat -XX:MaxTrivialSize=1K \
 -XX:CompileThreshold=20000 -Duserid=$(id -u) -Dcom.sun.jndi.ldap.connect.pool=false"
 
 [[ -z "${FOUND_TMP}" ]] && FOUND_TMP="${TMPDIR}"
