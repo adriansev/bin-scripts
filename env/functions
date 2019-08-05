@@ -552,3 +552,15 @@ wttr () {
     curl -H "Accept-Language: ${LANG%_*}" --compressed "${request}?F"
 }
 
+gogo () { python2 ${HOME}/bin/gogo.py "${@}" ;}
+
+j_py_compile () {
+    DIR=$(dirname $(which alien.py))
+    cd ${DIR}
+    python3 -OO -m py_compile alien.py
+}
+
+j ()          { python3 ${HOME}/bin/alien.py "${@}" ;}
+j_json ()     { python3 ${HOME}/bin/alien_json "${@}" ;}
+j_json_all () { python3 ${HOME}/bin/alien_json_all "${@}" ;}
+
