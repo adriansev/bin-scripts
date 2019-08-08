@@ -1,2 +1,6 @@
 ## disable these gcc flags
 export CXXFLAGS="-Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder"
+
+# -fassociative-math -fno-trapping-math -fno-signed-zeros -flto=4
+[[ "${GCC_OPTIM}" -eq "1" ]] && export CXXFLAGS="${CXXFLAGS} -march=native -mtune=native -mavx -ftree-vectorize"
+
