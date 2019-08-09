@@ -555,9 +555,12 @@ wttr () {
 gogo () { python2 ${HOME}/bin/gogo.py "${@}" ;}
 
 j_py_compile () {
+    local DIR CURDIR
+    CURDIR=$(pwd)
     DIR=$(dirname $(which alien.py))
-    cd ${DIR}
+    cd "${DIR}"
     python3 -OO -m py_compile alien.py
+    cd "${CURDIR}"
 }
 
 j ()          { python3 ${HOME}/bin/alien.py "${@}" ;}
