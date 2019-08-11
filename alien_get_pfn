@@ -1,4 +1,0 @@
-#!/bin/bash
-
-alien_guid2lfn $1 | grep $1 | awk '{print $1}' | xargs alien_whereis -r | grep -E $1 | grep -E ISS | awk -F"=>" '{print $3}'
-
