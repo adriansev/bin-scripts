@@ -15,7 +15,7 @@ if [[ ! -d "${JALIEN_CONF_DIR}" ]]; then # ups, setup was not run
 fi
 
 # check if command arguments have jar files and build a list of them as classpath definition
-ARGLIST="$@"
+ARGLIST="${@}"
 for jar in ${ARGLIST}; do
     if [[ ${jar} =~ .*\.jar ]]; then
         JARFILE="${BASH_REMATCH[0]}"
@@ -67,6 +67,24 @@ JALIEN_OPTS_DEFAULT="-client -Xms16M -Xmx64M -Duserid=$(id -u)"
 [[ -z "${FOUND_TMP}" ]] && FOUND_TMP="/tmp"
 
 JALIEN_OPTS_DEFAULT="${JALIEN_OPTS_DEFAULT} -Djava.io.tmpdir=${FOUND_TMP}"
+
+jbox_stop () {
+# clean up the remaining JBox process
+JBOX_PID="$(ps -u $(id -u) -f | awk '/[a]lien.JBox/ {print $2}')"
+[[ -n "${JBOX_PID}" ]] && kill -15 ${JBOX_PID}
+}
+
+jbox_start () {
+jbox_stop
+RUNSH_OPTS="-DAliEnConfig=${JALIEN_CONF_DIR} alien.JBox"
+[[ -n "${JALIEN_OPTS}" ]] && RUNSH_OPTS="${JALIEN_OPTS} ${RUNSH_OPTS}"
+PIPE="${TMPDIR:-/tmp}/jbox_input.pipe"
+[[ -e "${PIPE}" ]] &&  rm -rf "${PIPE}"
+mkfifo ${PIPE}
+nohup java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS} <${PIPE} >${HOME}/jbox.out 2>&1 &
+read -s -p "Password:" PASS
+echo "${PASS}" > ${PIPE}
+}
 
 ARG1="${1}"
 if [ "${ARG1}" == "setup" ]; then
@@ -153,26 +171,23 @@ EOF
     #wget -q "https://cafiles.cern.ch/cafiles/certificates/CERN%20Root%20Certification%20Authority%202.crt" -O ${HOME}/.j/trusts/CERN_ROOT_CA2.der
     #wget -q "https://cafiles.cern.ch/cafiles/certificates/CERN%20Grid%20Certification%20Authority.crt" -O ${HOME}/.j/trusts/CERN_Grid_CA.der
     exit 0 # we done our job, let's exit
-
 elif [ "${ARG1}" == "cleanup" ]; then
-    # clean up the remaining JBox process
-    JBOX_PID="$(ps -u $(id -u) -f | awk '/[a]lien.JBox/ {print $2}')"
-    [[ -n "${JBOX_PID}" ]] && kill "${JBOX_PID}"
+    jbox_stop
     exit 0 # we done our job, let's exit
-elif [ "${ARG1}" == "login" ]; then
-    RUNSH_OPTS="-DAliEnConfig=${JALIEN_CONF_DIR} alien.JBox"
-    shift
-elif [ "${ARG1}" == "run" ]; then
-    # allows running custom commands from cli
-    RUNSH_OPTS="-DAliEnConfig=${JALIEN_CONF_DIR}"
-    shift
+elif [ "${ARG1}" == "jbox" ]; then
+    jbox_start
+    exit 0
 else
     RUNSH_OPTS="-DAliEnConfig=${JALIEN_CONF_DIR} alien.JSh"
 fi
 
-ARGLIST="$@"
-
 # prepend any JALIEN_OPTS additional options to java command to be run
 [[ -n "${JALIEN_OPTS}" ]] && RUNSH_OPTS="${JALIEN_OPTS} ${RUNSH_OPTS}"
-exec java ${JALIEN_OPTS_DEFAULT} ${ARGLIST} ${RUNSH_OPTS}
 
+if [[ -n ${ARGLIST} ]]; then
+    JBOX_PID="$(ps -u $(id -u) -f | awk '/[a]lien.JBox/ {print $2}')"
+    [[ -z "${JBOX_PID}" ]] && jbox_start
+    java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS} <<< ${ARGLIST} | head -n -2 | tail -n +7
+else
+    java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS}
+fi
