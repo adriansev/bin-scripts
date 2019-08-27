@@ -546,10 +546,13 @@ function __wget() {
     exec 3>&-
 }
 
-wttr () {
-    local request="wttr.in/${1-Bucharest}"
-    [ "$(tput cols)" -lt 125 ] && request+='?n'
-    curl -H "Accept-Language: ${LANG%_*}" --compressed "${request}?F"
+meteo () {
+    if [[ "${1}" == "nice" ]]; then
+        local request="wttr.in/Bucharest?format=v2"
+    else
+        local request="wttr.in/Bucharest?mMAFq${1}"
+    fi
+    curl -H "Accept-Language: ${LANG%_*}" --compressed "${request}"
 }
 
 gogo () { python2 ${HOME}/bin/gogo.py "${@}" ;}
