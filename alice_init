@@ -5,7 +5,7 @@ MYUSER="asevcenc"
 HN=$(hostname -f)
 
 rm -rf /tmp/gclient_env_${MYUID} /tmp/gclient_token_${MYUID} /tmp/x509up_u${MYUID}
-rm -rf /tmp/gbbox_*
+rm -rf /tmp/gbbox_${MYUID}*
 
 alien-token-init ${MYUSER}
 
