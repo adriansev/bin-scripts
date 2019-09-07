@@ -1,0 +1,31 @@
+#!/bin/bash
+
+trap "exit" SIGINT
+
+zip_name='root_archive.zip'
+
+DIR="${1}"
+IS_TEST="${2}"
+
+archives=$(find -H "${DIR}" -type f -name "${zip_name}")
+
+DECOMP='unzip -o '
+TEST_CMD='unzip -tq '
+
+which 7za &> /dev/null && { DECOMP='7za -y e '; TEST_CMD='7za t '; }
+
+for zip_name in ${archives}; do
+    dir=$(dirname "${zip_name}")
+    cd ${dir}
+    size=$(stat -c %s "${zip_name}")
+    [[ ${size} == "0" ]] && { echo -e ${zip_name} "  ---> SIZE 0 <--- "; rm -rfv "${zip_name}"; continue;}
+
+    if [[ "${IS_TEST}" == "test" ]]; then
+        ${TEST_CMD} "${zip_name}" &> /dev/null || { echo -e "${zip_name} ---> ZIP TEST FAILED <--- "; [[ -e "${zip_name}" ]] && rm -rf "${zip_name}"; }
+    else
+        ${DECOMP} "${zip_name}" AliAOD.root
+        if [[ "${IS_TEST}" == "deletezip" ]] && { [[ -e "${zip_name}" ]] && rm -rf "${zip_name}"; }
+    fi
+done
+
+
