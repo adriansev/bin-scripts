@@ -24,7 +24,7 @@ for zip_name in ${archives}; do
         ${TEST_CMD} "${zip_name}" &> /dev/null || { echo -e "${zip_name} ---> ZIP TEST FAILED <--- "; [[ -e "${zip_name}" ]] && rm -rf "${zip_name}"; }
     else
         ${DECOMP} "${zip_name}" AliAOD.root
-        if [[ "${IS_TEST}" == "deletezip" ]] && { [[ -e "${zip_name}" ]] && rm -rf "${zip_name}"; }
+        [[ "${IS_TEST}" == "deletezip" ]] && { [[ -e "${zip_name}" ]] && rm -rf "${zip_name}"; }
     fi
 done
 
