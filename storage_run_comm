@@ -1,9 +1,13 @@
 #!/bin/bash
 
 storage_hosts="rd storage02 storage03 storage04 storage05 storage06 storage07 storage08"
-for host in $storage_hosts ; do
-  echo $host
-  ssh_run_cmd ${host} "$@"
+
+[[ "${1}" == "root" ]] && { RUN_AS_ROOT=1; shift; }
+
+for srv in ${storage_hosts} ; do
+  [[ -n "${RUN_AS_ROOT}" ]] && srv="${srv}_root"
+  echo ${srv}
+  ssh_run_cmd ${srv} "${@}"
   echo
 done
 
