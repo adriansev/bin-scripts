@@ -1,0 +1,5 @@
+#!/bin/bash
+
+rm -rf MANIFEST.in install.sh publish.sh setup.py
+cp packaging/wheel/* .
+python3 ./setup.py install --user
