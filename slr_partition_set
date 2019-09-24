@@ -1,0 +1,157 @@
+#!/bin/bash
+
+help () {
+echo "
+SPECIFICATIONS FOR CREATE, UPDATE, AND DELETE COMMANDS, PARTITIONS
+AllowGroups=<name>
+Identify the user groups which may use this partition; comma separated list; all groups "AllowGroups=ALL".
+
+AllocNodes=<name>
+The default value is "ALL".
+Comma separated list of nodes from which users can execute jobs in the partition.
+Node names may be specified using the node range expression syntax described above.
+
+Alternate=<partition name>
+Alternate partition to be used if the state of this partition is "DRAIN" or "INACTIVE."
+The value "NONE" will clear a previously set alternate partition.
+
+CpuBind=<node>
+Specify the task binding mode to be used by default for this partition.
+Supported options include: "none", "board", "socket", "ldom" (NUMA), "core", "thread" and "off" (remove previous binding mode).
+
+Default=<yes|no>
+Specify if this partition is to be used by jobs which do not explicitly identify a partition to use.
+Possible output values are "YES" and "NO". In order to change the default partition of a running system,
+use the scontrol update command and set Default=yes for the partition that you want to become the new default.
+
+DefaultTime=<time>
+Run time limit used for jobs that don\'t specify a value.
+If not set then MaxTime will be used. Format is the same as for MaxTime.
+
+DefMemPerCPU=<MB>
+Set the default memory to be allocated per CPU for jobs in this partition (megabytes)
+
+DefMemPerNode=<MB>
+Set the default memory to be allocated per node for jobs in this partition (megabytes)
+
+DisableRootJobs=<yes|no>
+Specify if jobs can be executed as user root.
+
+GraceTime=<seconds>
+The preemption grace time to be extended to a job which has been selected for preemption.
+The default value is zero, no preemption grace time is allowed on this partition or qos.
+(Meaningful only for PreemptMode=CANCEL)
+
+Hidden=<yes|no>
+Specify if the partition and its jobs should be hidden from view.
+Hidden partitions will by default not be reported by Slurm APIs or commands. Possible values are "YES" and "NO".
+
+JobDefaults=<specs>
+Specify job default values using a comma delimited list of "key=value" pairs. Supported keys include
+        DefCpuPerGPU    Default number of CPUs per allocated GPU.
+        DefMemPerGPU    Default memory limit (in megabytes) per allocated GPU.
+
+MaxMemPerCPU=<MB>
+Set the maximum memory to be allocated per CPU for jobs in this partition (megabytes)
+
+MaxMemPerCNode=<MB>
+Set the maximum memory to be allocated per node for jobs in this partition (megabytes)
+
+MaxNodes=<count>
+Set the maximum number of nodes which will be allocated to any single job in the partition. Specify a number, "INFINITE" or "UNLIMITED".
+Changing the MaxNodes of a partition has no effect upon jobs that have already begun execution.
+
+MaxTime=<time>
+The maximum run time for jobs. Output format is [days-]hours:minutes:seconds or "UNLIMITED".
+Input format (for update command) is minutes, minutes:seconds, hours:minutes:seconds, days-hours, days-hours:minutes or days-hours:minutes:seconds.
+Time resolution is one minute and second values are rounded up to the next minute.
+Changing the MaxTime of a partition has no effect upon jobs that have already begun execution.
+
+MinNodes=<count>
+Set the minimum number of nodes which will be allocated to any single job in the partition.
+Changing the MinNodes of a partition has no effect upon jobs that have already begun execution.
+
+Nodes=<name>
+Identify the node(s) to be associated with this partition.
+Multiple node names may be specified using simple node range expressions (e.g. "lx[10-20]").
+Note that jobs may only be associated with one partition at any time.
+Specify a blank data value to remove all nodes from a partition: "Nodes=".
+Changing the Nodes in a partition has no effect upon jobs that have already begun execution.
+
+OverTimeLimit=<count>
+Number of minutes by which a job can exceed its time limit before being canceled.
+The configured job time limit is treated as a soft limit. Adding OverTimeLimit to the soft limit provides a hard limit, at which point the job is canceled.
+This is particularly useful for backfill scheduling, which bases upon each job's soft time limit.
+A partition-specific OverTimeLimit will override any global OverTimeLimit value. If not specified,
+the global OverTimeLimit value will take precedence. May not exceed exceed 65533 minutes.
+An input value of "UNLIMITED" will clear any previously configured partition-specific OverTimeLimit value.
+
+OverSubscribe=<yes|no|exclusive|force>[:<job_count>]
+Specify if compute resources (i.e. individual CPUs) in this partition can be shared by multiple jobs.
+Possible values are "YES", "NO", "EXCLUSIVE" and "FORCE". An optional job count specifies how many jobs can be allocated to use each resource.
+
+PartitionName=<name>
+Identify the partition to be updated. This specification is required.
+
+PreemptMode=<mode>
+Reset the mechanism used to preempt jobs in this partition if PreemptType is configured to preempt/partition_prio.
+The default preemption mechanism is specified by the cluster-wide PreemptMode configuration parameter.
+Possible values are "OFF", "CANCEL", "CHECKPOINT", "REQUEUE" and "SUSPEND".
+
+Priority=<count>
+Jobs submitted to a higher priority partition will be dispatched before pending jobs in lower priority partitions
+and if possible they will preempt running jobs from lower priority partitions.
+Note that a partition's priority takes precedence over a job's priority. The value may not exceed 65533.
+
+PriorityJobFactor=<count>
+Partition factor used by priority/multifactor plugin in calculating job priority.
+The value may not exceed 65533. Also see PriorityTier.
+
+PriorityTier=<count>
+Jobs submitted to a partition with a higher priority tier value will be dispatched before pending jobs in partition with lower priority tier value and,
+if possible, they will preempt running jobs from partitions with lower priority tier values.
+Note that a partition's priority tier takes precedence over a job's priority. The value may not exceed 65533. Also see PriorityJobFactor.
+
+QOS=<QOSname|blank to remove>
+Set the partition QOS with a QOS name or to remove the Partition QOS leave the option blank.
+
+RootOnly=<yes|no>
+Specify if only allocation requests initiated by user root will be satisfied.
+This can be used to restrict control of the partition to some meta-scheduler. Possible values are "YES" and "NO".
+
+ReqResv=<yes|no>
+Specify if only allocation requests designating a reservation will be satisfied.
+This is used to restrict partition usage to be allowed only within a reservation. Possible values are "YES" and "NO".
+
+Shared=<yes|no|exclusive|force>[:<job_count>]
+Renamed to OverSubscribe, see option descriptions above.
+
+State=<up|down|drain|inactive>
+Specify if jobs can be allocated nodes or queued in this partition. Possible values are "UP", "DOWN", "DRAIN" and "INACTIVE".
+UP          Designates that new jobs may queued on the partition, and that jobs may be allocated nodes and run from the partition.
+DOWN        Designates that new jobs may be queued on the partition, but queued jobs may not be allocated nodes and run from the partition.
+            Jobs already running on the partition continue to run. The jobs must be explicitly canceled to force their termination.
+DRAIN       Designates that no new jobs may be queued on the partition (job submission requests will be denied with an error message),
+            but jobs already queued on the partition may be allocated nodes and run. See also the "Alternate" partition specification.
+INACTIVE    Designates that no new jobs may be queued on the partition, and jobs already queued may not be allocated nodes and run.
+            See also the "Alternate" partition specification.
+
+TRESBillingWeights=<TRES Billing Weights>
+TRESBillingWeights is used to define the billing weights of each TRES type that will be used in calculating the usage of a job.
+The calculated usage is used when calculating fairshare and when enforcing the TRES billing limit on jobs.
+Updates affect new jobs and not existing jobs. See the slurm.conf man page for more information.
+"
+}
+
+[[ -z "${1}" ]] && { help; exit 0; }
+
+PART_LIST="$(sinfo -o "%50R" -ah)"
+
+PART="${1}"
+shift
+
+[[ ! ${PART_LIST} =~ "${PART}" ]] && { echo "Specified partition >${PART}< not found"; help; exit 0; }
+
+CMD="scontrol update partition ${PART} ${@}"
+exec ${CMD}
+

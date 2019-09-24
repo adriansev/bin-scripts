@@ -1,0 +1,41 @@
+#!/bin/bash
+
+ACTION=""
+
+if [[ "${1,,}" == "hold" ]]; then
+    ACTION="hold"
+    shift
+elif [[ "${1,,}" == "release" ]]; then
+    ACTION="release"
+    shift
+elif [[ "${1,,}" == "requeue" ]]; then
+    ACTION="requeue"
+    shift
+elif [[ "${1,,}" == "resume" ]]; then
+    ACTION="resume"
+    shift
+elif [[ "${1,,}" == "suspend" ]]; then
+    ACTION="suspend"
+    shift
+elif [[ "${1,,}" == "requeuehold" ]]; then
+    ACTION="requeuehold"
+    shift
+elif [[ "${1,,}" == "uhold" ]]; then
+    ACTION="uhold"
+    shift
+else
+    echo "arg should be one of hold, release, requeue, resume, suspend, requeuehold, uhold; see man scontrol";
+    exit 0;
+fi
+
+if [[ "${1}" == "all" ]]; then
+    shift
+    CMD="squeue -ho %A ${@} | xargs -n 1 scontrol ${ACTION}"
+else
+    JOBID="${1}"
+    shift
+    CMD="scontrol ${ACTION} ${JOBID}"
+fi
+
+exec ${CMD}
+

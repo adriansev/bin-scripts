@@ -1,0 +1,13 @@
+#!/bin/bash
+
+JOB_STATE="RUNNING"  #"PENDING", "SUSPENDED"
+
+ARG="${1}"
+
+[[ "${ARG,,}" == "pending"   ]] && { JOB_STATE="PENDING"; shift; }
+[[ "${ARG,,}" == "suspended" ]] && { JOB_STATE="SUSPENDED"; shift; }
+
+[[ -z "${ARG}" ]] && ALL="-t ${JOB_STATE}" # if no argument jobid then select all
+
+CMD="scancel -f ${ALL} ${@}"
+

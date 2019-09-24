@@ -1,0 +1,31 @@
+#!/bin/bash
+
+help () {
+echo '
+1st arg is the partition name and it is required
+2nd arg is the state of the partition with the following details:
+UP        Designates that new jobs may queued on the partition, and that jobs may be allocated nodes and run from the partition.
+
+DOWN      Designates that new jobs may be queued on the partition, but queued jobs may not be allocated nodes and run from the partition.
+          Jobs already  running  on the partition continue to run. The jobs must be explicitly canceled to force their termination.
+
+DRAIN     Designates that no new jobs may be queued on the partition (job submission requests will be denied with an error message),
+          but jobs already queued on the partition may be allocated nodes and run.
+
+INACTIVE  Designates that no new jobs may be queued on the partition, and jobs already queued may not be allocated nodes and run.
+'
+}
+
+PART_LIST="$(sinfo -o "%50R" -ah)"
+
+PART="${1}"
+shift
+
+[[ ! ${PART_LIST} =~ "${PART}" ]] && { echo "Specified partition >${PART}< not found"; help; exit 0; }
+
+STATE="${1}"
+shift
+
+CMD="scontrol update partition ${PART} State=${STATE}"
+exec ${CMD}
+

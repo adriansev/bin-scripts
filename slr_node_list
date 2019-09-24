@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "Node list --> $(sinfo -h -o %N)"
+echo "List of host names :"
+sinfo -h -o %n
+
