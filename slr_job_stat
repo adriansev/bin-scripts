@@ -1,0 +1,19 @@
+#!/bin/bash
+
+JOB_TYPE="r"
+ARG="${1}"
+shift
+
+[[ "${1}" == "c" ]] && { JOB_TYPE="c"; shift; }
+JOBID="${1}"
+
+
+FORMAT="--format=JobID,JobName,State,AveCPU,AveRSS,MaxRSS,Elapsed"
+
+if [[ "${JOB_TYPE}" == "r" ]]; then
+    CMD="sstat ${FORMAT} -j ${JOBID} --allsteps ${@}"
+elif [[ "${JOB_TYPE}" == "c" ]]; then
+    CMD="sacct ${FORMAT} -j ${JOBID} ${@}"
+fi
+
+exec "${CMD}"
