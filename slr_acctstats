@@ -1,10 +1,8 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # Summarize USER accounting information from Slurm sacct accounting records
-
-# Usage: slurmacct [flags] BeginDate EndDate
 # Author:	Ole.H.Nielsen@fysik.dtu.dk
-#---------------------------------------------------------------
+# Homepage: https://github.com/OleHolmNielsen/Slurm_tools/
 
 #####################################################################################
 #
@@ -12,21 +10,31 @@
 #
 function usage()
 {
-        cat <<EOF
-Usage: $0 [-p partition(s)] [-u username] [-g groupname] [-G] Start_time End_time
+	cat <<EOF
+Usage: slurmacct -s Start_time -e End_time [-c | -w] [-p partition(s)] [-u username] [-g groupname] [-G] [-r report-prefix] [-h]
 where:
-        -p partition: Select only Slurm partion <partition>
-        -u username: Print only user <username> 
-        -g groupname: Print only users in UNIX group <groupname>
-        -G: Print only groupwise summed accounting data
-        -h: Print this help information
+	-s Start_time [last month]: Starting time of accounting period.
+	-e End_time [last month]: End time of accounting period.
+	-c: Current month
+	-w: Last week
+	-p partition: Select only Slurm partion <partition>
+	-u username: Print only user <username> 
+	-g groupname: Print only users in UNIX group <groupname>
+	-G: Print only groupwise summed accounting data
+	-r: Report name prefix
+	-h: Print this help information
+
 The Start_time and End_time values specify the date/time interval of
 job completion/termination (see "man sacct").
+
+Hint: Specify Start/End time as MMDD (Month and Date)
 EOF
 }
 
 #####################################################################################
 
+# Report file prefix
+REPORT_PREFIX=/tmp/Slurm_report
 export partition=""
 export username=""
 export groupname=""
@@ -34,100 +42,181 @@ export ALLGROUPS=0
 export SORTCOLUMN=5
 
 # Process options
-while getopts "p:u:g:hG" options; do
-        case $options in
-                p )     export partition=$OPTARG
-                        # echo Print only accounting in Slurm partition $OPTARG
-                        ;;
-                u )     export username=$OPTARG
+while getopts "p:u:g:s:e:r:cwGh" options; do
+	case $options in
+		p )     export partition=$OPTARG
+			echo Print only accounting in Slurm partition $OPTARG
+			;;
+		u )     export username=$OPTARG
 			export ALLGROUPS=0
-                        if test -z "`sacctmgr -p -n show assoc where users=$username`"
-                        then
-                                echo Error selecting Slurm username $username 
-                                exit -1
-                        fi
-                        ;;
-                g )     export groupname="$OPTARG"
+			;;
+		g )     export groupname="$OPTARG"
 			export ALLGROUPS=0
 	    		export SORTCOLUMN=5
-                        # echo Print only users in UNIX group $OPTARG
-                        ;;
-                G )     export ALLGROUPS=1
+			echo Print only users in UNIX group $OPTARG
+			;;
+		G )     export ALLGROUPS=1
 			export username=""
 			export groupname=""
 	    		export SORTCOLUMN=4
-                        # echo Print only groupwise summed accounting data
-                        ;;
-                h|? ) usage
-                        exit 1;;
-                * ) usage
-                        exit 1;;
-        esac
+			echo Print only groupwise summed accounting data
+			;;
+		s )     export start_time=$OPTARG
+			echo Start date $OPTARG
+			REPORT_NAME=${start_time}_${end_time}
+			;;
+		e )     export end_time=$OPTARG
+			echo End date $OPTARG
+			REPORT_NAME=${start_time}_${end_time}
+			;;
+		c )     export start_time=`date +%m01%y`
+			export end_time=`date +%m%d%y`
+			echo Select current month from $start_time until $end_time
+			REPORT_NAME=Current_month
+			;;
+		w )     export start_time=`date -d 'last week' +%m%d%y`
+			export end_time=`date +%m%d%y`
+			echo Select last week from $start_time until $end_time
+			REPORT_NAME=Last_week
+			;;
+		r )     export REPORT_PREFIX="$OPTARG"
+			echo Copy report to $OPTARG.
+			;;
+		h|? ) usage
+			exit 1;;
+		* ) usage
+			exit 1;;
+	esac
 done
-
-# Shift options to process remaining arguments
 shift $((OPTIND-1))
 
-# Get Start and End dates (see "man sacct")
-START=$1
-END=$2
-if test -z "$START" -o -z "$END"
+#
+# Default period: last month 
+#
+# Test if either start_time or end_time are empty strings
+if test -z "$start_time" -o -z "$end_time"
 then
-	echo ERROR: No dates selected
-	usage
-	exit 1
+	MONTH=`date -d "last month" +%B`
+	YEAR=`date -d "last month" +%Y`
+	REPORT_NAME=${MONTH}_${YEAR}
+	start_time=`date -d "last month" +%m01%y`
+	end_time=`date +%m01%y`
+fi
+
+# Check partition name
+if test -n "$partition"
+then
+	part_ok=0
+	for p in `sinfo -o "%R"`
+	do
+		if test $p = "$partition"
+		then
+			part_ok=1
+			break
+		fi
+	done
+	if test "$part_ok" -ne 1
+	then
+		echo "ERROR: Invalid partition name $partition"
+		echo "Valid partition names are:"
+		sinfo -o "%R"
+		exit -1
+	fi
+fi
+# Test username
+if test -n "$username" 
+then
+	if test -z "`sacctmgr -p -n show assoc where users=$username`"
+	then
+		echo Error selecting Slurm username $username 
+		exit -1
+	fi
+fi
+# Test groupname
+if test -n "$groupname"
+then
+	getent group $groupname > /dev/null
+	if test "$?" -ne 0
+	then
+		echo "Error selecting UNIX groupname $groupname (it does not exist)"
+		exit -1
+	fi
 fi
 
 #####################################################################################
 #
 # Print a heading
+#
+# First report overall statistics including nicely formatted start/end date:
+# Change the date/time format in report header for readibility (formats in "man strftime")
+
+REPORT=${REPORT_PREFIX}${REPORT_NAME}
+
+export SLURM_TIME_FORMAT="%d-%b-%Y_%R"
+sreport cluster utilization start=$start_time end=$end_time -t percent > $REPORT
 
 if test $ALLGROUPS -eq 0
 then
 	# User statistics
-	echo
-	echo "Jobs completed/terminated between date/time $START and $END"
+	echo >> $REPORT
+	echo Usage sorted by top users: >> $REPORT
+	# echo "Jobs completed/terminated between date/time $start_time and $end_time"
 	if test -n "$username"
 	then
-		echo "Group name selected: $username"
+		echo "User name selected: $username" >> $REPORT
 	fi
 	if test -n "$groupname"
 	then
-		echo "Group name selected: $groupname"
+		echo "Group name selected: $groupname" >> $REPORT
 	fi
 	if test -n "$partition"
 	then
-		echo "Partition selected: $partition"
+		echo "Partition selected: $partition" >> $REPORT
 	fi
-	echo "                             Wallclock          Average Average"
-	echo "Username    Group    #jobs       hours  Percent  #cpus  q-hours  Full name"
-	echo "--------    -----  ------- -----------  ------- ------- -------  ---------"
+	echo "			     Wallclock	  Average Average" >> $REPORT
+	echo "Username    Group    #jobs       hours  Percent  #cpus  q-hours  Full name" >> $REPORT
+	echo "--------    -----  ------- -----------  ------- ------- -------  ---------" >> $REPORT
 else
 	# Group statistics
-	echo
-	echo "Jobs completed/terminated between date/time $START and $END"
+	echo >> $REPORT
+	echo Usage sorted by top groups: >> $REPORT
+	# echo "Jobs completed/terminated between date/time $start_time and $end_time"
 	if test -n "$partition"
 	then
-		echo "Partition selected: $partition"
+		echo "Partition selected: $partition" >> $REPORT
 	fi
-	echo "                    Wallclock          Average Average"
-	echo "   Group    #jobs       hours  Percent  #nodes q-hours"
-	echo "   -----  ------- -----------  ------- ------- -------"
+	echo "		    Wallclock	  Average Average" >> $REPORT
+	echo "   Group    #jobs       hours  Percent  #nodes q-hours" >> $REPORT
+	echo "   -----  ------- -----------  ------- ------- -------" >> $REPORT
 fi
 
 #####################################################################################
 #
 # Get and process Slurm accounting records
 
+# Get length of selection strings for sacct formatting
+if test -n "$partition"
+then
+	plen="%${#partition}"
+fi
+if test -n "$usernamelength"
+then
+	ulen="%${#username}"
+fi
+if test -n "$groupnamelength"
+then
+	glen="%${#groupname}"
+fi
+
 # Report time in seconds:
 export SLURM_TIME_FORMAT="%s"
 # Request job data
-export FORMAT="JobID,User,Group,Partition,AllocNodes,AllocCPUS,Submit,Eligible,Start,End,CPUTimeRAW,State"
+export FORMAT="JobID,User${ulen},Group${glen},Partition${plen},AllocNodes,AllocCPUS,Submit,Eligible,Start,End,CPUTimeRAW,State"
 # Request job states: Cancelled, Completed, Failed, Timeout, Preempted
 export STATE="ca,cd,f,to,pr"
 
 # Get Slurm individual job accounting records using the "sacct" command
-sacct -n -X -a -S $START -E $END -o $FORMAT -s $STATE | awk '
+sacct -n -X -a -S $start_time -E $end_time -o $FORMAT -s $STATE | awk '
 BEGIN {
 	partitionselect=ENVIRON["partition"]
 	userselect=ENVIRON["username"]
@@ -135,12 +224,13 @@ BEGIN {
 	ALLGROUPS=ENVIRON["ALLGROUPS"]
 	totaljobs=0
 	# First get the list of user full names from /etc/passwd lines
-	while ("getent passwd" | getline ) {
+	COMMAND="getent passwd"
+	while (COMMAND | getline ) {
 		split($0,b,":")		# Split password line into fields
 		fullname[b[1]] = b[5]	# Full name b[5] of this username (b[1])
 		# print b[1], fullname[b[1]]
 	}
-	close("getent passwd")
+	close(COMMAND)
 }
 {
 	# Parse input data
@@ -238,10 +328,12 @@ BEGIN {
 			groupnodehours += wallnodes[ug]/3600
 			grouphours += wallcpu[ug]/3600
 			groupwait += waittime[ug]
+			usercount++
 		}
 		# Print out total usage
+		totalusers = "Number of users: " usercount
 		printf(format, "TOTAL", "(All)", totaljobs, wallnodehours, 100,
-			nodesaverage, totalwaitaverage/3600, "")
+			nodesaverage, totalwaitaverage/3600, totalusers)
 		# Print out group usage
 		if (length(groupselect) > 0 && groupjobs > 0 && wallnodehours > 0 && grouphours > 0 && groupjobs > 0)
 			printf(format,
@@ -254,6 +346,11 @@ BEGIN {
 
 		# Print format
 		format = "%8s %8d  %10.1f  %7.2f %7.2f %7.2f\n"
+
+		# Sort arrays by element values:
+		# https://www.gnu.org/software/gawk/manual/html_node/Controlling-Scanning.html
+		PROCINFO["sorted_in"] = "@ind_num_desc"
+
 		for (group in groupname) {
 			if (gr_jobs[group] > 0 && gr_wallcpu[group] > 0) printf(format,
 				groupname[group],
@@ -267,9 +364,12 @@ BEGIN {
 			nodesaverage, totalwaitaverage/3600)
 	}
 		
-} ' | env LC_ALL=C sort -r -n -k $SORTCOLUMN -k 3 -k 1d
+} ' | env LC_ALL=C sort -r -n -k $SORTCOLUMN -k 3 -k 1d >> $REPORT
+
 # The sort command sorts number of running procs in descending order
 # on keys $SORTCOLUMN and 3, and alphabetical sort on key 1
 # The LC_ALL=C ensures that Upper case is sorted before lower case.
+
+echo Report generated to file $REPORT
 
 exit 0

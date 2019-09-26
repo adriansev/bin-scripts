@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+
+# Slurm: Add nice level to jobs, or list jobs with non-zero nice level
+# Homepage: https://github.com/OleHolmNielsen/Slurm_tools/
+
+# List or set nice values:
+listnice=0
+# Default nice value
+NICE=-50000
+# squeue: the %y option prints nice level
+SQUEUE_FORMAT="%y %Q %T %A %P %u %g %S %e %j %b %R"
+
+# Parse command options
+while getopts "lp:n:h" options; do
+	case $options in
+		l )	listnice=1
+			;;
+		p )	export partition="-p $OPTARG"
+			echo "Select partition $OPTARG"
+			listnice=1
+			;;
+		n )	export NICE=$OPTARG
+			listnice=0
+			echo Set job nice value to $NICE
+			;;
+		h | * )	echo "Usage:"
+			echo "Listing: $0 -l | -p partition"
+			echo "Setting: $0 [-n nice-value] job [jobs ...]"
+			exit 1;;
+	esac
+done
+shift $((OPTIND-1))
+
+if test $listnice -eq 0
+then
+	JOBLIST="$*"
+	if test -z "$JOBLIST"
+	then
+		echo $0: No job list provided
+		$0 -h
+		exit 1
+	fi
+	echo Job list: $JOBLIST
+	# Change nice level of jobs
+	for j in $JOBLIST
+	do
+		scontrol update jobid=$j nice=$NICE
+	done
+	# Print a job status
+	squeue -o "$SQUEUE_FORMAT" -j `echo $JOBLIST | sed 's/ /,/g'`
+else
+	echo; echo "Jobs with a non-zero nice value:"; echo
+	squeue $partition -o "$SQUEUE_FORMAT" | awk '{if ($1 != 0) print $0}' 
+fi
