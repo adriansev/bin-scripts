@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sacctmgr show cluster "${1}"
+
