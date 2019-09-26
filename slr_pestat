@@ -340,7 +340,7 @@ BEGIN {
 		JobName=$10
 		if (JobName=="") JobName="(None)"
 		# Select job information to be printed for this job
-		JobInfo = JobId " " User " "
+		JobInfo = JobId "/" User " "
 		if (printgres == 1) JobInfo = JobInfo GRES " "
 		if (printjobname == 1) JobInfo = JobInfo JobName " "
 		if (printjobendtime == 1) JobInfo = JobInfo EndTime " "
