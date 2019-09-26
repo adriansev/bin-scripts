@@ -1,4 +1,7 @@
 #!/bin/bash
 
-sacctmgr show cluster "${1}"
+ARG="clusters"
+[[ -n "${1}" ]] && ARG="cluster ${1}"
+
+sacctmgr show ${ARG}
 
