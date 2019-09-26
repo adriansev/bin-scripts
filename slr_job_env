@@ -1,0 +1,36 @@
+#!/bin/bash
+
+jobId=$1
+partition=$2
+cluster=$3
+
+if [[ -z "${jobId}" ]]; then
+  echo "Usage:"
+  echo "  sgetscr <job_id> [partition] [cluster]"
+  echo ""
+  echo "Retrieves the SLURM/SBATCH script and environment "
+  echo "files for a job that is queued or running."
+  echo ""
+  exit
+fi
+
+[[ -n "${partition}" ]] && PART="--partition=${partition}"
+[[ -n "${cluster}"   ]] && CLUS="--clusters=${cluster}"
+
+
+curState=$(squeue --job=${jobId} ${CLUS} ${PART} -ho "%T" 2>/dev/null | tail -n1)
+
+# echo "curState = $curState"
+
+if [ "${curState}" != "PENDING" -a "${curState}" != "RUNNING" ]; then
+  echo "The job must be running or queued."
+  exit
+fi
+
+eval $(grep StateSaveLocation /etc/slurm/slurm.conf)
+
+
+JOBDIR=$(find ${StateSaveLocation} -type d -name "*.${jobId}")
+
+sudo -- sh -c "cat ${JOBDIR}/script > job_${jobId}_script.txt; sed 's/\x00/\n/g' ${JOBDIR}/environment > job_${jobId}_environment.txt"
+

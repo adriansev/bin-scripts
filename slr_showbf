@@ -76,7 +76,7 @@ echo "Backfill Tolerance is $SLURMBF_TOLERANCE seconds"
 echo ""
 
 # a C program that assists with determining time available
-HELPER=$STUBL_HOME/bin/slurmbf_helper
+HELPER=$STUBL_HOME/bin/slr_showbf_helper
 NODEINFO=$STUBL_HOME/log/NodeInfo.log
 
 bQuick=no
