@@ -3,5 +3,17 @@
 ARCH="root_archive.zip"
 FILE="AnalysisResults.root"
 
-find $(pwd -P) -type f -name "${ARCH}" -execdir unzip -o -u '{}' "${FILE}"  ';'
+list_str=$(find $(pwd -P) -type f -name "${ARCH}" -printf '%p\n') #" # -execdir unzip -o -u '{}' "${FILE}"  ';'
+
+for f in ${list_str};do
+    size=$(stat -c %s "${f}")
+    [[ ${size} == "0" ]] && { echo -e ${f} "  ---> SIZE 0 <--- "; rm -rfv "${f}"; continue; }
+
+    if [[ "${1}" == "test" ]]; then
+        unzip -tq "${f}" &> /dev/null || { echo -e "${f} ---> ZIP TEST FAILED <--- "; [[ -e "${f}" ]] && rm -rf "${f}"; }
+    else
+        cd "$(dirname ${f})"
+        unzip -o -u "${basename ${f}}" "${FILE}"
+    fi
+done
 
