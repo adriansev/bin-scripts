@@ -1,0 +1,7 @@
+#!/bin/bash
+
+ARCH="root_archive.zip"
+FILE="AnalysisResults.root"
+
+find $(pwd -P) -type f -name "${ARCH}" -execdir unzip -o -u '{}' "${FILE}"  ';'
+
