@@ -1,19 +1,73 @@
 #!/bin/bash
 
-ARCH="root_archive.zip"
+trap "exit" SIGINT
+
+ZIP="root_archive.zip"
 FILE="AnalysisResults.root"
+CURDIR="$(pwd -P)"
 
-list_str=$(find $(pwd -P) -type f -name "${ARCH}" -printf '%p\n') #" # -execdir unzip -o -u '{}' "${FILE}"  ';'
+help () {
+echo "$0 -test -dir start_directory -zip zip_file -file file_to_be_extracted
+all arguments are optional; the default values are :
+-dir : current directory
+-zip : root_archive.zip
+-file : AnalysisResults.root
+-test : no zip testing unless specified"
+}
 
-for f in ${list_str};do
+[[ -z "${1}" ]] && { help; exit 0; }
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="${1}"
+
+    case ${key} in
+        -test)
+        IS_TEST="1"
+        shift # past argument
+        ;;
+        -h|-help|--h|--help)
+        help
+        exit 0
+        ;;
+        -zip)
+        ZIP="${2}"
+        shift # past argument
+        shift # past value
+        ;;
+        -file)
+        FILE="${2}"
+        shift # past argument
+        shift # past value
+        ;;
+        -dir)
+        CURDIR="${2}"
+        shift # past argument
+        shift # past value
+        ;;
+        *)    # unknown option
+        POSITIONAL+=("${1}") # save it in an array for later
+        shift # past argument
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+EXTRACT='unzip -o -u '
+TEST='unzip -tq '
+which 7za &> /dev/null && { EXTRACT='7za -y e '; TEST='7za t '; }
+
+list=$(find -H "${CURDIR}" -type f -name "${ZIP}" -printf '%p\n')
+
+for f in ${list};do
     size=$(stat -c %s "${f}")
-    [[ ${size} == "0" ]] && { echo -e ${f} "  ---> SIZE 0 <--- "; rm -rfv "${f}"; continue; }
+    [[ ${size} == "0" ]] && { echo -e ${f} "  ---> SIZE 0 <--- "; rm -rf "${f}"; continue; }
 
-    if [[ "${1}" == "test" ]]; then
-        unzip -tq "${f}" &> /dev/null || { echo -e "${f} ---> ZIP TEST FAILED <--- "; [[ -e "${f}" ]] && rm -rf "${f}"; }
+    if [[ -n "${IS_TEST}" ]]; then
+        ${TEST} "${f}" &> /dev/null || { echo -e "${f} ---> ZIP TEST FAILED <--- "; rm -rf "${f}"; }
     else
-        cd "$(dirname ${f})"
-        unzip -o -u "${basename ${f}}" "${FILE}"
+        cd "$(/usr/bin/dirname ${f})"
+        ${EXTRACT} "${/usr/bin/basename ${f}}" "${FILE}"
     fi
 done
 
