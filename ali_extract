@@ -15,8 +15,6 @@ all arguments are optional; the default values are :
 -test : no zip testing unless specified"
 }
 
-[[ -z "${1}" ]] && { help; exit 0; }
-
 POSITIONAL=()
 while [[ $# -gt 0 ]]; do
     key="${1}"
@@ -67,7 +65,7 @@ for f in ${list};do
         ${TEST} "${f}" &> /dev/null || { echo -e "${f} ---> ZIP TEST FAILED <--- "; rm -rf "${f}"; }
     else
         cd "$(/usr/bin/dirname ${f})"
-        ${EXTRACT} "${/usr/bin/basename ${f}}" "${FILE}"
+        ${EXTRACT} "$(/usr/bin/basename ${f})" "${FILE}"
     fi
 done
 
