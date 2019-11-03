@@ -210,15 +210,13 @@ alias wget='wget -c'
 alias btar='tar --use-compress-program /usr/bin/bzip2'
 
 ## ls aliases
-# -F : append indicator (one of */=>@|) to entries
-# -p : append / indicator to directories
-
-alias ls='ls --show-control-chars --color=auto'
+alias ls='ls -p --color=auto --show-control-chars --time-style="+%Y/%b/%d %H:%M:%S"' #'
 
 ## Use a long listing format ##
-alias ll='ls -l'
-alias la='ls -A'
-alias l='ls -CF'
+alias ll='ls -lh'
+alias la='ls -lA'
+alias ll1='ls -lA1'
+alias l1='ls -1'
 
 ## Show hidden files ##
 alias l.='ls -d .*'
@@ -226,7 +224,10 @@ alias l.='ls -d .*'
 ## List only subdirectories
 alias lsd='ls -al -d * | egrep "^d"'
 ## List the most recently modified files and directories
-alias lt='ls -alt'
+alias ls_mod='ls -lAt'
+
+# Sort by reverse size
+alias ls_sz='ls -lAhS'
 
 ## more compact than ls -l
 alias ls1='ls -oh'
