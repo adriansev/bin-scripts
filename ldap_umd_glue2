@@ -1,0 +1,12 @@
+#!/bin/bash
+
+HOST=${1}
+shift
+
+SITE=${1}
+shift
+
+[[ ${0} == *_glue2 ]] && GLUE="GLUE2DomainID=${SITE},o=glue" || GLUE="Mds-Vo-Name=${SITE},o=grid"
+
+ldapsearch -x -LLL -o ldif-wrap=no -H ldap://${HOST}:2170 -b ${GLUE} "${@}"
+
