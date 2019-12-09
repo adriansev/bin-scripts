@@ -1,0 +1,2 @@
+#!/bin/bash
+/cvmfs/alice.cern.ch/bin/alienv q | awk '/AliPhysics/ { gsub("VO_ALICE@","",$0); print $0}'
