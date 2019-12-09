@@ -1,0 +1,21 @@
+cvmfs_load_alice ()   { eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@${1}); }
+cvmfs_load_aliphys () { eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@AliPhysics::${1}); }
+
+cvmfs_load_aliphys_latest () {
+local latest
+latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics\/vAN/ && !/ROOT6/ && !/JALIEN/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
+cvmfs_load_aliphys ${latest}
+}
+
+cvmfs_load_aliphys_r6_latest () {
+local latest
+latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics/ && /ROOT6/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
+cvmfs_load_aliphys ${latest}
+}
+
+cvmfs_load_aliphys_jalien_latest () {
+local latest
+latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics/ && /JALIEN/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
+cvmfs_load_aliphys ${latest}
+}
+
