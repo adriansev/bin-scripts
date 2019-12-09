@@ -1,1 +1,1 @@
-/cvmfs/alice.cern.ch/bin/alienv load -q VO_ALICE@AliPhysics::${1}
+/cvmfs/alice.cern.ch/bin/alienv -q load VO_ALICE@AliPhysics::${1}
