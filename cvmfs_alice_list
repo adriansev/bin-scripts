@@ -1,0 +1,2 @@
+#!/bin/bash
+[[ -e /cvmfs/alice.cern.ch/bin/alienv ]] && { /cvmfs/alice.cern.ch/bin/alienv q | sed 's/VO_ALICE@//g'; } || echo "no alice cvmfs"
