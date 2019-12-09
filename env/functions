@@ -22,30 +22,7 @@ __MANPATH_INS () { [[ "$MANPATH" =~ "$1" ]] && return 0; [[ -z $MANPATH ]] && ex
 __MANPATH_ADD () { [[ "$MANPATH" =~ "$1" ]] && return 0; [[ -z $MANPATH ]] && export MANPATH=$1 || export MANPATH=$MANPATH:$1; }
 
 ## CVMFS ALICE functions
-
-cvmfs_load_alicephys_latest () {
-local latest
-latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics\/vAN/ && !/ROOT6/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
-eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@AliPhysics::${latest})
-}
-
-cvmfs_enter_alicephys_latest () {
-local latest
-latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics\/vAN/ && !/ROOT6/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
-/cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@AliPhysics::${latest}
-}
-
-cvmfs_load_alicephys_r6_latest () {
-local latest
-latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics/ && /ROOT6/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
-eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@AliPhysics::${latest})
-}
-
-cvmfs_enter_alicephys_r6_latest () {
-local latest
-latest=$(/cvmfs/alice.cern.ch/bin/alienv -l avail AliPhysics 2>&1 | awk '/AliPhysics/ && /ROOT6/ {gsub ("AliPhysics/","",$1); print;}' | sort -k2 | awk 'END {print $1}') #'
-/cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@AliPhysics::${latest}
-}
+source ${HOME}/bin/cvmfs_load_f
 
 __cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
 __cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
