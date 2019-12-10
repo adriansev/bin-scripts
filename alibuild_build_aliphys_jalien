@@ -3,5 +3,5 @@
 INITDIR="${1}"
 shift
 
-alibuild_build_initdir_default ${INITDIR} AliPhysics --defaults jalien --disable DPMJET,GEANT3,GEANT4,GEANT4_VMC,arrow "${@}"
+alibuild_build_initdir_default ${INITDIR} AliPhysics jalien --disable DPMJET,GEANT3,GEANT4,GEANT4_VMC,arrow "${@}"
 

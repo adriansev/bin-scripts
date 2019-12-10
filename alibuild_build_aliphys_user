@@ -3,5 +3,5 @@
 INITDIR="${1}"
 shift
 
-alibuild_build_initdir_default ${INITDIR} AliPhysics --defaults user "${@}"
+alibuild_build_initdir_default ${INITDIR} AliPhysics user "${@}"
 
