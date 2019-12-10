@@ -1,0 +1,9 @@
+#!/bin/bash
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
+[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
+
+pushd ${ALIBUILD_WORK_DIR}/../${1} || { echo "could not cd to: ${ALIBUILD_WORK_DIR}/../${1}"; exit 1; }
+aliBuild init AliRoot,AliPhysics -z ${1};
+popd
+
