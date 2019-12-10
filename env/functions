@@ -27,136 +27,8 @@ source ${HOME}/bin/cvmfs_load_f
 __cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
 __cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
 
-## aliBuild ALICE functions
-alias alibuild='aliBuild'
-
-loaded_aliphys () { alienv list 2>&1| sed -r 's#[0-9]+\) #\n#g;' | grep AliPhysics; }
-
-alibuild_list_inits  () {
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-ls -1 --hide=sw ${ALIBUILD_WORK_DIR}/..
-}
-
-alibuild_list_builds () {
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-
-local ALIBUILD_ARCH
-ALIBUILD_ARCH=$(aliBuild architecture);
-[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-/usr/bin/find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n";
-}
-
-alibuild_list_links  () {
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-
-local ALIBUILD_ARCH
-ALIBUILD_ARCH=$(aliBuild architecture);
-[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-/usr/bin/find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type l -printf "%f -> %l\n";
-}
-
-alibuild_list_labels () {
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-
-local ALIBUILD_ARCH
-ALIBUILD_ARCH=$(aliBuild architecture);
-[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-
-/usr/bin/find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";
-}
-
-alibuild_init        () {
-local CURDIR
-CURDIR=$(pwd)
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-
-[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
-
-cd ${ALIBUILD_WORK_DIR}/..
-
-aliBuild init AliRoot,AliPhysics -z ${1};
-cd "${CURDIR}"
-}
-
-alibuild_build        () {
-local CURDIR
-CURDIR=$(pwd)
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; return 1; }
-local BUILDNAME
-BUILDNAME="${1}"
-shift
-
-cd ${ALIBUILD_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to build name directory"; return 1; }
-pwd
-ALIBUILD_ARCH=$(aliBuild architecture);
-ARCH_ARG="--force-unknown-architecture"
-[[ "${ALIBUILD_ARCH}" == "slc7_x86-64" ]] && ARCH_ARG="--architecture ${ALIBUILD_ARCH}"
-
-DEPS=""
-[[ "${ALIBUILD_ARCH}" == "slc7_x86-64" ]] && DEPS="--no-system"
-
-CMD="aliBuild ${ARCH_ARG} ${DEPS} -z -w ../sw -d $@"
-echo "${CMD}"
-eval "${CMD}"
-
-cd "${CURDIR}"
-}
-
-alibuild_build_distcc        () {
-alias cc='distcc cc'
-alias c++='distcc c++'
-alias gcc='distcc gcc'
-alias g++='distcc g++'
-
-alibuild_build "$@"
-}
-
-alibuild_build_latest    () { alibuild_build ali-latest    build AliPhysics --defaults user "$@";}
-alibuild_build_latest_r6 () { alibuild_build ali-latest-r6 build AliPhysics --defaults user-root6 "$@"; }
-alibuild_build_latest_r6_next () { alibuild_build ali-latest-r6-next build AliPhysics --defaults user-next-root6 "$@"; }
-
-alibuild_build_roounfold () { alibuild_build ali-latest-r6 build RooUnfold  --defaults user-root6 "$@"; }
-alibuild_build_roounfold_next () { alibuild_build ali-latest-r6-next build RooUnfold  --defaults user-next-root6 "$@"; }
-
-alibuild_clean  () {
-local CURDIR=$(pwd -P);
-for ali in $(ls  --hide=sw $ALIBUILD_WORK_DIR/..); do
-    cd $ALIBUILD_WORK_DIR/../${ali} && aliBuild clean --aggressive-cleanup;
-done;
-cd "${CURDIR}";
-}
-
-alibuild_load_latest ()    {
-alienv load AliPhysics/ali-latest-1;
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib;
-
-if [[ "${1}" == "inc" ]]; then
-    export C_INCLUDE_PATH=${VC_ROOT}/include:${GSL_ROOT}/include:${CGAL_ROOT}/include:${FASTJET_ROOT}/include:${ROOTSYS}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
-    export CPLUS_INCLUDE_PATH=${C_INCLUDE_PATH}
-fi
-}
-
-alibuild_load_latest_r6 () {
-alienv load AliPhysics/ali-latest-r6-1;
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib;
-
-if [[ "${1}" == "inc" ]]; then
-    export C_INCLUDE_PATH=${VC_ROOT}/include:${GSL_ROOT}/include:${CGAL_ROOT}/include:${FASTJET_ROOT}/include:${ROOTSYS}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
-    export CPLUS_INCLUDE_PATH=${C_INCLUDE_PATH}
-fi
-}
-
-alibuild_load_latest_r6_next () {
-alienv load AliPhysics/ali-latest-r6-next-1;
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib;
-
-if [[ "${1}" == "inc" ]]; then
-    export C_INCLUDE_PATH=${VC_ROOT}/include:${GSL_ROOT}/include:${CGAL_ROOT}/include:${FASTJET_ROOT}/include:${ROOTSYS}/include:${ALICE_ROOT}/include:${ALICE_PHYSICS}/include
-    export CPLUS_INCLUDE_PATH=${C_INCLUDE_PATH}
-fi
-}
-
+## aliBuild functions
+source ${HOME}/bin/alibuild_load_f
 
 ###########################################################
 ##   GIT
@@ -504,16 +376,12 @@ meteo () {
 
 gogo () { python2 ${HOME}/bin/gogo.py "${@}" ;}
 
-j_py_compile () {
-    local DIR CURDIR
-    CURDIR=$(pwd)
+j_compile () {
     DIR=$(dirname $(which alien.py))
-    cd "${DIR}"
+    pushd "${DIR}"
     python3 -OO -m py_compile alien.py
-    cd "${CURDIR}"
+    popd
 }
 
-j ()          { python3 ${HOME}/bin/alien.py "${@}" ;}
-j_json ()     { python3 ${HOME}/bin/alien_json "${@}" ;}
-j_json_all () { python3 ${HOME}/bin/alien_json_all "${@}" ;}
+j () { python3 ${HOME}/bin/alien.py "${@}" ;}
 
