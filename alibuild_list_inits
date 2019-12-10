@@ -1,0 +1,4 @@
+#!/bin/bash
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
+ls -1 --hide=sw ${ALIBUILD_WORK_DIR}/..

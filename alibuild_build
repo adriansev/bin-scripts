@@ -1,0 +1,12 @@
+#!/bin/bash
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; exit 1; }
+[[ -z "${1}" ]] && { echo "Argument needed : the tag name of build"; exit 1; }
+BUILDNAME="${1}"
+shift
+
+pushd ${ALIBUILD_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to: ${ALIBUILD_WORK_DIR}/../${BUILDNAME}"; exit 1; }
+
+aliBuild -d --force-unknown-architecture --work-dir ../sw "${@}"
+popd
+

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+INITDIR="${1}"
+shift
+PACKAGE="${1}"
+shift
+DEFAULT="${1}"
+shift
+
+alibuild_build ${INITDIR} "${@}" build ${PACKAGE} --defaults ${DEFAULT}

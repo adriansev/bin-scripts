@@ -1,0 +1,7 @@
+#!/bin/bash
+
+pushd
+for ali in $(ls  --hide=sw $ALIBUILD_WORK_DIR/..); do
+    aliBuild --chdir $ALIBUILD_WORK_DIR/../${ali} --work-dir ${ALIBUILD_WORK_DIR} --force-unknown-architecture clean --aggressive-cleanup;
+done
+popd
