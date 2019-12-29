@@ -1,0 +1,2 @@
+for i in $(firewall-cmd --get-icmptypes); do echo "${i} $(firewall-cmd --permanent --add-icmp-block=${i})" ; done
+firewall-cmd --reload

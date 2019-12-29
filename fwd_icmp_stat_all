@@ -1,0 +1,1 @@
+for i in $(firewall-cmd --get-icmptypes); do echo "${i} $(firewall-cmd --query-icmp-block=${i})" ; done

@@ -1,0 +1,2 @@
+firewall-cmd --permanent --set-target=DROP
+firewall-cmd --reload
