@@ -1,0 +1,1 @@
+curl -s https://ipvigilante.com/$(myip) | jq '.data.country_name, .data.city_name, .data.latitude, .data.longitude'

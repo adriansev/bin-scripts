@@ -1,5 +1,5 @@
 #!/bin/bash
 
-MYIP=$(curl https://ipinfo.io/ip)
+MYIP=$(curl -s https://ipinfo.io/ip)
 [[ -z "${MYIP}" ]] && MYIP=$(curl -s checkip.dyndns.org 2>&1| grep -oP -e '(?<=(<body>))(.*?)(?=(<\/body>))' | sed 's/Current IP Address: //') #'
 echo "${MYIP}"
