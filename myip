@@ -1,9 +1,5 @@
 #!/bin/bash
 
-MYIP=$(host -t TXT o-o.myaddr.l.google.com ns1.google.com | awk '/o-o.myaddr.l.google.com/ {gsub("\"","",$NF);print $NF;}') #'
-
-[[ -z "${MYIP}" ]] && MYIP=$(host -t A myip.opendns.com resolver1.opendns.com | awk '/myip.opendns.com/ {print $NF;}') #'
-[[ -z "${MYIP}" ]] && MYIP=$(curl -s checkip.dyndns.org|sed -e 's/.*Current IP Address: //' -e 's/<.*$//') #'
-
+MYIP=$(curl https://ipinfo.io/ip)
+[[ -z "${MYIP}" ]] && MYIP=$(curl -s checkip.dyndns.org 2>&1| grep -oP -e '(?<=(<body>))(.*?)(?=(<\/body>))' | sed 's/Current IP Address: //') #'
 echo "${MYIP}"
-
