@@ -1,16 +1,19 @@
 ## disable these gcc flags
 export CXXFLAGS="-Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder"
 
+#GCC_HAS_STD14="$($(g++ -print-prog-name=cc1) --help | grep -e '-std=.*++14'))"
+#[[ -n "${GCC_HAS_STD14}" ]] && export CXXFLAGS="${CXXFLAGS} -std=c++14"
+
 # -fassociative-math -fno-trapping-math -fno-signed-zeros -flto=4
 TUNE="-march=native -mtune=native -ftree-vectorize"
-IS_AVX2="$(grep -w avx2 /proc/cpuinfo)"
-IS_AVX="$(grep -w avx /proc/cpuinfo)"
+HAS_AVX2="$(grep -w avx2 /proc/cpuinfo)"
+HAS_AVX="$(grep -w avx /proc/cpuinfo)"
 
-if [[ -n "${IS_AVX2}" ]]; then
+if [[ -n "${HAS_AVX2}" ]]; then
     TUNE="${TUNE} -mavx2"
-elif [[ -n "${IS_AVX}" ]]; then
+elif [[ -n "${HAS_AVX}" ]]; then
     TUNE="${TUNE} -mavx"
 fi
 
-[[ "${GCC_OPTIM}" -eq "1" ]] && export CXXFLAGS="${CXXFLAGS} ${TUNE}"
+[[ ! "$(hostname -s)" =~ issaf* ]] && export CXXFLAGS="${CXXFLAGS} ${TUNE}"
 
