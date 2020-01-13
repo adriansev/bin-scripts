@@ -1,0 +1,2 @@
+export ALIENPY_DEBUG=1
+export ALIENPY_DEBUG_FILE=log.txt
