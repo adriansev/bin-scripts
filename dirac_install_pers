@@ -9,11 +9,13 @@ echo "Start install script"
 $HOME/bin/dirac-install \
 -r ${VER} \
 -t client \
--i 27 \
--e COMDIRAC:v0r17 \
--g v13r0 \
+-e COMDIRAC \
 -V auger \
 -P ${DIRACDIR}
+
+#-g v13r0 \
+#-i 27 \
+#-e COMDIRAC:v0r17 \
 
 echo -e '\ninstall done!\n'
 
