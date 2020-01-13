@@ -1,0 +1,39 @@
+#!/bin/bash
+
+while [[ ${#} -gt 0 ]]; do
+key="${1}"
+case $key in
+    help)
+    echo "source \$HOME/bin/xrd_debug level Debug|Info|Warning|Error topic AppMsg|UtilityMsg|FileMsg|PollerMsg|PostMasterMsg|XRootDTransportMsg|TaskMgrMsg|XRootDMsg|FileSystemMsg|AsyncSockMsg"
+    return;
+    ;;
+    topics)
+    echo "AppMsg, UtilityMsg, FileMsg, PollerMsg, PostMasterMsg, XRootDTransportMsg, TaskMgrMsg, XRootDMsg, FileSystemMsg, AsyncSockMsg";
+    return;
+    ;;
+    levels)
+    echo "Dump, Debug, Info, Warning, Error";
+    return;
+    ;;
+    level)
+    LEVEL="${2}"
+    shift # past argument
+    shift # past value
+    ;;
+    topic)
+    TOPIC="${2}"
+    shift # past argument
+    shift # past value
+    ;;
+    *)    # unknown option
+    ;;
+esac
+done
+
+
+[[ -z "${LEVEL}" ]] && LEVEL="Dump"
+[[ -z "${TOPIC}" ]] && TOPIC="All|^PollerMsg"
+export XRD_LOGFILE=xrdlog.txt
+export XRD_LOGLEVEL="${LEVEL}"
+export XRD_LOGMASK="${TOPIC}"
+
