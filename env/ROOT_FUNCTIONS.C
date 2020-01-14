@@ -105,6 +105,31 @@ static void ForEachH (const char* method, const char* params) {
   }
 
 //______________________________________________________________
+static void SaveAllHistos (const char* file_name, const char* directory) {
+    if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) {return;}
+    static TFile* results_file = new TFile(file_name, "UPDATE");
+    if (results_file->IsZombie()) return;
+    results_file->mkdir(directory);
+    results_file->cd(directory);
+
+    TSeqCollection* list_canvases = gROOT->GetListOfCanvases();
+    for (int i=0; i<list_canvases->GetEntries(); ++i) {
+      TPad* canvas = dynamic_cast<TPad*> (list_canvases->At(i));
+      for(const auto&& obj: *(canvas->GetListOfPrimitives())) {
+        if ( obj->InheritsFrom("TH1") ) { obj->Write(); }
+        if ( obj->InheritsFrom("TPad") ) {
+          TPad* pad = dynamic_cast<TPad*>(obj);
+          TList* padlist = pad->GetListOfPrimitives();
+          for (int i=0; i<padlist->GetEntries(); ++i) {
+            TObject* h_in_padlist = padlist->At(i);
+            if ( h_in_padlist->InheritsFrom("TH1") ) { h_in_padlist->Write(); }
+          }
+        }
+      }
+    }
+  }
+
+//______________________________________________________________
 static TH1D* ProjectY (TH2D* h, Option_t* option = "") {
   TString new_name = h->GetName();
   new_name += "_projY";
