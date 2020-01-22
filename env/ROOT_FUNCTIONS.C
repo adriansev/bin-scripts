@@ -36,6 +36,7 @@
 #include <TAttMarker.h>
 #include <TLegend.h>
 #include <TLegendEntry.h>
+#include <TAttMarker.h>
 #include <TStyle.h>
 #include <TPad.h>
 #include <TVirtualPad.h>
@@ -52,6 +53,11 @@
 
 using namespace std;
 
+// Preferred colors and markers
+const Int_t fillColors[] = {kGray+1,  kRed-10, kBlue-9, kGreen-8, kMagenta-9, kOrange-9,kCyan-8,kYellow-7}; // for syst bands
+const Int_t colors[]     = {kBlack, kRed+1 , kBlue+1, kGreen+3, kMagenta+1, kOrange-1,kCyan+2,kYellow+2};
+const Int_t markers[]    = {kFullCircle, kOpenCircle, kFullSquare, kOpenSquare, kFullCross, kOpenCross, kFullDiamond, kOpenDiamond, kFullStar, kOpenStar, kFullTriangleUp, kOpenTriangleUp, kFullTriangleDown, kOpenTriangleDown};
+
 //void ROOT_FUNCTIONS(){ }
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
@@ -61,6 +67,24 @@ std::pair <TString, TString> HistoNameTitle (const TString& base, const TString&
   TString range_mod = range;
   TString title = range_mod.Replace(0,1,"").ReplaceAll("_","-") + title_suffix;
   return std::make_pair(name, title);
+}
+
+//______________________________________________________________
+void print_canvas (TPad* c, TString name) {
+  name += ".png";
+  c->Print(name.Data());
+}
+
+//______________________________________________________________
+static TH1D* getH1 (THashList* list, const char* hname, Int_t cent = 0) {
+  if (!list) { std::cout << "invalid list" << endl; return NULL;}
+  return dynamic_cast<TH1D*>( list->FindObject( Form("%s_%i",hname,cent)) );
+}
+
+//______________________________________________________________
+static TH2D* getH2 (THashList* list, const char* hname, Int_t cent = 0) {
+  if (!list) { std::cout << "invalid list" << endl; return NULL;}
+  return dynamic_cast<TH2D*>( list->FindObject( Form("%s_%i",hname,cent)) );
 }
 
 //______________________________________________________________
@@ -567,3 +591,12 @@ Bool_t PeriodIsMC ( const TString& per_str ) {
   return kFALSE;
 }
 
+//______________________________________________________________________________
+void myPadSetUp ( float currentLeft=0.09, float currentTop=0.06, float currentRight=0.06, float currentBottom=0.09) {
+  TVirtualPad* currentPad = gPad;
+  currentPad->SetLeftMargin(currentLeft);
+  currentPad->SetTopMargin(currentTop);
+  currentPad->SetRightMargin(currentRight);
+  currentPad->SetBottomMargin(currentBottom);
+  return;
+  }
