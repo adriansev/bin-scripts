@@ -56,6 +56,13 @@ using namespace std;
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
 
+std::pair <TString, TString> HistoNameTitle (const TString& base, const TString& radius, const TString& type, const TString& range, const TString& title_suffix) {
+  TString name = base + radius + type + range;
+  TString range_mod = range;
+  TString title = range_mod.Replace(0,1,"").ReplaceAll("_","-") + title_suffix;
+  return std::make_pair(name, title);
+}
+
 //______________________________________________________________
 void val2bin (unsigned int val) {
 for ( unsigned short i = 0; i <= 31; ++i) { std::cout << ((val >> i) & 1); };
