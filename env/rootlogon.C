@@ -1,4 +1,5 @@
 {
+gROOT->ProcessLine("#include </home/adrian/bin/env/ROOT_FUNCTIONS.C>");
 gSystem->AddIncludePath("-Wno-deprecated -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder");
 gSystem->AddIncludePath("-I. -I$ALICE_PHYSICS/include -I$ALICE_ROOT/include -I$FASTJET/include -I/usr/include");
 gSystem->AddDynamicPath(".:$ALICE_PHYSICS/lib:$ALICE_ROOT/lib:$ROOTSYS/lib:$FASTJET/lib");

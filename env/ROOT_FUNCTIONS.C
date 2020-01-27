@@ -1,3 +1,5 @@
+#pragma once
+
 #if !defined(__CINT__) || defined(__MAKECINT__) || defined(__CLING__) || defined(__ROOTCLING__)
 
 #include <iostream>
@@ -140,20 +142,20 @@ static void SaveAllHistos (const char* file_name, const char* directory) {
     if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) {return;}
     static TFile* results_file = new TFile(file_name, "UPDATE");
     if (results_file->IsZombie()) return;
-    results_file->mkdir(directory);
+    if (!results_file->GetDirectory(directory)) { results_file->mkdir(directory); }
     results_file->cd(directory);
 
     TSeqCollection* list_canvases = gROOT->GetListOfCanvases();
     for (int i=0; i<list_canvases->GetEntries(); ++i) {
       TPad* canvas = dynamic_cast<TPad*> (list_canvases->At(i));
       for(const auto&& obj: *(canvas->GetListOfPrimitives())) {
-        if ( obj->InheritsFrom("TH1") ) { obj->Write(); }
+        if ( obj->InheritsFrom("TH1") ) { obj->Write(NULL, TObject::kOverwrite); }
         if ( obj->InheritsFrom("TPad") ) {
           TPad* pad = dynamic_cast<TPad*>(obj);
           TList* padlist = pad->GetListOfPrimitives();
           for (int i=0; i<padlist->GetEntries(); ++i) {
             TObject* h_in_padlist = padlist->At(i);
-            if ( h_in_padlist->InheritsFrom("TH1") ) { h_in_padlist->Write(); }
+            if ( h_in_padlist->InheritsFrom("TH1") ) { h_in_padlist->Write(NULL, TObject::kOverwrite); }
           }
         }
       }
