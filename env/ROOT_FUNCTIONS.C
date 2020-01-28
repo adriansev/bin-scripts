@@ -594,11 +594,267 @@ Bool_t PeriodIsMC ( const TString& per_str ) {
 }
 
 //______________________________________________________________________________
-void myPadSetUp ( float currentLeft=0.09, float currentTop=0.06, float currentRight=0.06, float currentBottom=0.09) {
+TVirtualPad* myPadSetUp ( float currentLeft=0.09, float currentTop=0.06, float currentRight=0.06, float currentBottom=0.09) {
   TVirtualPad* currentPad = gPad;
   currentPad->SetLeftMargin(currentLeft);
   currentPad->SetTopMargin(currentTop);
   currentPad->SetRightMargin(currentRight);
   currentPad->SetBottomMargin(currentBottom);
-  return;
+  return currentPad;
   }
+
+TLegend* myLegendSetUp ( TLegend* currentLegend = 0, float currentTextSize=0.07)
+  {
+  currentLegend->SetTextFont(42);
+  currentLegend->SetBorderSize(0);
+  currentLegend->SetFillStyle(0);
+  currentLegend->SetFillColor(0);
+  currentLegend->SetMargin(0.25);
+  currentLegend->SetTextSize(currentTextSize);
+  currentLegend->SetEntrySeparation(0.5);
+  return currentLegend;
+  }
+
+
+//########  ANALYSIS SPECIFIC FUNCTIONS   ####################
+//______________________________________________________________
+static Double_t GetEvNr (THashList* list, Int_t cent = 0) {
+  TH1D* h_ev = dynamic_cast<TH1D*>( list->FindObject(Form("histo5_%i",cent)));
+  h_ev->SetDirectory(0);
+  Double_t nr_events = h_ev->GetEntries();
+  delete h_ev;
+  return nr_events;
+  }
+
+//______________________________________________________________
+static Double_t GetNrJets (THashList* list, Int_t cent = 0) {
+  TH1D* h_nrjets = dynamic_cast<TH1D*>( list->FindObject(Form("histo4c_%i",cent)));
+  h_nrjets->SetDirectory(0);
+  Double_t nr_jets = h_nrjets->GetEntries();
+  delete h_nrjets;
+  return nr_jets;
+  }
+
+//______________________________________________________________
+static TH1D* GetH1_normjets (THashList* list, const char* hname, Int_t cent = 0) {
+  if (!list) { std::cout << "invalid list" << endl; return NULL;}
+  TH1D* h = getH1(list, hname, cent);
+  if (!h) {return NULL;}
+  NormHn(h, GetNrJets(list,cent));
+  return h;
+}
+
+//______________________________________________________________
+static TH1D* GetH1_normev (THashList* list, const char* hname, Int_t cent = 0) {
+  if (!list) { std::cout << "invalid list" << endl; return NULL;}
+  TH1D* h = getH1(list, hname, cent);
+  if (!h) {return NULL;}
+  NormHn(h, GetEvNr(list,cent));
+  return h;
+}
+
+//______________________________________________________________
+static AliEmcalList* taskDirectory ( TFile* f, const char* tracks, const char* clusters, const char* cells, const char* jettype) {
+  TString sTracks (tracks), sClusters (clusters), sCells (cells), sJettype (jettype);
+
+  TString taskDirectory = "JetCDF_" + sTracks;
+  if (!sClusters.IsNull()) {taskDirectory += "_" + sClusters;}
+  if (!sCells.IsNull()) {taskDirectory += "_" + sCells;}
+  taskDirectory += "_CDF" + sJettype;
+  if (sTracks.EqualTo("mcparticles")) {taskDirectory += "MC";}
+  taskDirectory += "_histos";
+
+  //   std::cout << "taskDirectory = " << taskDirectory.Data() << std::endl;
+  AliEmcalList* task_list = dynamic_cast<AliEmcalList*>(f->Get(taskDirectory.Data()));
+  if (!task_list) { std::cout << "invalid AliEmcalList" << endl; return NULL;}
+  return task_list;
+}
+
+//______________________________________________________________
+static THashList* getCDFlist ( AliEmcalList* task_list, const char* tracks, const char* clusters, const char* jettype, Double_t radius, Int_t ptmin, Int_t ptmax) {
+  TString sTracks (tracks), sClusters (clusters), sJettype (jettype);
+  if (!task_list) { std::cout << "invalid AliEmcalList" << endl; return NULL;}
+
+  TString jetstrmin = TString::Itoa((Int_t)ptmin,10);
+  TString jetstrmax = TString::Itoa((Int_t)ptmax,10);
+  TString radiusString = TString::Format("R%03.0f", radius*100.0);
+
+  TString histoDirectory = "Jet_AKT";
+  if (sJettype.EqualTo("full"))
+    {histoDirectory += "Full";}
+  else
+    {histoDirectory += "Charged";}
+
+  histoDirectory += radiusString;
+  histoDirectory += "_" + sTracks + "_pT0150";
+  if (!sClusters.IsNull()) {histoDirectory += "_" + sClusters + "_E0300_pt_scheme";}
+  histoDirectory += "_pt_scheme_ptbin" ;
+  histoDirectory += "_" + jetstrmin + "_" + jetstrmax;
+
+  //   std::cout << "histoDirectory = " << histoDirectory.Data() << std::endl;
+  return dynamic_cast<THashList*>( task_list->FindObject(histoDirectory.Data()) );
+  }
+
+//##########################################################################
+
+void myOptions(Int_t lStat=0) {
+  // Set gStyle
+  int font = 42;
+
+  TStyle* mystyle = new TStyle("Modern","MyStyle");
+  mystyle->SetLegendFillColor(0);
+
+  // From plain
+  mystyle->SetFrameBorderMode(0);
+  mystyle->SetFrameFillColor(0);
+  mystyle->SetCanvasBorderMode(0);
+  mystyle->SetPadBorderMode(0);
+  mystyle->SetPadColor(10);
+  mystyle->SetCanvasColor(10);
+  mystyle->SetTitleFillColor(10);
+  mystyle->SetTitleBorderSize(1);
+  mystyle->SetStatColor(10);
+  mystyle->SetStatBorderSize(1);
+  mystyle->SetLegendBorderSize(1);
+
+  mystyle->SetDrawBorder(0);
+  mystyle->SetTextFont(font);
+  mystyle->SetStatFont(font);
+  mystyle->SetStatFontSize(0.05);
+  mystyle->SetStatX(0.97);
+  mystyle->SetStatY(0.98);
+  mystyle->SetStatH(0.03);
+  mystyle->SetStatW(0.3);
+  mystyle->SetTickLength(0.02,"y");
+  mystyle->SetEndErrorSize(3);
+  mystyle->SetLabelSize(0.03,"xyz");
+  mystyle->SetLabelFont(font,"xyz");
+  mystyle->SetLabelOffset(0.01,"xyz");
+  mystyle->SetTitleFont(font,"xyz");
+  mystyle->SetTitleOffset(1.0,"xyz");
+  mystyle->SetTitleSize(0.04,"xyz");
+  mystyle->SetMarkerSize(2.4);
+  mystyle->SetPalette(1,0);
+  if (lStat) {
+    mystyle->SetOptTitle(1);
+    mystyle->SetOptStat(11111111);
+    mystyle->SetOptFit(1111);
+    }
+  else {
+    mystyle->SetOptTitle(0);
+    mystyle->SetOptStat(0);
+    mystyle->SetOptFit(0);
+    }
+
+  mystyle->cd();
+  }
+
+//##########################################################################
+void SetAliceStyle(Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
+  cout << "Setting style!" << endl;
+
+  gStyle->Reset("Plain");
+  gStyle->SetOptTitle(0);
+  gStyle->SetOptStat(0);
+  gStyle->SetOptFit(0);
+
+  if (stat) {
+    gStyle->SetOptTitle(1);
+    gStyle->SetOptStat(11111111);
+    gStyle->SetOptFit(1111);
+    }
+
+  if(graypalette)
+    { gStyle->SetPalette(8,0); }
+  else
+    { gStyle->SetPalette(1); }
+
+  gStyle->SetCanvasColor(10);
+  gStyle->SetCanvasBorderMode(0);
+  gStyle->SetFrameLineWidth(1);
+  gStyle->SetFrameFillColor(kWhite);
+  gStyle->SetPadColor(10);
+  gStyle->SetPadTickX(1);
+  gStyle->SetPadTickY(1);
+  gStyle->SetPadBottomMargin(0.15);
+  gStyle->SetPadLeftMargin(0.1);
+  gStyle->SetPadRightMargin(0.02);
+  gStyle->SetHistLineWidth(1);
+  gStyle->SetHistLineColor(kRed);
+  gStyle->SetFuncWidth(2);
+  gStyle->SetFuncColor(kGreen);
+  gStyle->SetLineWidth(2);
+  gStyle->SetLabelSize(0.045,"xyz");
+  gStyle->SetLabelOffset(0.01,"y");
+  gStyle->SetLabelOffset(0.01,"x");
+  gStyle->SetLabelColor(kBlack,"xyz");
+  gStyle->SetTitleSize(0.04,"xyz");
+  gStyle->SetTitleOffset(1.25,"y");
+  gStyle->SetTitleOffset(1.2,"x");
+  gStyle->SetTitleFillColor(kWhite);
+  gStyle->SetTextSizePixels(26);
+  gStyle->SetTextFont(42);
+  gStyle->SetMarkerSize(8);
+  // gStyle->SetTickLength(0.04,"X");
+  // gStyle->SetTickLength(0.04,"Y");
+
+  gStyle->SetLegendBorderSize(0);
+  gStyle->SetLegendFillColor(kWhite);
+  //  gStyle->SetFillColor(kWhite);
+  gStyle->SetLegendFont(42);
+
+}
+
+// //##########################################################################
+// void SetAliceStylePad (TPad* pad, Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
+//   pad->SetOptTitle(0);
+//   pad->SetOptStat(0);
+//   pad->SetOptFit(0);
+//
+//   if (stat) {
+//     pad->SetOptTitle(1);
+//     pad->SetOptStat(11111111);
+//     pad->SetOptFit(1111);
+//     }
+//
+//   if(graypalette)
+//     { pad->SetPalette(8,0); }
+//   else
+//     { pad->SetPalette(1); }
+//
+//   pad->SetCanvasColor(10);
+//   pad->SetCanvasBorderMode(0);
+//   pad->SetFrameLineWidth(1);
+//   pad->SetFrameFillColor(kWhite);
+//   pad->SetPadColor(10);
+//   pad->SetPadTickX(1);
+//   pad->SetPadTickY(1);
+//   pad->SetPadBottomMargin(0.15);
+//   pad->SetPadLeftMargin(0.15);
+//   pad->SetHistLineWidth(1);
+//   pad->SetHistLineColor(kRed);
+//   pad->SetFuncWidth(2);
+//   pad->SetFuncColor(kGreen);
+
+//   pad->SetLineWidth(2);
+//   pad->SetLabelSize(0.045,"xyz");
+//   pad->SetLabelOffset(0.01,"y");
+//   pad->SetLabelOffset(0.01,"x");
+//   pad->SetLabelColor(kBlack,"xyz");
+//   pad->SetTitleSize(0.05,"xyz");
+//   pad->SetTitleOffset(1.25,"y");
+//   pad->SetTitleOffset(1.2,"x");
+//   pad->SetTitleFillColor(kWhite);
+//   pad->SetTextSizePixels(26);
+//   pad->SetTextFont(42);
+//   pad->SetMarkerSize(8);
+  //  pad->SetTickLength(0.04,"X");
+  //  pad->SetTickLength(0.04,"Y");
+
+//   pad->SetLegendBorderSize(0);
+//   pad->SetLegendFillColor(kWhite);
+//   //  pad->SetFillColor(kWhite);
+//   pad->SetLegendFont(42);
+
+// }
+
