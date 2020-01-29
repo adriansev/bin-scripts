@@ -48,8 +48,7 @@
 
 #include <TString.h>
 #include <TObjString.h>
-
-//#include <AliEmcalList.h>
+#include <AliEmcalList.h>
 
 #endif
 
