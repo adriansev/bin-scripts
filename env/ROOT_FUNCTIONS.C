@@ -46,6 +46,7 @@
 #include <TSystemDirectory.h>
 #include <TInterpreter.h>
 
+#include <TRatioPlot.h>
 #include <TString.h>
 #include <TObjString.h>
 #include <AliEmcalList.h>
@@ -77,13 +78,19 @@ void print_canvas (TPad* c, TString name) {
 }
 
 //______________________________________________________________
-static TH1D* getH1 (THashList* list, const char* hname, Int_t cent = 0) {
-  if (!list) { std::cout << "invalid list" << endl; return NULL;}
-  return dynamic_cast<TH1D*>( list->FindObject( Form("%s_%i",hname,cent)) );
-}
+TH1D* getH1dir (TFile& f, const TString dir , const TString hname) {
+  TString path = dir + "/" + hname;
+  return dynamic_cast<TH1D*>(f.Get(path.Data()));
+  }
 
 //______________________________________________________________
-static TH2D* getH2 (THashList* list, const char* hname, Int_t cent = 0) {
+TH1D* getH1 (THashList* list, const char* hname, Int_t cent = 0) {
+  if (!list) { std::cout << "invalid list" << endl; return NULL;}
+  return dynamic_cast<TH1D*>( list->FindObject( Form("%s_%i",hname,cent)) );
+  }
+
+//______________________________________________________________
+TH2D* getH2 (THashList* list, const char* hname, Int_t cent = 0) {
   if (!list) { std::cout << "invalid list" << endl; return NULL;}
   return dynamic_cast<TH2D*>( list->FindObject( Form("%s_%i",hname,cent)) );
 }
@@ -107,7 +114,7 @@ const char* ObjGetName (TObject* ptr) {
   }
 
 //______________________________________________________________
-static TObject* Apply2Ptr (TObject* obj, const char* arg) {
+TObject* Apply2Ptr (TObject* obj, const char* arg) {
   // apply the method (arg) to the object
   TInterpreter* my_int = TInterpreter::Instance();
   my_int->ProcessLine(Form( "(( reinterpret_cast<%s*>(%s) )->%s);" , ObjGetName(obj) , ObjGetPtr(obj), arg ));
@@ -115,7 +122,7 @@ static TObject* Apply2Ptr (TObject* obj, const char* arg) {
 }
 
 //______________________________________________________________
-static void ForEachH (const char* method, const char* params) {
+void ForEachH (const char* method, const char* params) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) {return;}
 
   TSeqCollection* list_canvases = gROOT->GetListOfCanvases();
@@ -137,9 +144,9 @@ static void ForEachH (const char* method, const char* params) {
   }
 
 //______________________________________________________________
-static void SaveAllHistos (const char* file_name, const char* directory) {
+void SaveAllHistos (const char* file_name, const char* directory) {
     if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) {return;}
-    static TFile* results_file = new TFile(file_name, "UPDATE");
+    TFile* results_file = new TFile(file_name, "UPDATE");
     if (results_file->IsZombie()) return;
     if (!results_file->GetDirectory(directory)) { results_file->mkdir(directory); }
     results_file->cd(directory);
@@ -162,21 +169,21 @@ static void SaveAllHistos (const char* file_name, const char* directory) {
   }
 
 //______________________________________________________________
-static TH1D* ProjectY (TH2D* h, Option_t* option = "") {
+TH1D* ProjectY (TH2D* h, Option_t* option = "") {
   TString new_name = h->GetName();
   new_name += "_projY";
   return h->ProjectionY(new_name.Data(), 0, -1, option );
   }
 
 //______________________________________________________________
-static TH1D* ProjectX (TH2D* h, Option_t* option = "") {
+TH1D* ProjectX (TH2D* h, Option_t* option = "") {
   TString new_name = h->GetName();
   new_name += "_projX";
   return h->ProjectionX(new_name.Data(), 0, -1, option );
 }
 
 //______________________________________________________________
-static void PadToLogScale() {
+void PadToLogScale() {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
   if ( gPad->GetLogy() ) {return;}
 
@@ -194,7 +201,25 @@ static void PadToLogScale() {
 }
 
 //______________________________________________________________
-static void PadToLogScale_AutoScale() {
+TPad* PadToLogScale(TPad* pad) {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return NULL;
+  if ( pad->GetLogy() ) {return NULL;}
+  
+  // Now loop through histos and find the extrema
+  for(const auto&& obj: *(pad->GetListOfPrimitives())) {
+    if ( obj->InheritsFrom("TH1") ) {
+      // If there is a 2D histogram, don't do anything.
+      if ( obj->InheritsFrom("TH2") ) { return NULL; }
+      (dynamic_cast<TH1*>(obj))->SetMinimum();
+      }
+    }
+  pad->SetLogy();
+  pad->Modified();
+  return pad;
+  }
+
+//______________________________________________________________
+void PadToLogScale_AutoScale() {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
   if ( gPad->GetLogy() ) {return;}
 
@@ -218,7 +243,7 @@ static void PadToLogScale_AutoScale() {
 }
 
 //______________________________________________________________
-static void PadRebin(Int_t binsgroup) {
+void PadRebin(Int_t binsgroup) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
 
   TPad* oldpad = dynamic_cast<TPad*> gPad;
@@ -232,7 +257,7 @@ static void PadRebin(Int_t binsgroup) {
 }
 
 //______________________________________________________________
-static void PadSetYaxis(Double_t r1, Double_t r2) {
+void PadSetYaxis(Double_t r1, Double_t r2) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
 
   TPad* oldpad = dynamic_cast<TPad*> gPad;
@@ -246,7 +271,7 @@ static void PadSetYaxis(Double_t r1, Double_t r2) {
 }
 
 //______________________________________________________________
-static void PadSetXaxis(Double_t r1, Double_t r2) {
+void PadSetXaxis(Double_t r1, Double_t r2) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return;
 
   TPad* oldpad = dynamic_cast<TPad*> gPad;
@@ -260,6 +285,32 @@ static void PadSetXaxis(Double_t r1, Double_t r2) {
 }
 
 //______________________________________________________________
+TPad* PadSetYaxis(TPad* pad, Double_t r1, Double_t r2) {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return NULL;
+  // Now loop through histos and find the extrema
+  TList* glist = pad->GetListOfPrimitives();
+  for (int i=0; i<glist->GetEntries(); ++i) {
+    TObject *obj = glist->At(i);
+    if ( obj->InheritsFrom("TH1") ) { (dynamic_cast<TH1*>(obj))->GetYaxis()->SetRangeUser(r1, r2); }
+    }
+  pad->Modified();
+  return pad;
+  }
+
+//______________________________________________________________
+TPad* PadSetXaxis(TPad* pad, Double_t r1, Double_t r2) {
+  if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return NULL;
+  // Now loop through histos and find the extrema
+  TList* glist = pad->GetListOfPrimitives();
+  for (int i=0; i<glist->GetEntries(); ++i) {
+    TObject *obj = glist->At(i);
+    if ( obj->InheritsFrom("TH1") ) { (dynamic_cast<TH1*>(obj))->GetXaxis()->SetRangeUser(r1, r2); }
+    }
+  pad->Modified();
+  return pad;
+  }
+  
+//______________________________________________________________
 TH1D* Rebin (TH1D* h, Int_t nbins, Double_t* xbins) {
   return dynamic_cast<TH1D*>( h->Rebin(nbins, Form("%s_rebin",h->GetName()), xbins) );
   }
@@ -270,7 +321,7 @@ return dynamic_cast<TH1D*>(h->Clone( Form("%s_cl",h->GetName()) ));
   }
 
 //______________________________________________________________
-static TH1* NormH ( TH1* h, Option_t* option = "") {
+TH1* NormH ( TH1* h, Option_t* option = "") {
   if (!h) { cout << "invalid pointer" << endl; return NULL; }
   TH1::SetDefaultSumw2(kTRUE);
 
@@ -284,7 +335,7 @@ static TH1* NormH ( TH1* h, Option_t* option = "") {
 }
 
 //______________________________________________________________
-static TH1* NormHn ( TH1* h, Double_t norm = 1., Option_t* option = "") {
+TH1* NormHn ( TH1* h, Double_t norm = 1., Option_t* option = "") {
   if (!h) { cout << "invalid pointer" << endl; return NULL; }
   TH1::SetDefaultSumw2(kTRUE);
 
@@ -298,7 +349,7 @@ static TH1* NormHn ( TH1* h, Double_t norm = 1., Option_t* option = "") {
 }
 
 //______________________________________________________________
-static TH1* ScaleH ( TH1* h, Double_t factor = 1., Option_t* option = "") {
+TH1* ScaleH ( TH1* h, Double_t factor = 1., Option_t* option = "") {
   if (!h) { cout << "invalid pointer" << endl; return NULL; }
   TH1::SetDefaultSumw2(kTRUE);
 
@@ -312,7 +363,7 @@ static TH1* ScaleH ( TH1* h, Double_t factor = 1., Option_t* option = "") {
 }
 
 //______________________________________________________________
-static TH1* SetAxis ( TH1* h, const char* axis_name, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
+TH1* SetAxis ( TH1* h, const char* axis_name, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
   if (!h) { cout << "invalid pointer" << endl; return NULL; }
   TAxis* axis = NULL;
 
@@ -332,31 +383,31 @@ static TH1* SetAxis ( TH1* h, const char* axis_name, Float_t l_offset /*Label of
 
 
 //______________________________________________________________
-static TH1* SetXProperties ( TH1* h, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
+TH1* SetXProperties ( TH1* h, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
   return SetAxis (h, "x", l_offset, l_size, t_offset, t_size);
 }
 
 //______________________________________________________________
-static TH1* SetYProperties ( TH1* h, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
+TH1* SetYProperties ( TH1* h, Float_t l_offset /*Label offset*/, Float_t l_size /*Label size*/, Float_t t_offset /*Title offset*/, Float_t t_size /*Title size*/) {
   return SetAxis (h, "y", l_offset, l_size, t_offset, t_size);
 }
 
 //______________________________________________________________
-static TH1* SetXRange ( TH1* h, Double_t r1 , Double_t r2) {
+TH1* SetXRange ( TH1* h, Double_t r1 , Double_t r2) {
   if (!h) {cout << "invalid pointer" << endl; return NULL;}
   h->GetXaxis()->SetRangeUser(r1, r2);
   return h;
 }
 
 //______________________________________________________________
-static TH1* SetYRange ( TH1* h, Double_t r1 , Double_t r2) {
+TH1* SetYRange ( TH1* h, Double_t r1 , Double_t r2) {
   if (!h) {cout << "invalid pointer" << endl; return NULL;}
   h->GetYaxis()->SetRangeUser(r1, r2);
   return h;
 }
 
 //______________________________________________________________
-static TH1* SetXYRange ( TH1* h, Double_t x_r1 , Double_t x_r2, Double_t y_r1 , Double_t y_r2) {
+TH1* SetXYRange ( TH1* h, Double_t x_r1 , Double_t x_r2, Double_t y_r1 , Double_t y_r2) {
   if (!h) {cout << "invalid pointer" << endl; return NULL;}
   h->GetXaxis()->SetRangeUser(x_r1, x_r2);
   h->GetYaxis()->SetRangeUser(y_r1, y_r2);
@@ -364,7 +415,7 @@ static TH1* SetXYRange ( TH1* h, Double_t x_r1 , Double_t x_r2, Double_t y_r1 , 
 }
 
 //______________________________________________________________
-static TH1* StyleColor ( TH1* h, Style_t mystyle = 1, Color_t mycolor = 1, Size_t mysize = 1.3) {
+TH1* StyleColor ( TH1* h, Style_t mystyle = 1, Color_t mycolor = 1, Size_t mysize = 1.3) {
   if (!h) {cout << "invalid pointer" << endl; return NULL;}
   h->SetMarkerStyle(mystyle);
   h->SetMarkerColor(mycolor);
@@ -373,7 +424,7 @@ static TH1* StyleColor ( TH1* h, Style_t mystyle = 1, Color_t mycolor = 1, Size_
 }
 
 //______________________________________________________________
-static TH1* hDraw ( TH1* h, TString arg = "PE SAME" ) {
+TH1* hDraw ( TH1* h, TString arg = "PE SAME" ) {
   if (!h) {cout << "invalid pointer" << endl; return NULL;}
   TString default_args ("PE SAME");
 
@@ -617,7 +668,7 @@ TLegend* myLegendSetUp ( TLegend* currentLegend = 0, float currentTextSize=0.07)
 
 //########  ANALYSIS SPECIFIC FUNCTIONS   ####################
 //______________________________________________________________
-static Double_t GetEvNr (THashList* list, Int_t cent = 0) {
+Double_t GetEvNr (THashList* list, Int_t cent = 0) {
   TH1D* h_ev = dynamic_cast<TH1D*>( list->FindObject(Form("histo5_%i",cent)));
   h_ev->SetDirectory(0);
   Double_t nr_events = h_ev->GetEntries();
@@ -626,7 +677,7 @@ static Double_t GetEvNr (THashList* list, Int_t cent = 0) {
   }
 
 //______________________________________________________________
-static Double_t GetNrJets (THashList* list, Int_t cent = 0) {
+Double_t GetNrJets (THashList* list, Int_t cent = 0) {
   TH1D* h_nrjets = dynamic_cast<TH1D*>( list->FindObject(Form("histo4c_%i",cent)));
   h_nrjets->SetDirectory(0);
   Double_t nr_jets = h_nrjets->GetEntries();
@@ -635,7 +686,7 @@ static Double_t GetNrJets (THashList* list, Int_t cent = 0) {
   }
 
 //______________________________________________________________
-static TH1D* GetH1_normjets (THashList* list, const char* hname, Int_t cent = 0) {
+TH1D* GetH1_normjets (THashList* list, const char* hname, Int_t cent = 0) {
   if (!list) { std::cout << "invalid list" << endl; return NULL;}
   TH1D* h = getH1(list, hname, cent);
   if (!h) {return NULL;}
@@ -644,7 +695,7 @@ static TH1D* GetH1_normjets (THashList* list, const char* hname, Int_t cent = 0)
 }
 
 //______________________________________________________________
-static TH1D* GetH1_normev (THashList* list, const char* hname, Int_t cent = 0) {
+TH1D* GetH1_normev (THashList* list, const char* hname, Int_t cent = 0) {
   if (!list) { std::cout << "invalid list" << endl; return NULL;}
   TH1D* h = getH1(list, hname, cent);
   if (!h) {return NULL;}
@@ -653,7 +704,7 @@ static TH1D* GetH1_normev (THashList* list, const char* hname, Int_t cent = 0) {
 }
 
 //______________________________________________________________
-static AliEmcalList* taskDirectory ( TFile* f, const char* tracks, const char* clusters, const char* cells, const char* jettype) {
+AliEmcalList* taskDirectory ( TFile* f, const char* tracks, const char* clusters, const char* cells, const char* jettype) {
   TString sTracks (tracks), sClusters (clusters), sCells (cells), sJettype (jettype);
 
   TString taskDirectory = "JetCDF_" + sTracks;
@@ -670,7 +721,7 @@ static AliEmcalList* taskDirectory ( TFile* f, const char* tracks, const char* c
 }
 
 //______________________________________________________________
-static THashList* getCDFlist ( AliEmcalList* task_list, const char* tracks, const char* clusters, const char* jettype, Double_t radius, Int_t ptmin, Int_t ptmax) {
+THashList* getCDFlist ( AliEmcalList* task_list, const char* tracks, const char* clusters, const char* jettype, Double_t radius, Int_t ptmin, Int_t ptmax) {
   TString sTracks (tracks), sClusters (clusters), sJettype (jettype);
   if (!task_list) { std::cout << "invalid AliEmcalList" << endl; return NULL;}
 
@@ -856,4 +907,71 @@ void SetAliceStyle(Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
 //   pad->SetLegendFont(42);
 
 // }
+void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny, Float_t lMargin, Float_t rMargin, Float_t bMargin, Float_t tMargin) {
+  if (!C) return;
+  // Setup Pad layout:
+  Float_t vSpacing = 0.0;
+  Float_t vStep  = (1.- bMargin - tMargin - (Ny-1) * vSpacing) / Ny;
+  Float_t hSpacing = 0.0;
+  Float_t hStep  = (1.- lMargin - rMargin - (Nx-1) * hSpacing) / Nx;
+  Float_t vposd,vposu,vmard,vmaru,vfactor;
+  Float_t hposl,hposr,hmarl,hmarr,hfactor;
+  for (Int_t i=0;i<Nx;i++) {
+    if (i==0) {
+      hposl = 0.0;
+      hposr = lMargin + hStep;
+      hfactor = hposr-hposl;
+      hmarl = lMargin / hfactor;
+      hmarr = 0.0;
+    } else if (i == Nx-1) {
+      hposl = hposr + hSpacing;
+      hposr = hposl + hStep + rMargin;
+      hfactor = hposr-hposl;
+      hmarl = 0.0;
+      hmarr = rMargin / (hposr-hposl);
+    } else {
+      hposl = hposr + hSpacing;
+      hposr = hposl + hStep;
+      hfactor = hposr-hposl;
+      hmarl = 0.0;
+      hmarr = 0.0;
+    }
+    for (Int_t j=0;j<Ny;j++) {
+      if (j==0) {
+        vposd = 0.0;
+        vposu = bMargin + vStep;
+        vfactor = vposu-vposd;
+        vmard = bMargin / vfactor;
+        vmaru = 0.0;
+      } else if (j == Ny-1) {
+        vposd = vposu + vSpacing;
+        vposu = vposd + vStep + tMargin;
+        vfactor = vposu-vposd;
+        vmard = 0.0;
+        vmaru = tMargin / (vposu-vposd);
+      } else {
+        vposd = vposu + vSpacing;
+        vposu = vposd + vStep;
+        vfactor = vposu-vposd;
+        vmard = 0.0;
+        vmaru = 0.0;
+      }
+      C->cd(0);
+      char name[16];
+      sprintf(name,"pad_%i_%i",i,j);
+      TPad *pad = (TPad*) gROOT->FindObject(name);
+      if (pad) delete pad;
+      pad = new TPad(name,"",hposl,vposd,hposr,vposu);
+      pad->SetLeftMargin(hmarl);
+      pad->SetRightMargin(hmarr);
+      pad->SetBottomMargin(vmard);
+      pad->SetTopMargin(vmaru);
+      pad->SetFrameBorderMode(0);
+      pad->SetBorderMode(0);
+      pad->SetBorderSize(0);
+      pad->Draw();
+    }
+  }
+}
+
 
