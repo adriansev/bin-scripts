@@ -1,0 +1,59 @@
+#!/bin/bash
+
+help () {
+echo "Usage: $(basename ${0}) directory_with_jobs_subdirs -from|--from index_start -to|--to index_stop -script|--script executable_to_run
+the list of files is numbered from 0
+and index_stop IS INCLUDED";
+exit 1;
+}
+
+[[ -z "${1}" ]] && help
+DIR="${1}"
+shift
+CWD=$(pwd -P)
+[[ ${DIR:0:1} != "/" ]] && DIR="${CWD}/${DIR}"
+[[ ! -e "${DIR}" ]] && help
+
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    key="${1}"
+    case ${key} in
+        -from|--from)
+            START="${2}"
+            shift # past argument
+            shift # past value
+        ;;
+        -to|--to)
+            STOP="${2}"
+            shift # past argument
+            shift # past value
+        ;;
+        -script|--script)
+            EXEC="${2}"
+            shift # past argument
+            shift # past value
+        ;;
+        *)    # unknown option
+            POSITIONAL+=("${1}") # save it in an array for later
+            shift # past argument
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+[[ -z "${EXEC}" ]] && help
+
+list_of_job_dirs=$(find "${DIR}" -type f -name "${EXEC}" -printf '%h\n'| sort)
+array=(${list_of_job_dirs})
+TOTAL="${#array[@]}"
+
+[[ -z "${STOP}" ]] && STOP="$((TOTAL-1))"
+[[ -z "${START}" ]] && START="0"
+
+echo "Total elements found : ${TOTAL}"
+for INDEX in $(seq ${START} ${STOP}); do
+    cd "${array[INDEX]}"
+    chmod +x ${EXEC}
+    nohup ${EXEC} 0<&- &> exec_log.txt &
+    cd "${CWD}"
+done
