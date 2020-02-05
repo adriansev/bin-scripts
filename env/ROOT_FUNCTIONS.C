@@ -824,8 +824,6 @@ void SetAliceStyle(Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
   gStyle->SetFrameLineWidth(1);
   gStyle->SetFrameFillColor(kWhite);
   gStyle->SetPadColor(10);
-  gStyle->SetPadTickX(1);
-  gStyle->SetPadTickY(1);
   gStyle->SetPadBottomMargin(0.15);
   gStyle->SetPadLeftMargin(0.1);
   gStyle->SetPadRightMargin(0.02);
@@ -845,8 +843,10 @@ void SetAliceStyle(Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
   gStyle->SetTextSizePixels(26);
   gStyle->SetTextFont(42);
   gStyle->SetMarkerSize(8);
-  // gStyle->SetTickLength(0.04,"X");
-  // gStyle->SetTickLength(0.04,"Y");
+  gStyle->SetPadTickX(1);
+  gStyle->SetPadTickY(1);
+  gStyle->SetTickLength(0.02,"X");
+  gStyle->SetTickLength(0.02,"Y");
 
   gStyle->SetLegendBorderSize(0);
   gStyle->SetLegendFillColor(kWhite);
@@ -855,59 +855,8 @@ void SetAliceStyle(Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
 
 }
 
-// //##########################################################################
-// void SetAliceStylePad (TPad* pad, Bool_t graypalette = kFALSE, Bool_t stat = kFALSE) {
-//   pad->SetOptTitle(0);
-//   pad->SetOptStat(0);
-//   pad->SetOptFit(0);
-//
-//   if (stat) {
-//     pad->SetOptTitle(1);
-//     pad->SetOptStat(11111111);
-//     pad->SetOptFit(1111);
-//     }
-//
-//   if(graypalette)
-//     { pad->SetPalette(8,0); }
-//   else
-//     { pad->SetPalette(1); }
-//
-//   pad->SetCanvasColor(10);
-//   pad->SetCanvasBorderMode(0);
-//   pad->SetFrameLineWidth(1);
-//   pad->SetFrameFillColor(kWhite);
-//   pad->SetPadColor(10);
-//   pad->SetPadTickX(1);
-//   pad->SetPadTickY(1);
-//   pad->SetPadBottomMargin(0.15);
-//   pad->SetPadLeftMargin(0.15);
-//   pad->SetHistLineWidth(1);
-//   pad->SetHistLineColor(kRed);
-//   pad->SetFuncWidth(2);
-//   pad->SetFuncColor(kGreen);
-
-//   pad->SetLineWidth(2);
-//   pad->SetLabelSize(0.045,"xyz");
-//   pad->SetLabelOffset(0.01,"y");
-//   pad->SetLabelOffset(0.01,"x");
-//   pad->SetLabelColor(kBlack,"xyz");
-//   pad->SetTitleSize(0.05,"xyz");
-//   pad->SetTitleOffset(1.25,"y");
-//   pad->SetTitleOffset(1.2,"x");
-//   pad->SetTitleFillColor(kWhite);
-//   pad->SetTextSizePixels(26);
-//   pad->SetTextFont(42);
-//   pad->SetMarkerSize(8);
-  //  pad->SetTickLength(0.04,"X");
-  //  pad->SetTickLength(0.04,"Y");
-
-//   pad->SetLegendBorderSize(0);
-//   pad->SetLegendFillColor(kWhite);
-//   //  pad->SetFillColor(kWhite);
-//   pad->SetLegendFont(42);
-
-// }
-void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny, Float_t lMargin, Float_t rMargin, Float_t bMargin, Float_t tMargin) {
+//######################################################################################################################################
+  void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny, Float_t lMargin, Float_t rMargin, Float_t bMargin, Float_t tMargin) {
   if (!C) return;
   // Setup Pad layout:
   // Setup Pad layout:
