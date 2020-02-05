@@ -54,6 +54,6 @@ echo "Total elements found : ${TOTAL}"
 for INDEX in $(seq ${START} ${STOP}); do
     cd "${array[INDEX]}"
     chmod +x ${EXEC}
-    nohup ${EXEC} 0<&- &> exec_log.txt &
+    nohup ./${EXEC} 0<&- &> exec_log.txt &
     cd "${CWD}"
 done
