@@ -383,5 +383,5 @@ j_compile () {
     popd
 }
 
-j () { python3 ${HOME}/bin/alien.py "${@}" ;}
+j () { python3 $(which alien.py) "${@}" ;}
 
