@@ -14,10 +14,12 @@ print(f"path={url.path}")
 }
 
 [[ -n "${2}" ]] && FLAG_QUERY=" -q ${2}"
-
 eval $(get_locations "${PFN}")
-echo -e "Server:\t${srv}"
 
-[[ -n "${FLAG_QUERY}" ]] && CMD="xrdfs ${srv} stat ${FLAG_QUERY} ${path}" || CMD="xrdfs ${srv} stat ${path}"
+if [[ -n "${FLAG_QUERY}" ]]; then
+    xrdfs "${srv}" stat ${FLAG_QUERY} "${path}" &>/dev/null && echo "OK" || echo "FAIL"
+else
+    echo -e "Server:\t${srv}"
+    xrdfs "${srv}" stat "${path}"
+fi
 
-exec ${CMD}

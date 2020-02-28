@@ -1,0 +1,10 @@
+#!/bin/bash
+
+LFN="${1}"
+FLAG="IsReadable"
+[[ -n "${2}" ]] && FLAG="${2}"
+
+for pfn in $(alien.py whereis ${LFN} | tail -n +3 | awk '{print $NF}'); do
+    echo -ne "${pfn} : "; xrd_pfn_flags ${pfn} ${FLAG};
+done
+
