@@ -1,0 +1,23 @@
+#!/bin/bash
+
+PFN="${1}"
+
+get_locations () {
+echo -n "${1}" | python3 -c '
+import os,sys
+from urllib.parse import urlparse
+pfn = sys.stdin.read();
+url = urlparse(pfn)
+print(f"srv={url.netloc}")
+print(f"path={url.path}")
+'
+}
+
+[[ -n "${2}" ]] && FLAG_QUERY=" -q ${2}"
+
+eval $(get_locations "${PFN}")
+echo -e "Server:\t${srv}"
+
+[[ -n "${FLAG_QUERY}" ]] && CMD="xrdfs ${srv} stat ${FLAG_QUERY} ${path}" || CMD="xrdfs ${srv} stat ${path}"
+
+exec ${CMD}
