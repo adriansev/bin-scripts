@@ -1,0 +1,16 @@
+#!/usr/bin/bash
+
+TGT="${1}"
+LABEL="${2}"
+NOW=$(date +%Y%m%d_%H%M%S)
+
+PATH="$(/usr/bin/dirname ${TGT})"
+FILENAME="$(/usr/bin/basename ${TGT})"
+EXT="${FILENAME##*.}"
+NAME="${FILENAME%.*}"
+NEW_NAME="${NAME}_${NOW}"
+[[ -n "${LABEL}" ]] && NEW_NAME="${NEW_NAME}_${LABEL}"
+[[ -n "${EXT}" ]] && NEW_NAME="${NEW_NAME}.${EXT}"
+NEW_TGT="${PATH}/${NEW_NAME}"
+/usr/bin/cp -r "${TGT}" "${NEW_TGT}"
+

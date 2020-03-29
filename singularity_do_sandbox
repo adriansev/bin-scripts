@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+IMAGE="${1}"
+SANDBOX_NAME="$(basename ${IMAGE} | sed 's/:/_/g')_sandbox"
+[[ -e "${SANDBOX_NAME}" ]] && { echo "Sandbox already present, should be renamed"; exit 1; }
+singularity build --sandbox "${SANDBOX_NAME}" "${IMAGE}"
+
