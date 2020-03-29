@@ -1,2 +1,2 @@
-#!/bin/bash
-sed ':a;N;$!ba;s/\n/ /g' "$@"
+#!/usr/bin/env bash
+sed ':a;N;$!ba;s/\n/ /g' "${@}"
