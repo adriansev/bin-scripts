@@ -1,0 +1,11 @@
+#!/usr/bin/python3
+
+import os,sys
+
+raw_value = int(sys.argv[1])
+nr_ops = raw_value & 0xFFFFFFFF
+failed_ops = (raw_value & 0xFFFF00000000) >> 32
+
+print(f"Number of ops = {nr_ops}")
+print(f"Number of _failed_ ops = {failed_ops}")
+
