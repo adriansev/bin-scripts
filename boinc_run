@@ -1,3 +1,0 @@
-#!/bin/bash
-
-cd $BOINCDIR && exec $BOINCDIR/boinc --dir $BOINCDIR --redirectio --daemon $@ >> $BOINCDIR/boinc_out.log 2>>$BOINCDIR/boinc_err.log 
