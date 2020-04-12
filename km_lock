@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+if [[ "${1}" == "off" || "${1}" == "0" || "${1}" == "disable"  ]]; then
+    pkill pyxtrlock
+else
+    pyxtrlock
+fi

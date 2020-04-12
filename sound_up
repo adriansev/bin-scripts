@@ -1,0 +1,2 @@
+qdbus org.kde.kglobalaccel /component/kmix invokeShortcut "increase_volume"
+
