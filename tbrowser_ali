@@ -1,0 +1,2 @@
+//usr/bin/env -S aliroot -l "${0}" ; exit $?
+{TBrowser br;}
