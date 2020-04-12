@@ -1,2 +1,2 @@
-#!/bin/bash
-exec root.exe -l ${HOME}/bin/tbrowser.C
+//usr/bin/env -S root.exe -l "${0}" ; exit $?
+{TBrowser br;}

@@ -1,2 +1,0 @@
-#!/bin/bash
-exec root.exe -l ${HOME}/bin/tbrowser2.C
