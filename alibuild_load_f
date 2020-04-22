@@ -18,3 +18,5 @@ if [[ "${2}" == "INCLUDES"  ]]; then
 fi
 
 }
+
+ali_latest () { alibuild_load_aliphys latest ${1}; }
