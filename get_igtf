@@ -1,2 +1,0 @@
-wget http://dist.eugridpma.info/distribution/current/accredited/igtf-preinstalled-bundle-classic.tar.gz -O "igtf-preinstalled-bundle-classic2.tar.gz"
-mv igtf-preinstalled-bundle-classic2.tar.gz igtf-preinstalled-bundle-classic.tar.gz
