@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+HN="${1}"
+IP="${2}"
+FN="/etc/dnsmasq.d/${HN}.conf"
+
+sudo bash -c "cat > ${FN}" << EOF
+address=/$HN/$IP
+
+EOF
