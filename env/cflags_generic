@@ -1,5 +1,5 @@
 ## disable these gcc flags
-export CXXFLAGS="-Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder"
+export MYCXXFLAGS="-Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder"
 
 #GCC_HAS_STD14="$($(g++ -print-prog-name=cc1) --help | grep -e '-std=.*++14'))"
 #[[ -n "${GCC_HAS_STD14}" ]] && export CXXFLAGS="${CXXFLAGS} -std=c++14"
@@ -15,5 +15,5 @@ elif [[ -n "${HAS_AVX}" ]]; then
     TUNE="${TUNE} -mavx"
 fi
 
-[[ ! "$(hostname -s)" =~ issaf* ]] && export CXXFLAGS="${CXXFLAGS} ${TUNE}"
+[[ ! "$(hostname -s)" =~ issaf* ]] && export MYCXXFLAGS="${MYCXXFLAGS} ${TUNE}"
 
