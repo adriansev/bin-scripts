@@ -340,3 +340,6 @@ alias ali_unload='alienv unload $(loaded_aliphys)'
 alias debug_alienpy='source ${HOME}/bin/alienpy_debug'
 alias debug_xrootd='source ${HOME}/bin/xrd_debug'
 
+alias ansplay='ansible-playbook '
+
+
