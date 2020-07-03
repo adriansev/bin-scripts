@@ -23,9 +23,3 @@ echo "doing push --all ..."
 git push --all
 echo "done"
 
-if [[ "${REPO_NAME}" == "alidist" ]]; then
-  git checkout myflags
-  git pull --rebase origin master
-  git push -f
-fi
-
