@@ -1,0 +1,4 @@
+echo "git checkout myflags
+git pull --rebase origin master
+git push -f"
+
