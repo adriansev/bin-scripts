@@ -1,0 +1,16 @@
+#!/bin/bash
+
+cluster_list=$(sacctmgr -np show clusters | awk -F"|" '{print $1}')
+
+ARG="${1}"
+CLUSTER=''
+
+if [[ ! ${cluster_list} =~ ${ARG} ]]; then
+    MAXJOBS=${ARG}
+else
+    CLUSTER="${1}"
+    MAXJOBS="${2}"
+fi
+
+sacctmgr modify cluster ${CLUSTER} set MaxJobs="${MAXJOBS}"
+
