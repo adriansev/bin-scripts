@@ -29,16 +29,16 @@ XRD_QUERY () {
 
 
 for srv in ${SRV_LIST} ; do
-    name=$(awk -F: '{print $1}' <<< "${srv}" )
+    name=$(awk -F: '{printf("%s_%s\n",$1,$2);}' <<< "${srv}" ) #'
     ( XRD_QUERY ${srv} &> /tmp/${name}.xrdinfo ) &
 done
 
 ( XRD_QUERY ${redir}:1094 &> /tmp/${redir}.xrdinfo ) &
 wait
-
 cat /tmp/${redir}.xrdinfo
+
 for srv in ${SRV_LIST} ; do
-    name=$(awk -F: '{print $1}' <<< "${srv}" )
+    name=$(awk -F: '{printf("%s_%s\n",$1,$2);}' <<< "${srv}" ) #'
     cat /tmp/${name}.xrdinfo
 done
 
