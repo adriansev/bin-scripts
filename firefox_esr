@@ -1,8 +1,8 @@
 #!/bin/bash
 
 export JAVA_HOME=/home.hdd/adrian/jre32
-
-DIR=/home.hdd/adrian/firefox_esr
+export PATH=${JAVA_HOME}/bin:${PATH}
+DIR="/home.hdd/adrian/firefox_esr"
 
 JAVA_PLUG="/usr/java/latest/lib/amd64/libnpjp2.so"
 JAVA_PLUG32="/home.hdd/adrian/jre32/lib/i386/libnpjp2.so"
@@ -11,7 +11,7 @@ PLUG="$HOME/.mozilla/plugins/libnpjp2.so"
 unlink ${PLUG}
 /bin/ln -s ${JAVA_PLUG32} ${PLUG}
 
-${DIR}/run-mozilla.sh ${DIR}/firefox -P esr --new-instance
+${DIR}/firefox -P esr --new-instance
 
 unlink ${PLUG}
 /bin/ln -s ${JAVA_PLUG} ${PLUG}
