@@ -21,6 +21,7 @@
 #
 from __future__ import with_statement
 
+import _thread
 import errno
 import locale
 import optparse
@@ -33,7 +34,6 @@ import sys
 import tarfile
 import tempfile
 import threading
-import _thread
 import time
 import traceback
 import urllib.request
@@ -53,7 +53,7 @@ from contextlib import closing, contextmanager
 from io import BytesIO
 from operator import methodcaller
 from os.path import relpath
-from posixpath import curdir, sep, pardir, join, abspath, commonprefix
+from posixpath import abspath, commonprefix, curdir, join, pardir, sep
 
 INFO = "Dropbox is the easiest way to share and store your files online. Want to learn more? Head to"
 LINK = "https://www.dropbox.com/"
@@ -294,11 +294,9 @@ if GUI_AVAILABLE:
         import gi
         gi.require_version('Gdk', '3.0')
         gi.require_version('Gtk', '3.0')
-        from gi.repository import GObject
-        from gi.repository import Gdk
-        from gi.repository import Gtk
-        from gi.repository import Pango
         import webbrowser
+
+        from gi.repository import Gdk, GObject, Gtk, Pango
 
         GObject.threads_init()
 
