@@ -1,1 +1,0 @@
-ssh -p 60000 -t -o RemoteCommand="tmux attach-session -t ssh_tmux${1} || tmux new-session -s ssh_tmux${1}" adrian@sev.spacescience.ro
