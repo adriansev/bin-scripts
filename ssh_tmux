@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+declare -a ARGS
+read -ra ARGS <<< "${@}"
+DST="${ARGS[-1]}"
+unset 'ARGS[-1]'
+
+exec ssh -t -o RemoteCommand="tmux attach-session -t ssh_${DST} || tmux new-session -s ssh_${DST}" "${ARGS[@]}" "${DST}"
+
