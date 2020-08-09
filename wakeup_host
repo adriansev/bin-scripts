@@ -2,7 +2,7 @@
 
 ARG="${1}"
 
-ping -c 1 ${ARG} || { echo "ping failed"; exit 1; }
+ping -c 1 ${ARG}
 arpline=$(arp -en ${ARG} 2>/dev/null | tail -n +2)
 [[ -z "${arpline}" ]] && { echo "Invalid host/ip !!!"; exit 1; }
 
