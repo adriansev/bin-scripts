@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ARG="${1}"
+
+ping -c 1 ${ARG} || { echo "ping failed"; exit 1; }
+arpline=$(arp -en ${ARG} 2>/dev/null | tail -n +2)
+[[ -z "${arpline}" ]] && { echo "Invalid host/ip !!!"; exit 1; }
+
+##ip=$(awk '{print $1}' <<< "${arpline}" )
+mac=$(awk '{print $3}' <<< "${arpline}" )
+iface=$(awk '{print $5}' <<< "${arpline}" )
+
+sudo ether-wake -i ${iface} ${mac}
+
