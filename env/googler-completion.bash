@@ -10,21 +10,70 @@ _googler () {
     local IFS=$' \n'
     local cur=$2 prev=$3
     local -a opts opts_with_args
-    opts=(-c --tld -C --nocolor -d --debug -h --help --include-git -j --first --lucky --json
-          -l --lang -n --count -N --news --noua --np --noprompt -p --proxy -s --start -t --time
-          -U --upgrade --update -w --site -x --exact --enable-browser-output)
-    opts_with_arg=(-c --tld --colors -l --lang -n --count -p --proxy -s --start -t --time -w --site)
+    opts=(
+        -h --help
+        -s --start
+        -n --count
+        -N --news
+        -V --videos
+        -c --tld
+        -l --lang
+        -x --exact
+        --colorize
+        -C --nocolor
+        --colors
+        -j --first --lucky
+        -t --time
+        --from
+        --to
+        -w --site
+        -e --exclude
+        --unfilter
+        -p --proxy
+        --notweak
+        --json
+        --url-handler
+        --show-browser-logs
+        --np --noprompt
+        -u --upgrade
+        --include-git
+        -v --version
+        -d --debug
+    )
+    opts_with_arg=(
+        -s --start
+        -n --count
+        -c --tld
+        -l --lang
+        --colorize
+        --colors
+        -t --time
+        --from
+        --to
+        -w --site
+        -e --exclude
+        -p --proxy
+        --url-handler
+    )
 
-    # Do not complete non option names
-    [[ $cur == -* ]] || return 1
+    if [[ $cur == -* ]]; then
+        # The current argument is an option -- complete option names.
+        COMPREPLY=( $(compgen -W "${opts[*]}" -- "$cur") )
+    else
+        # Do not complete option arguments; only autocomplete positional
+        # arguments (queries).
+        for opt in "${opts_with_arg[@]}"; do
+            [[ $opt == $prev ]] && return 1
+        done
 
-    # Do not complete when the previous arg is an option expecting an argument
-    for opt in "${opts_with_arg[@]}"; do
-        [[ $opt == $prev ]] && return 1
-    done
+        local completion
+        COMPREPLY=()
+        while IFS= read -r completion; do
+            # Quote spaces for `complete -W wordlist`
+            COMPREPLY+=( "${completion// /\\ }" )
+        done < <(googler --complete "$cur")
+    fi
 
-    # Complete option names
-    COMPREPLY=( $(compgen -W "${opts[*]}" -- "$cur") )
     return 0
 }
 
