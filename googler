@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 #
-# Copyright (C) 2008 Henri Hakkinen
-#
-# Copyright (C) 2015-2016 Arun Prakash Jana <engineerarun@gmail.com>
+# Copyright © 2008 Henri Hakkinen
+# Copyright © 2015-2020 Arun Prakash Jana <engineerarun@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,22 +18,30 @@
 
 import argparse
 import atexit
+import base64
 import collections
+import codecs
 import functools
 import gzip
 import html.entities
 import html.parser
 import http.client
 from http.client import HTTPSConnection
-import socket
-import ssl
+import locale
 import logging
 import os
 import platform
+import shutil
 import signal
+import socket
+import ssl
+from subprocess import Popen, PIPE, DEVNULL
 import sys
 import textwrap
+import unicodedata
 import urllib.parse
+import uuid
+import webbrowser
 
 # Python optional dependency compatibility layer
 try:
@@ -42,28 +49,48 @@ try:
 except ImportError:
     pass
 
-
-# Basic setup
-
 try:
     import setproctitle
     setproctitle.setproctitle('googler')
-except Exception:
+except (ImportError, Exception):
     pass
+
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Match,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+    cast,
+)
+
+# Basic setup
 
 logging.basicConfig(format='[%(levelname)s] %(message)s')
 logger = logging.getLogger()
+
 
 def sigint_handler(signum, frame):
     print('\nInterrupted.', file=sys.stderr)
     sys.exit(1)
 
-signal.signal(signal.SIGINT, sigint_handler)
+try:
+    signal.signal(signal.SIGINT, sigint_handler)
+except ValueError:
+    # signal only works in main thread
+    pass
 
 
 # Constants
 
-_VERSION_ = '2.7'
+_VERSION_ = '4.2'
+_EPOCH_ = '20201001'
 
 COLORMAP = {k: '\x1b[%sm' % v for k, v in {
     'a': '30', 'b': '31', 'c': '32', 'd': '33',
@@ -77,8 +104,9 @@ COLORMAP = {k: '\x1b[%sm' % v for k, v in {
     'x': '0', 'X': '1', 'y': '7', 'Y': '7;1',
 }.items()}
 
-# Disguise as Firefox on Ubuntu
-USER_AGENT = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 Firefox/48.0')
+USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36'
+
+text_browsers = ['elinks', 'links', 'lynx', 'w3m', 'www-browser']
 
 # Self-upgrade parameters
 #
@@ -89,9 +117,1269 @@ USER_AGENT = ('Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:48.0) Gecko/20100101 F
 #
 # before running `make install'.
 
-ENABLE_SELF_UPGRADE_MECHANISM=True
+ENABLE_SELF_UPGRADE_MECHANISM = True
 API_REPO_BASE = 'https://api.github.com/repos/jarun/googler'
 RAW_DOWNLOAD_REPO_BASE = 'https://raw.githubusercontent.com/jarun/googler'
+
+debugger = False
+
+
+# Monkeypatch textwrap for CJK wide characters.
+
+def monkeypatch_textwrap_for_cjk():
+    try:
+        if textwrap.wrap.patched:
+            return
+    except AttributeError:
+        pass
+    psl_textwrap_wrap = textwrap.wrap
+
+    def textwrap_wrap(text, width=70, **kwargs):
+        if width <= 2:
+            width = 2
+        # We first add a U+0000 after each East Asian Fullwidth or East
+        # Asian Wide character, then fill to width - 1 (so that if a NUL
+        # character ends up on a new line, we still have one last column
+        # to spare for the preceding wide character). Finally we strip
+        # all the NUL characters.
+        #
+        # East Asian Width: https://www.unicode.org/reports/tr11/
+        return [
+            line.replace('\0', '')
+            for line in psl_textwrap_wrap(
+                ''.join(
+                    ch + '\0' if unicodedata.east_asian_width(ch) in ('F', 'W') else ch
+                    for ch in unicodedata.normalize('NFC', text)
+                ),
+                width=width - 1,
+                **kwargs
+            )
+        ]
+
+    def textwrap_fill(text, width=70, **kwargs):
+        return '\n'.join(textwrap_wrap(text, width=width, **kwargs))
+
+    textwrap.wrap = textwrap_wrap
+    textwrap.fill = textwrap_fill
+    textwrap.wrap.patched = True
+    textwrap.fill.patched = True
+
+
+monkeypatch_textwrap_for_cjk()
+
+
+CoordinateType = Tuple[int, int]
+
+
+class TrackedTextwrap:
+    """
+    Implements a text wrapper that tracks the position of each source
+    character, and can correctly insert zero-width sequences at given
+    offsets of the source text.
+
+    Wrapping result should be the same as that from PSL textwrap.wrap
+    with default settings except expand_tabs=False.
+    """
+
+    def __init__(self, text: str, width: int):
+        self._original = text
+
+        # Do the job of replace_whitespace first so that we can easily
+        # match text to wrapped lines later. Note that this operation
+        # does not change text length or offsets.
+        whitespace = "\t\n\v\f\r "
+        whitespace_trans = str.maketrans(whitespace, " " * len(whitespace))
+        text = text.translate(whitespace_trans)
+
+        self._lines = textwrap.wrap(
+            text, width, expand_tabs=False, replace_whitespace=False
+        )
+
+        # self._coords track the (row, column) coordinate of each source
+        # character in the result text. It is indexed by offset in
+        # source text.
+        self._coords = []  # type: List[CoordinateType]
+        offset = 0
+        try:
+            if not self._lines:
+                # Source text only has whitespaces. We add an empty line
+                # in order to produce meaningful coordinates.
+                self._lines = [""]
+            for row, line in enumerate(self._lines):
+                assert text[offset : offset + len(line)] == line
+                col = 0
+                for _ in line:
+                    self._coords.append((row, col))
+                    offset += 1
+                    col += 1
+                # All subsequent dropped whitespaces map to the last, imaginary column
+                # (the EOL character if you wish) of the current line.
+                while offset < len(text) and text[offset] == " ":
+                    self._coords.append((row, col))
+                    offset += 1
+            # One past the final character (think of it as EOF) should
+            # be treated as a valid offset.
+            self._coords.append((row, col))
+        except AssertionError:
+            raise RuntimeError(
+                "TrackedTextwrap: the impossible happened at offset {} of text {!r}".format(
+                    offset, self._original
+                )
+            )
+
+    # seq should be a zero-width sequence, e.g., an ANSI escape sequence.
+    # May raise IndexError if offset is out of bounds.
+    def insert_zero_width_sequence(self, seq: str, offset: int) -> None:
+        row, col = self._coords[offset]
+        line = self._lines[row]
+        self._lines[row] = line[:col] + seq + line[col:]
+
+        # Shift coordinates of all characters after the given character
+        # on the same line.
+        shift = len(seq)
+        offset += 1
+        while offset < len(self._coords) and self._coords[offset][0] == row:
+            _, col = self._coords[offset]
+            self._coords[offset] = (row, col + shift)
+            offset += 1
+
+    @property
+    def original(self) -> str:
+        return self._original
+
+    @property
+    def lines(self) -> List[str]:
+        return self._lines
+
+    @property
+    def wrapped(self) -> str:
+        return "\n".join(self._lines)
+
+    # May raise IndexError if offset is out of bounds.
+    def get_coordinate(self, offset: int) -> CoordinateType:
+        return self._coords[offset]
+
+
+### begin dim (DOM implementation with CSS support) ###
+### https://github.com/zmwangx/dim/blob/master/dim.py ###
+
+import html
+import re
+import textwrap
+from collections import OrderedDict
+from enum import Enum
+from html.parser import HTMLParser
+
+
+SelectorGroupLike = Union[str, "SelectorGroup", "Selector"]
+
+
+class Node(object):
+    """
+    Represents a DOM node.
+
+    Parts of JavaScript's DOM ``Node`` API and ``Element`` API are
+    mirrored here, with extensions. In particular, ``querySelector`` and
+    ``querySelectorAll`` are mirrored.
+
+    Notable properties and methods: :meth:`attr()`, :attr:`classes`,
+    :attr:`html`, :attr:`text`, :meth:`ancestors()`,
+    :meth:`descendants()`, :meth:`select()`, :meth:`select_all()`,
+    :meth:`matched_by()`,
+
+    Attributes:
+        tag      (:class:`Optional`\\[:class:`str`])
+        attrs    (:class:`Dict`\\[:class:`str`, :class:`str`])
+        parent   (:class:`Optional`\\[:class:`Node`])
+        children (:class:`List`\\[:class:`Node`])
+    """
+
+    # Meant to be reimplemented by subclasses.
+    def __init__(self) -> None:
+        self.tag = None  # type: Optional[str]
+        self.attrs = {}  # type: Dict[str, str]
+        self.parent = None  # type: Optional[Node]
+        self.children = []  # type: List[Node]
+
+        # Used in DOMBuilder.
+        self._partial = False
+
+    # HTML representation of the node. Meant to be implemented by
+    # subclasses.
+    def __str__(self) -> str:  # pragma: no cover
+        raise NotImplementedError
+
+    def select(self, selector: SelectorGroupLike) -> Optional["Node"]:
+        """DOM ``querySelector`` clone. Returns one match (if any)."""
+        selector = self._normalize_selector(selector)
+        for node in self._select_all(selector):
+            return node
+        return None
+
+    def query_selector(self, selector: SelectorGroupLike) -> Optional["Node"]:
+        """Alias of :meth:`select`."""
+        return self.select(selector)
+
+    def select_all(self, selector: SelectorGroupLike) -> List["Node"]:
+        """DOM ``querySelectorAll`` clone. Returns all matches in a list."""
+        selector = self._normalize_selector(selector)
+        return list(self._select_all(selector))
+
+    def query_selector_all(self, selector: SelectorGroupLike) -> List["Node"]:
+        """Alias of :meth:`select_all`."""
+        return self.select_all(selector)
+
+    def matched_by(
+        self, selector: SelectorGroupLike, root: Optional["Node"] = None
+    ) -> bool:
+        """
+        Checks whether this node is matched by `selector`.
+
+        See :meth:`SelectorGroup.matches()`.
+        """
+        selector = self._normalize_selector(selector)
+        return selector.matches(self, root=root)
+
+    @staticmethod
+    def _normalize_selector(selector: SelectorGroupLike) -> "SelectorGroup":
+        if isinstance(selector, str):
+            return SelectorGroup.from_str(selector)
+        if isinstance(selector, SelectorGroup):
+            return selector
+        if isinstance(selector, Selector):
+            return SelectorGroup([selector])
+        raise ValueError("not a selector or group of selectors: %s" % repr(selector))
+
+    def _select_all(self, selector: "SelectorGroup") -> Generator["Node", None, None]:
+        for descendant in self.descendants():
+            if selector.matches(descendant, root=self):
+                yield descendant
+
+    def child_nodes(self) -> List["Node"]:
+        return self.children
+
+    def first_child(self) -> Optional["Node"]:
+        if self.children:
+            return self.children[0]
+        else:
+            return None
+
+    def first_element_child(self) -> Optional["Node"]:
+        for child in self.children:
+            if isinstance(child, ElementNode):
+                return child
+        return None
+
+    def last_child(self) -> Optional["Node"]:
+        if self.children:
+            return self.children[-1]
+        else:
+            return None
+
+    def last_element_child(self) -> Optional["Node"]:
+        for child in reversed(self.children):
+            if isinstance(child, ElementNode):
+                return child
+        return None
+
+    def next_sibling(self) -> Optional["Node"]:
+        """.. note:: Not O(1), use with caution."""
+        next_siblings = self.next_siblings()
+        if next_siblings:
+            return next_siblings[0]
+        else:
+            return None
+
+    def next_siblings(self) -> List["Node"]:
+        parent = self.parent
+        if not parent:
+            return []
+        try:
+            index = parent.children.index(self)
+            return parent.children[index + 1 :]
+        except ValueError:  # pragma: no cover
+            raise ValueError("node is not found in children of its parent")
+
+    def next_element_sibling(self) -> Optional["ElementNode"]:
+        """.. note:: Not O(1), use with caution."""
+        for sibling in self.next_siblings():
+            if isinstance(sibling, ElementNode):
+                return sibling
+        return None
+
+    def previous_sibling(self) -> Optional["Node"]:
+        """.. note:: Not O(1), use with caution."""
+        previous_siblings = self.previous_siblings()
+        if previous_siblings:
+            return previous_siblings[0]
+        else:
+            return None
+
+    def previous_siblings(self) -> List["Node"]:
+        """
+        Compared to the natural DOM order, the order of returned nodes
+        are reversed. That is, the adjacent sibling (if any) is the
+        first in the returned list.
+        """
+        parent = self.parent
+        if not parent:
+            return []
+        try:
+            index = parent.children.index(self)
+            if index > 0:
+                return parent.children[index - 1 :: -1]
+            else:
+                return []
+        except ValueError:  # pragma: no cover
+            raise ValueError("node is not found in children of its parent")
+
+    def previous_element_sibling(self) -> Optional["ElementNode"]:
+        """.. note:: Not O(1), use with caution."""
+        for sibling in self.previous_siblings():
+            if isinstance(sibling, ElementNode):
+                return sibling
+        return None
+
+    def ancestors(
+        self, *, root: Optional["Node"] = None
+    ) -> Generator["Node", None, None]:
+        """
+        Ancestors are generated in reverse order of depth, stopping at
+        `root`.
+
+        A :class:`RuntimeException` is raised if `root` is not in the
+        ancestral chain.
+        """
+        if self is root:
+            return
+        ancestor = self.parent
+        while ancestor is not root:
+            if ancestor is None:
+                raise RuntimeError("provided root node not found in ancestral chain")
+            yield ancestor
+            ancestor = ancestor.parent
+        if root:
+            yield root
+
+    def descendants(self) -> Generator["Node", None, None]:
+        """Descendants are generated in depth-first order."""
+        for child in self.children:
+            yield child
+            yield from child.descendants()
+
+    def attr(self, attr: str) -> Optional[str]:
+        """Returns the attribute if it exists on the node, otherwise ``None``."""
+        return self.attrs.get(attr)
+
+    @property
+    def html(self) -> str:
+        """
+        HTML representation of the node.
+
+        (For a :class:`TextNode`, :meth:`html` returns the escaped version of the
+        text.
+        """
+        return str(self)
+
+    def outer_html(self) -> str:
+        """Alias of :attr:`html`."""
+        return self.html
+
+    def inner_html(self) -> str:
+        """HTML representation of the node's children."""
+        return "".join(child.html for child in self.children)
+
+    @property
+    def text(self) -> str:  # pragma: no cover
+        """This property is expected to be implemented by subclasses."""
+        raise NotImplementedError
+
+    def text_content(self) -> str:
+        """Alias of :attr:`text`."""
+        return self.text
+
+    @property
+    def classes(self) -> List[str]:
+        return self.attrs.get("class", "").split()
+
+    def class_list(self) -> List[str]:
+        return self.classes
+
+
+class ElementNode(Node):
+    """
+    Represents an element node.
+
+    Note that tag and attribute names are case-insensitive; attribute
+    values are case-sensitive.
+    """
+
+    def __init__(
+        self,
+        tag: str,
+        attrs: Iterable[Tuple[str, Optional[str]]],
+        *,
+        parent: Optional["Node"] = None,
+        children: Optional[Sequence["Node"]] = None
+    ) -> None:
+        Node.__init__(self)
+        self.tag = tag.lower()  # type: str
+        self.attrs = OrderedDict((attr.lower(), val or "") for attr, val in attrs)
+        self.parent = parent
+        self.children = list(children or [])
+
+    def __repr__(self) -> str:
+        s = "<" + self.tag
+        if self.attrs:
+            s += " attrs=%s" % repr(list(self.attrs.items()))
+        if self.children:
+            s += " children=%s" % repr(self.children)
+        s += ">"
+        return s
+
+    # https://ipython.org/ipython-doc/3/api/generated/IPython.lib.pretty.html
+    def _repr_pretty_(self, p: Any, cycle: bool) -> None:  # pragma: no cover
+        if cycle:
+            raise RuntimeError("cycle detected in DOM tree")
+        p.text("<\x1b[1m%s\x1b[0m" % self.tag)
+        if self.attrs:
+            p.text(" attrs=%s" % repr(list(self.attrs.items())))
+        if self.children:
+            p.text(" children=[")
+            if len(self.children) == 1 and isinstance(self.first_child(), TextNode):
+                p.text("\x1b[4m%s\x1b[0m" % repr(self.first_child()))
+            else:
+                with p.indent(2):
+                    for child in self.children:
+                        p.break_()
+                        if hasattr(child, "_repr_pretty_"):
+                            child._repr_pretty_(p, False)  # type: ignore
+                        else:
+                            p.text("\x1b[4m%s\x1b[0m" % repr(child))
+                        p.text(",")
+                p.break_()
+            p.text("]")
+        p.text(">")
+
+    def __str__(self) -> str:
+        """HTML representation of the node."""
+        s = "<" + self.tag
+        for attr, val in self.attrs.items():
+            s += ' %s="%s"' % (attr, html.escape(val))
+        if self.children:
+            s += ">"
+            s += "".join(str(child) for child in self.children)
+            s += "</%s>" % self.tag
+        else:
+            if _tag_is_void(self.tag):
+                s += "/>"
+            else:
+                s += "></%s>" % self.tag
+        return s
+
+    @property
+    def text(self) -> str:
+        """The concatenation of all descendant text nodes."""
+        return "".join(child.text for child in self.children)
+
+
+class TextNode(str, Node):
+    """
+    Represents a text node.
+
+    Subclasses :class:`Node` and :class:`str`.
+    """
+
+    def __new__(cls, text: str) -> "TextNode":
+        s = str.__new__(cls, text)  # type: ignore
+        s.parent = None
+        return s  # type: ignore
+
+    def __init__(self, text: str) -> None:
+        Node.__init__(self)
+
+    def __repr__(self) -> str:
+        return "<%s>" % str.__repr__(self)
+
+    # HTML-escaped form of the text node. use text() for unescaped
+    # version.
+    def __str__(self) -> str:
+        return html.escape(self)
+
+    def __eq__(self, other: object) -> bool:
+        """
+        Two text nodes are equal if and only if they are the same node.
+
+        For string comparison, use :attr:`text`.
+        """
+        return self is other
+
+    def __ne__(self, other: object) -> bool:
+        """
+        Two text nodes are non-equal if they are not the same node.
+
+        For string comparison, use :attr:`text`.
+        """
+        return self is not other
+
+    @property
+    def text(self) -> str:
+        return str.__str__(self)
+
+
+class DOMBuilderException(Exception):
+    """
+    Exception raised when :class:`DOMBuilder` detects a bad state.
+
+    Attributes:
+        pos (:class:`Tuple`\\[:class:`int`, :class:`int`]):
+            Line number and offset in HTML input.
+        why (:class:`str`):
+            Reason of the exception.
+    """
+
+    def __init__(self, pos: Tuple[int, int], why: str) -> None:
+        self.pos = pos
+        self.why = why
+
+    def __str__(self) -> str:  # pragma: no cover
+        return "DOM builder aborted at %d:%d: %s" % (self.pos[0], self.pos[1], self.why)
+
+
+class DOMBuilder(HTMLParser):
+    """
+    HTML parser / DOM builder.
+
+    Subclasses :class:`html.parser.HTMLParser`.
+
+    Consume HTML and builds a :class:`Node` tree. Once finished, use
+    :attr:`root` to access the root of the tree.
+
+    This parser cannot parse malformed HTML with tag mismatch.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._stack = []  # type: List[Node]
+
+    def handle_starttag(
+        self, tag: str, attrs: Sequence[Tuple[str, Optional[str]]]
+    ) -> None:
+        node = ElementNode(tag, attrs)
+        node._partial = True
+        self._stack.append(node)
+        # For void elements, immediately invoke the end tag handler (see
+        # handle_startendtag()).
+        if _tag_is_void(tag):
+            self.handle_endtag(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        children = []
+        while self._stack and not self._stack[-1]._partial:
+            children.append(self._stack.pop())
+        if not self._stack:
+            raise DOMBuilderException(self.getpos(), "extra end tag: %s" % repr(tag))
+        parent = self._stack[-1]
+        if parent.tag != tag:
+            raise DOMBuilderException(
+                self.getpos(),
+                "expecting end tag %s, got %s" % (repr(parent.tag), repr(tag)),
+            )
+        parent.children = list(reversed(children))
+        parent._partial = False
+        for child in children:
+            child.parent = parent
+
+    # Make parser behavior for explicitly and implicitly void elements
+    # (e.g., <hr> vs <hr/>) consistent. The former triggers
+    # handle_starttag only, whereas the latter triggers
+    # handle_startendtag (which by default triggers both handle_starttag
+    # and handle_endtag). See https://www.bugs.python.org/issue25258.
+    def handle_startendtag(
+        self, tag: str, attrs: Sequence[Tuple[str, Optional[str]]]
+    ) -> None:
+        self.handle_starttag(tag, attrs)
+
+    def handle_data(self, text: str) -> None:
+        if not self._stack:
+            # Ignore text nodes before the first tag.
+            return
+        self._stack.append(TextNode(text))
+
+    @property
+    def root(self) -> "Node":
+        """
+        Finishes processing and returns the root node.
+
+        Raises :class:`DOMBuilderException` if there is no root tag or
+        root tag is not closed yet.
+        """
+        if not self._stack:
+            raise DOMBuilderException(self.getpos(), "no root tag")
+        if self._stack[0]._partial:
+            raise DOMBuilderException(self.getpos(), "root tag not closed yet")
+        return self._stack[0]
+
+
+def parse_html(html: str, *, ParserClass: type = DOMBuilder) -> "Node":
+    """
+    Parses HTML string, builds DOM, and returns root node.
+
+    The parser may raise :class:`DOMBuilderException`.
+
+    Args:
+        html: input HTML string
+        ParserClass: :class:`DOMBuilder` or a subclass
+
+    Returns:
+        Root note of the parsed tree. If the HTML string contains
+        multiple top-level elements, only the first is returned and the
+        rest are lost.
+    """
+    builder = ParserClass()  # type: DOMBuilder
+    builder.feed(html)
+    builder.close()
+    return builder.root
+
+
+class SelectorParserException(Exception):
+    """
+    Exception raised when the selector parser fails to parse an input.
+
+    Attributes:
+        s (:class:`str`):
+            The input string to be parsed.
+        cursor (:class:`int`):
+            Cursor position where the failure occurred.
+        why (:class:`str`):
+            Reason of the failure.
+    """
+
+    def __init__(self, s: str, cursor: int, why: str) -> None:
+        self.s = s
+        self.cursor = cursor
+        self.why = why
+
+    def __str__(self) -> str:  # pragma: no cover
+        return "selector parser aborted at character %d of %s: %s" % (
+            self.cursor,
+            repr(self.s),
+            self.why,
+        )
+
+
+class SelectorGroup:
+    """
+    Represents a group of CSS selectors.
+
+    A group of CSS selectors is simply a comma-separated list of
+    selectors. [#]_ See :class:`Selector` documentation for the scope of
+    support.
+
+    Typically, a :class:`SelectorGroup` is constructed from a string
+    (e.g., ``th.center, td.center``) using the factory function
+    :meth:`from_str`.
+
+    .. [#] https://www.w3.org/TR/selectors-3/#grouping
+    """
+
+    def __init__(self, selectors: Iterable["Selector"]) -> None:
+        self._selectors = list(selectors)
+
+    def __repr__(self) -> str:
+        return "<SelectorGroup %s>" % repr(str(self))
+
+    def __str__(self) -> str:
+        return ", ".join(str(selector) for selector in self._selectors)
+
+    def __len__(self) -> int:
+        return len(self._selectors)
+
+    def __getitem__(self, index: int) -> "Selector":
+        return self._selectors[index]
+
+    def __iter__(self) -> Iterator["Selector"]:
+        return iter(self._selectors)
+
+    @classmethod
+    def from_str(cls, s: str) -> "SelectorGroup":
+        """
+        Parses input string into a group of selectors.
+
+        :class:`SelectorParserException` is raised on invalid input. See
+        :class:`Selector` documentation for the scope of support.
+
+        Args:
+            s: input string
+
+        Returns:
+            Parsed group of selectors.
+        """
+        i = 0
+        selectors = []
+        while i < len(s):
+            selector, i = Selector.from_str(s, i)
+            selectors.append(selector)
+        if not selectors:
+            raise SelectorParserException(s, i, "selector group is empty")
+        return cls(selectors)
+
+    def matches(self, node: "Node", root: Optional["Node"] = None) -> bool:
+        """
+        Decides whether the group of selectors matches `node`.
+
+        The group of selectors matches `node` as long as one of the
+        selectors matches `node`.
+
+        If `root` is provided and child and/or descendant combinators
+        are involved, parent/ancestor lookup terminates at `root`.
+        """
+        return any(selector.matches(node, root=root) for selector in self)
+
+
+class Selector:
+    """
+    Represents a CSS selector.
+
+    Recall that a CSS selector is a chain of one or more *sequences of
+    simple selectors* separated by *combinators*. [#selectors-3]_ This
+    concept is represented as a cons list of sequences of simple
+    selectors (in right to left order). This class in fact holds a
+    single sequence, with an optional combinator and reference to the
+    previous sequence.
+
+    For instance, ``main#main p.important.definition >
+    a.term[id][href]`` would be parsed into (schematically) the
+    following structure::
+
+        ">" tag='a' classes=('term') attrs=([id], [href]) ~>
+        " " tag='p' classes=('important', 'definition') ~>
+        tag='main' id='main'
+
+    Each line is held in a separate instance of :class:`Selector`,
+    linked together by the :attr:`previous` attribute.
+
+    Supported grammar (from selectors level 3 [#selectors-3]_):
+
+    - Type selectors;
+    - Universal selectors;
+    - Class selectors;
+    - ID selectors;
+    - Attribute selectors;
+    - Combinators.
+
+    Unsupported grammar:
+
+    - Pseudo-classes;
+    - Pseudo-elements;
+    - Namespace prefixes (``ns|``, ``*|``, ``|``) in any part of any
+      selector.
+
+    Rationale:
+
+    - Pseudo-classes have too many variants, a few of which even
+      complete with an admittedly not-so-complex minilanguage. These add
+      up to a lot of code.
+    - Pseudo-elements are useless outside rendering contexts, hence out of
+      scope.
+    - Namespace support is too niche to be worth the parsing headache.
+      *Using namespace prefixes may confuse the parser!*
+
+    Note that the parser only loosely follows the spec and priotizes
+    ease of parsing (which includes readability and *writability* of
+    regexes), so some invalid selectors may be accepted (in fact, false
+    positives abound, but accepting valid inputs is a much more
+    important goal than rejecting invalid inputs for this library), and
+    some valid selectors may be rejected (but as long as you stick to
+    the scope outlined above and common sense you should be fine; the
+    false negatives shouldn't be used by actual human beings anyway).
+
+    In particular, whitespace character is simplified to ``\\s`` (ASCII
+    mode) despite CSS spec not counting U+000B (VT) as whitespace,
+    identifiers are simplified to ``[\\w-]+`` (ASCII mode), and strings
+    (attribute selector values can be either identifiers or strings)
+    allow escaped quotes (i.e., ``\\'`` inside single-quoted strings and
+    ``\\"`` inside double-quoted strings) but everything else is
+    interpreted literally. The exact specs for CSS identifiers and
+    strings can be found at [#]_.
+
+    Certain selectors and combinators may be implemented in the parser
+    but not implemented in matching and/or selection APIs.
+
+    .. [#selectors-3] https://www.w3.org/TR/selectors-3/
+    .. [#] https://www.w3.org/TR/CSS21/syndata.html
+
+    Attributes:
+        tag (:class:`Optional`\\[:class:`str`]):
+            Type selector.
+        classes (:class:`List`\\[:class:`str`]):
+            Class selectors.
+        id (:class:`Optional`\\[:class:`str`]):
+            ID selector.
+        attrs (:class:`List`\\[:class:`AttributeSelector`]):
+            Attribute selectors.
+        combinator (:class:`Optional`\\[:class:`Combinator`]):
+            Combinator with the previous sequence of simple selectors in
+            chain.
+        previous (:class:`Optional`\\[:class:`Selector`]):
+            Reference to the previous sequence of simple selectors in
+            chain.
+
+    """
+
+    def __init__(
+        self,
+        *,
+        tag: Optional[str] = None,
+        classes: Optional[Sequence[str]] = None,
+        id: Optional[str] = None,
+        attrs: Optional[Sequence["AttributeSelector"]] = None,
+        combinator: Optional["Combinator"] = None,
+        previous: Optional["Selector"] = None
+    ) -> None:
+        self.tag = tag.lower() if tag else None
+        self.classes = list(classes or [])
+        self.id = id
+        self.attrs = list(attrs or [])
+        self.combinator = combinator
+        self.previous = previous
+
+    def __repr__(self) -> str:
+        return "<Selector %s>" % repr(str(self))
+
+    def __str__(self) -> str:
+        sequences = []
+        delimiters = []
+        seq = self
+        while True:
+            sequences.append(seq._sequence_str_())
+            if seq.previous:
+                if seq.combinator == Combinator.DESCENDANT:
+                    delimiters.append(" ")
+                elif seq.combinator == Combinator.CHILD:
+                    delimiters.append(" > ")
+                elif seq.combinator == Combinator.NEXT_SIBLING:
+                    delimiters.append(" + ")
+                elif seq.combinator == Combinator.SUBSEQUENT_SIBLING:
+                    delimiters.append(" ~ ")
+                else:  # pragma: no cover
+                    raise RuntimeError(
+                        "unimplemented combinator: %s" % repr(self.combinator)
+                    )
+                seq = seq.previous
+            else:
+                delimiters.append("")
+                break
+        return "".join(
+            delimiter + sequence
+            for delimiter, sequence in zip(reversed(delimiters), reversed(sequences))
+        )
+
+    # Format a single sequence of simple selectors, without combinator.
+    def _sequence_str_(self) -> str:
+        s = ""
+        if self.tag:
+            s += self.tag
+        if self.classes:
+            s += "".join(".%s" % class_ for class_ in self.classes)
+        if self.id:
+            s += "#%s" % self.id
+        if self.attrs:
+            s += "".join(str(attr) for attr in self.attrs)
+        return s if s else "*"
+
+    @classmethod
+    def from_str(cls, s: str, cursor: int = 0) -> Tuple["Selector", int]:
+        """
+        Parses input string into selector.
+
+        This factory function only parses out one selector (up to a
+        comma or EOS), so partial consumption is allowed --- an optional
+        `cursor` is taken as input (0 by default) and the moved cursor
+        (either after the comma or at EOS) is returned as part of the
+        output.
+
+        :class:`SelectorParserException` is raised on invalid input. See
+        :class:`Selector` documentation for the scope of support.
+
+        If you need to completely consume a string representing
+        (potentially) a group of selectors, use
+        :meth:`SelectorGroup.from_str()`.
+
+        Args:
+            s:      input string
+            cursor: initial cursor position on `s`
+
+        Returns:
+            A tuple containing the parsed selector and the moved the
+            cursor (either after a comma-delimiter, or at EOS).
+        """
+        # Simple selectors.
+        TYPE_SEL = re.compile(r"[\w-]+", re.A)
+        UNIVERSAL_SEL = re.compile(r"\*")
+        ATTR_SEL = re.compile(
+            r"""\[
+            \s*(?P<attr>[\w-]+)\s*
+            (
+                (?P<op>[~|^$*]?=)\s*
+                (
+                    (?P<val_identifier>[\w-]+)|
+                    (?P<val_string>
+                        (?P<quote>['"])
+                        (?P<val_string_inner>.*?)
+                        (?<!\\)(?P=quote)
+                    )
+                )\s*
+            )?
+            \]""",
+            re.A | re.X,
+        )
+        CLASS_SEL = re.compile(r"\.([\w-]+)", re.A)
+        ID_SEL = re.compile(r"#([\w-]+)", re.A)
+        PSEUDO_CLASS_SEL = re.compile(r":[\w-]+(\([^)]+\))?", re.A)
+        PSEUDO_ELEM_SEL = re.compile(r"::[\w-]+", re.A)
+
+        # Combinators
+        DESCENDANT_COM = re.compile(r"\s+")
+        CHILD_COM = re.compile(r"\s*>\s*")
+        NEXT_SIB_COM = re.compile(r"\s*\+\s*")
+        SUB_SIB_COM = re.compile(r"\s*~\s*")
+
+        # Misc
+        WHITESPACE = re.compile(r"\s*")
+        END_OF_SELECTOR = re.compile(r"\s*($|,)")
+
+        tag = None
+        classes = []
+        id = None
+        attrs = []
+        combinator = None
+
+        selector = None
+        previous_combinator = None
+
+        i = cursor
+
+        # Skip leading whitespace
+        m = WHITESPACE.match(s, i)
+        if m:
+            i = m.end()
+
+        while i < len(s):
+            # Parse one simple selector.
+            #
+            # PEP 572 (assignment expressions; the one that burned Guido
+            # so much that he resigned as BDFL) would have been nice; it
+            # would have saved us from all the regex match
+            # reassignments, and worse still, the casts, since mypy
+            # complains about getting Optional[Match[str]] instead of
+            # Match[str].
+            if TYPE_SEL.match(s, i):
+                if tag:
+                    raise SelectorParserException(s, i, "multiple type selectors found")
+                m = cast(Match[str], TYPE_SEL.match(s, i))
+                tag = m.group()
+            elif UNIVERSAL_SEL.match(s, i):
+                m = cast(Match[str], UNIVERSAL_SEL.match(s, i))
+            elif ATTR_SEL.match(s, i):
+                m = cast(Match[str], ATTR_SEL.match(s, i))
+
+                attr = m.group("attr")
+                op = m.group("op")
+                val_identifier = m.group("val_identifier")
+                quote = m.group("quote")
+                val_string_inner = m.group("val_string_inner")
+                if val_identifier is not None:
+                    val = val_identifier
+                elif val_string_inner is not None:
+                    val = val_string_inner.replace("\\" + quote, quote)
+                else:
+                    val = None
+
+                if op is None:
+                    type = AttributeSelectorType.BARE
+                elif op == "=":
+                    type = AttributeSelectorType.EQUAL
+                elif op == "~=":
+                    type = AttributeSelectorType.TILDE
+                elif op == "|=":
+                    type = AttributeSelectorType.PIPE
+                elif op == "^=":
+                    type = AttributeSelectorType.CARET
+                elif op == "$=":
+                    type = AttributeSelectorType.DOLLAR
+                elif op == "*=":
+                    type = AttributeSelectorType.ASTERISK
+                else:  # pragma: no cover
+                    raise SelectorParserException(
+                        s,
+                        i,
+                        "unrecognized operator %s in attribute selector" % repr(op),
+                    )
+
+                attrs.append(AttributeSelector(attr, val, type))
+            elif CLASS_SEL.match(s, i):
+                m = cast(Match[str], CLASS_SEL.match(s, i))
+                classes.append(m.group(1))
+            elif ID_SEL.match(s, i):
+                if id:
+                    raise SelectorParserException(s, i, "multiple id selectors found")
+                m = cast(Match[str], ID_SEL.match(s, i))
+                id = m.group(1)
+            elif PSEUDO_CLASS_SEL.match(s, i):
+                raise SelectorParserException(s, i, "pseudo-classes not supported")
+            elif PSEUDO_ELEM_SEL.match(s, i):
+                raise SelectorParserException(s, i, "pseudo-elements not supported")
+            else:
+                raise SelectorParserException(
+                    s, i, "expecting simple selector, found none"
+                )
+            i = m.end()
+
+            # Try to parse a combinator, or end the selector.
+            if CHILD_COM.match(s, i):
+                m = cast(Match[str], CHILD_COM.match(s, i))
+                combinator = Combinator.CHILD
+            elif NEXT_SIB_COM.match(s, i):
+                m = cast(Match[str], NEXT_SIB_COM.match(s, i))
+                combinator = Combinator.NEXT_SIBLING
+            elif SUB_SIB_COM.match(s, i):
+                m = cast(Match[str], SUB_SIB_COM.match(s, i))
+                combinator = Combinator.SUBSEQUENT_SIBLING
+            elif END_OF_SELECTOR.match(s, i):
+                m = cast(Match[str], END_OF_SELECTOR.match(s, i))
+                combinator = None
+            # Need to parse descendant combinator at the very end
+            # because it could be a prefix to all previous cases.
+            elif DESCENDANT_COM.match(s, i):
+                m = cast(Match[str], DESCENDANT_COM.match(s, i))
+                combinator = Combinator.DESCENDANT
+            else:
+                continue
+            i = m.end()
+
+            if combinator and i == len(s):
+                raise SelectorParserException(s, i, "unexpected end at combinator")
+
+            selector = cls(
+                tag=tag,
+                classes=classes,
+                id=id,
+                attrs=attrs,
+                combinator=previous_combinator,
+                previous=selector,
+            )
+            previous_combinator = combinator
+
+            # End of selector.
+            if combinator is None:
+                break
+
+            tag = None
+            classes = []
+            id = None
+            attrs = []
+            combinator = None
+
+        if not selector:
+            raise SelectorParserException(s, i, "selector is empty")
+
+        return selector, i
+
+    def matches(self, node: "Node", root: Optional["Node"] = None) -> bool:
+        """
+        Decides whether the selector matches `node`.
+
+        Each sequence of simple selectors in the selector's chain must
+        be matched for a positive.
+
+        If `root` is provided and child and/or descendant combinators
+        are involved, parent/ancestor lookup terminates at `root`.
+        """
+        if self.tag:
+            if not node.tag or node.tag != self.tag:
+                return False
+        if self.id:
+            if node.attrs.get("id") != self.id:
+                return False
+        if self.classes:
+            classes = node.classes
+            for class_ in self.classes:
+                if class_ not in classes:
+                    return False
+        if self.attrs:
+            for attr_selector in self.attrs:
+                if not attr_selector.matches(node):
+                    return False
+
+        if not self.previous:
+            return True
+
+        if self.combinator == Combinator.DESCENDANT:
+            return any(
+                self.previous.matches(ancestor, root=root)
+                for ancestor in node.ancestors()
+            )
+        elif self.combinator == Combinator.CHILD:
+            if node is root or node.parent is None:
+                return False
+            else:
+                return self.previous.matches(node.parent)
+        elif self.combinator == Combinator.NEXT_SIBLING:
+            sibling = node.previous_element_sibling()
+            if not sibling:
+                return False
+            else:
+                return self.previous.matches(sibling)
+        elif self.combinator == Combinator.SUBSEQUENT_SIBLING:
+            return any(
+                self.previous.matches(sibling, root=root)
+                for sibling in node.previous_siblings()
+                if isinstance(sibling, ElementNode)
+            )
+        else:  # pragma: no cover
+            raise RuntimeError("unimplemented combinator: %s" % repr(self.combinator))
+
+
+class AttributeSelector:
+    """
+    Represents an attribute selector.
+
+    Attributes:
+        attr (:class:`str`)
+        val  (:class:`Optional`\\[:class:`str`])
+        type (:class:`AttributeSelectorType`)
+    """
+
+    def __init__(
+        self, attr: str, val: Optional[str], type: "AttributeSelectorType"
+    ) -> None:
+        self.attr = attr.lower()
+        self.val = val
+        self.type = type
+
+    def __repr__(self) -> str:
+        return "<AttributeSelector %s>" % repr(str(self))
+
+    def __str__(self) -> str:
+        if self.type == AttributeSelectorType.BARE:
+            fmt = "[{attr}{val:.0}]"
+        elif self.type == AttributeSelectorType.EQUAL:
+            fmt = "[{attr}={val}]"
+        elif self.type == AttributeSelectorType.TILDE:
+            fmt = "[{attr}~={val}]"
+        elif self.type == AttributeSelectorType.PIPE:
+            fmt = "[{attr}|={val}]"
+        elif self.type == AttributeSelectorType.CARET:
+            fmt = "[{attr}^={val}]"
+        elif self.type == AttributeSelectorType.DOLLAR:
+            fmt = "[{attr}$={val}]"
+        elif self.type == AttributeSelectorType.ASTERISK:
+            fmt = "[{attr}*={val}]"
+        return fmt.format(attr=self.attr, val=repr(self.val))
+
+    def matches(self, node: "Node") -> bool:
+        val = node.attrs.get(self.attr)
+        if val is None:
+            return False
+        if self.type == AttributeSelectorType.BARE:
+            return True
+        elif self.type == AttributeSelectorType.EQUAL:
+            return val == self.val
+        elif self.type == AttributeSelectorType.TILDE:
+            return self.val in val.split()
+        elif self.type == AttributeSelectorType.PIPE:
+            return val == self.val or val.startswith("%s-" % self.val)
+        elif self.type == AttributeSelectorType.CARET:
+            return bool(self.val and val.startswith(self.val))
+        elif self.type == AttributeSelectorType.DOLLAR:
+            return bool(self.val and val.endswith(self.val))
+        elif self.type == AttributeSelectorType.ASTERISK:
+            return bool(self.val and self.val in val)
+        else:  # pragma: no cover
+            raise RuntimeError("unimplemented attribute selector: %s" % repr(self.type))
+
+
+# Enum: basis for poor man's algebraic data type.
+class AttributeSelectorType(Enum):
+    """
+    Attribute selector types.
+
+    Members correspond to the following forms of attribute selector:
+
+    - :attr:`BARE`: ``[attr]``;
+    - :attr:`EQUAL`: ``[attr=val]``;
+    - :attr:`TILDE`: ``[attr~=val]``;
+    - :attr:`PIPE`: ``[attr|=val]``;
+    - :attr:`CARET`: ``[attr^=val]``;
+    - :attr:`DOLLAR`: ``[attr$=val]``;
+    - :attr:`ASTERISK`: ``[attr*=val]``.
+    """
+
+    # [attr]
+    BARE = 1
+    # [attr=val]
+    EQUAL = 2
+    # [attr~=val]
+    TILDE = 3
+    # [attr|=val]
+    PIPE = 4
+    # [attr^=val]
+    CARET = 5
+    # [attr$=val]
+    DOLLAR = 6
+    # [attr*=val]
+    ASTERISK = 7
+
+
+class Combinator(Enum):
+    """
+    Combinator types.
+
+    Members correspond to the following combinators:
+
+    - :attr:`DESCENDANT`: ``A B``;
+    - :attr:`CHILD`: ``A > B``;
+    - :attr:`NEXT_SIBLING`: ``A + B``;
+    - :attr:`SUBSEQUENT_SIBLING`: ``A ~ B``.
+    """
+
+    # ' '
+    DESCENDANT = 1
+    # >
+    CHILD = 2
+    # +
+    NEXT_SIBLING = 3
+    # ~
+    SUBSEQUENT_SIBLING = 4
+
+
+def _tag_is_void(tag: str) -> bool:
+    """
+    Checks whether the tag corresponds to a void element.
+
+    https://www.w3.org/TR/html5/syntax.html#void-elements
+    https://html.spec.whatwg.org/multipage/syntax.html#void-elements
+    """
+    return tag.lower() in (
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    )
+
+### end dim ###
 
 
 # Global helper functions
@@ -99,32 +1387,61 @@ RAW_DOWNLOAD_REPO_BASE = 'https://raw.githubusercontent.com/jarun/googler'
 def open_url(url):
     """Open an URL in the user's default web browser.
 
+    The string attribute ``open_url.url_handler`` can be used to open URLs
+    in a custom CLI script or utility. A subprocess is spawned with url as
+    the parameter in this case instead of the usual webbrowser.open() call.
+
     Whether the browser's output (both stdout and stderr) are suppressed
     depends on the boolean attribute ``open_url.suppress_browser_output``.
     If the attribute is not set upon a call, set it to a default value,
     which means False if BROWSER is set to a known text-based browser --
-    elinks, links, lynx or w3m; or True otherwise.
+    elinks, links, lynx, w3m or 'www-browser'; or True otherwise.
+
+    The string attribute ``open_url.override_text_browser`` can be used to
+    ignore env var BROWSER as well as some known text-based browsers and
+    attempt to open url in a GUI browser available.
+    Note: If a GUI browser is indeed found, this option ignores the program
+          option `show-browser-logs`
     """
-    if not hasattr(open_url, 'suppress_browser_output'):
-        open_url.suppress_browser_output = (os.getenv('BROWSER') not in
-                                            ['elinks', 'links', 'lynx', 'w3m'])
     logger.debug('Opening %s', url)
+
+    # Custom URL handler gets max priority
+    if hasattr(open_url, 'url_handler'):
+        p = Popen([open_url.url_handler, url], stdin=PIPE)
+        p.communicate()
+        return
+
+    browser = webbrowser.get()
+    if open_url.override_text_browser:
+        browser_output = open_url.suppress_browser_output
+        for name in [b for b in webbrowser._tryorder if b not in text_browsers]:
+            browser = webbrowser.get(name)
+            logger.debug(browser)
+
+            # Found a GUI browser, suppress browser output
+            open_url.suppress_browser_output = True
+            break
+
     if open_url.suppress_browser_output:
         _stderr = os.dup(2)
         os.close(2)
         _stdout = os.dup(1)
-        os.close(1)
+        # Patch for GUI browsers on WSL
+        if "microsoft" not in platform.uname()[3].lower():
+            os.close(1)
         fd = os.open(os.devnull, os.O_RDWR)
         os.dup2(fd, 2)
         os.dup2(fd, 1)
     try:
-        import webbrowser
-        webbrowser.open(url)
+        browser.open(url, new=2)
     finally:
         if open_url.suppress_browser_output:
             os.close(fd)
             os.dup2(_stderr, 2)
             os.dup2(_stdout, 1)
+
+    if open_url.override_text_browser:
+        open_url.suppress_browser_output = browser_output
 
 
 def printerr(msg):
@@ -135,43 +1452,156 @@ def printerr(msg):
     print(msg, file=sys.stderr)
 
 
+def unwrap(text):
+    """Unwrap text."""
+    lines = text.split('\n')
+    result = ''
+    for i in range(len(lines) - 1):
+        result += lines[i]
+        if not lines[i]:
+            # Paragraph break
+            result += '\n\n'
+        elif lines[i + 1]:
+            # Next line is not paragraph break, add space
+            result += ' '
+    # Handle last line
+    result += lines[-1] if lines[-1] else '\n'
+    return result
+
+
+def check_stdout_encoding():
+    """Make sure stdout encoding is utf-8.
+
+    If not, print error message and instructions, then exit with
+    status 1.
+
+    This function is a no-op on win32 because encoding on win32 is
+    messy, and let's just hope for the best. /s
+    """
+    if sys.platform == 'win32':
+        return
+
+    # Use codecs.lookup to resolve text encoding alias
+    encoding = codecs.lookup(sys.stdout.encoding).name
+    if encoding != 'utf-8':
+        locale_lang, locale_encoding = locale.getlocale()
+        if locale_lang is None:
+            locale_lang = '<unknown>'
+        if locale_encoding is None:
+            locale_encoding = '<unknown>'
+        ioencoding = os.getenv('PYTHONIOENCODING', 'not set')
+        sys.stderr.write(unwrap(textwrap.dedent("""\
+        stdout encoding '{encoding}' detected. googler requires utf-8 to
+        work properly. The wrong encoding may be due to a non-UTF-8
+        locale or an improper PYTHONIOENCODING. (For the record, your
+        locale language is {locale_lang} and locale encoding is
+        {locale_encoding}; your PYTHONIOENCODING is {ioencoding}.)
+
+        Please set a UTF-8 locale (e.g., en_US.UTF-8) or set
+        PYTHONIOENCODING to utf-8.
+        """.format(
+            encoding=encoding,
+            locale_lang=locale_lang,
+            locale_encoding=locale_encoding,
+            ioencoding=ioencoding,
+        ))))
+        sys.exit(1)
+
+
 # Classes
 
-class TLS1_2Connection(HTTPSConnection):
+class HardenedHTTPSConnection(HTTPSConnection):
     """Overrides HTTPSConnection.connect to specify TLS version
 
     NOTE: TLS 1.2 is supported from Python 3.4
     """
 
-    def __init__(self, host, **kwargs):
+    def __init__(self, host, address_family=0, **kwargs):
         HTTPSConnection.__init__(self, host, **kwargs)
+        self.address_family = address_family
 
-    def connect(self):
-        sock = socket.create_connection((self.host, self.port),
-                self.timeout, self.source_address)
+    def connect(self, notweak=False):
+        sock = self.create_socket_connection()
 
         # Optimizations not available on OS X
-        if platform.system() == 'Linux':
-            sock.setsockopt(socket.SOL_TCP, socket.TCP_DEFER_ACCEPT, 1)
-            sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
-            sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,524288)
+        if not notweak and sys.platform.startswith('linux'):
+            try:
+                sock.setsockopt(socket.SOL_TCP, socket.TCP_DEFER_ACCEPT, 1)
+                sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_QUICKACK, 1)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 524288)
+            except OSError:
+                # Doesn't work on Windows' Linux subsystem (#179)
+                logger.debug('setsockopt failed')
 
         if getattr(self, '_tunnel_host', None):
             self.sock = sock
-            self._tunnel()
-            HTTPSConnection.connect(self)
-        elif sys.version_info >= (3,4):
-            # Use TLS 1.2
-            self.sock = ssl.wrap_socket(sock, self.key_file, self.cert_file,
-                    ssl_version=ssl.PROTOCOL_TLSv1_2)
+        elif not notweak:
+            # Try to use TLS 1.2
+            ssl_context = None
+            if hasattr(ssl, 'PROTOCOL_TLS'):
+                # Since Python 3.5.3
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
+                if hasattr(ssl_context, "minimum_version"):
+                    # Python 3.7 with OpenSSL 1.1.0g or later
+                    ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+                else:
+                    ssl_context.options |= (ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
+                                            ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1)
+            elif hasattr(ssl, 'PROTOCOL_TLSv1_2'):
+                # Since Python 3.4
+                ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+            if ssl_context:
+                self.sock = ssl_context.wrap_socket(sock)
+                return
+
+        # Fallback
+        HTTPSConnection.connect(self)
+
+    # Adapted from socket.create_connection.
+    # https://github.com/python/cpython/blob/bce4ddafdd188cc6deb1584728b67b9e149ca6a4/Lib/socket.py#L771-L813
+    def create_socket_connection(self):
+        err = None
+        results = socket.getaddrinfo(self.host, self.port, self.address_family, socket.SOCK_STREAM)
+        # Prefer IPv4 if address family isn't explicitly specified.
+        if self.address_family == 0:
+            results = sorted(results, key=lambda res: 1 if res[0] == socket.AF_INET else 2)
+        for af, socktype, proto, canonname, sa in results:
+            sock = None
+            try:
+                sock = socket.socket(af, socktype, proto)
+                if self.timeout is not None:
+                    sock.settimeout(self.timeout)
+                if self.source_address:
+                    sock.bind(self.source_address)
+                sock.connect(sa)
+                # Break explicitly a reference cycle
+                err = None
+                self.address_family = af
+                logger.debug('Opened socket to %s:%d',
+                             sa[0] if af == socket.AF_INET else ('[%s]' % sa[0]),
+                             sa[1])
+                return sock
+
+            except socket.error as _:
+                err = _
+                if sock is not None:
+                    sock.close()
+
+        if err is not None:
+            try:
+                raise err
+            finally:
+                # Break explicitly a reference cycle
+                err = None
         else:
-            HTTPSConnection.connect(self)
+            raise socket.error("getaddrinfo returns an empty list")
+
 
 class GoogleUrl(object):
     """
     This class constructs the Google Search/News URL.
 
-    This class is modeled on urllib.parse.ParseResult for familiarity,
+    This class is modelled on urllib.parse.ParseResult for familiarity,
     which means it supports reading of all six attributes -- scheme,
     netloc, path, params, query, fragment -- of
     urllib.parse.ParseResult, as well as the geturl() method.
@@ -195,6 +1625,8 @@ class GoogleUrl(object):
     keywords : str or list of strs
         Read-write property.
     news : bool
+        Read-only property.
+    videos : bool
         Read-only property.
     url : str
         Read-only property.
@@ -224,11 +1656,21 @@ class GoogleUrl(object):
         self._num = 10
         self._start = 0
         self._keywords = []
-        self._site = None
+        self._sites = None
+        self._exclude = None
+
         self._query_dict = {
             'ie': 'UTF-8',
             'oe': 'UTF-8',
+            #'gbv': '1',  # control the presence of javascript on the page, 1=no js, 2=js
+            'sei': base64.encodebytes(uuid.uuid4().bytes).decode("ascii").rstrip('=\n').replace('/', '_'),
         }
+
+        # In preloaded HTML parsing mode, set keywords to something so
+        # that we are not tripped up by require_keywords.
+        if opts.html_file and not opts.keywords:
+            opts.keywords = ['<debug>']
+
         self.update(opts, **kwargs)
 
     def __str__(self):
@@ -261,6 +1703,11 @@ class GoogleUrl(object):
     def news(self):
         """Whether the URL is for Google News."""
         return 'tbm' in self._query_dict and self._query_dict['tbm'] == 'nws'
+
+    @property
+    def videos(self):
+        """Whether the URL is for Google Videos."""
+        return 'tbm' in self._query_dict and self._query_dict['tbm'] == 'vid'
 
     def full(self):
         """Return the full URL.
@@ -311,10 +1758,12 @@ class GoogleUrl(object):
                 keywords: str or list of strs
                 lang: str
                 news: bool
+                videos: bool
                 num: int
                 site: str
                 start: int
                 tld: str
+                unfilter: bool
 
         Other Parameters
         ----------------
@@ -332,30 +1781,41 @@ class GoogleUrl(object):
         opts.update(kwargs)
 
         qd = self._query_dict
-        if 'duration' in opts and opts['duration']:
+        if opts.get('duration'):
             qd['tbs'] = 'qdr:%s' % opts['duration']
         if 'exact' in opts:
             if opts['exact']:
                 qd['nfpr'] = 1
             else:
                 qd.pop('nfpr', None)
+        if opts.get('from') or opts.get('to'):
+            cd_min = opts.get('from') or ''
+            cd_max = opts.get('to') or ''
+            qd['tbs'] = 'cdr:1,cd_min:%s,cd_max:%s' % (cd_min, cd_max)
         if 'keywords' in opts:
             self._keywords = opts['keywords']
         if 'lang' in opts and opts['lang']:
             qd['hl'] = opts['lang']
-        if 'news' in opts:
-            if opts['news']:
-                qd['tbm'] = 'nws'
-            else:
-                qd.pop('tbm', None)
+        if 'geoloc' in opts and opts['geoloc']:
+            qd['gl'] = opts['geoloc']
+        if 'news' in opts and opts['news']:
+            qd['tbm'] = 'nws'
+        elif 'videos' in opts and opts['videos']:
+            qd['tbm'] = 'vid'
+        else:
+            qd.pop('tbm', None)
         if 'num' in opts:
             self._num = opts['num']
-        if 'site' in opts:
-            self._site = opts['site']
+        if 'sites' in opts:
+            self._sites = opts['sites']
+        if 'exclude' in opts:
+            self._exclude = opts['exclude']
         if 'start' in opts:
             self._start = opts['start']
         if 'tld' in opts:
             self._tld = opts['tld']
+        if 'unfilter' in opts and opts['unfilter']:
+            qd['filter'] = 0
 
     def set_queries(self, **kwargs):
         """Forcefully set queries outside the normal `update` mechanism.
@@ -422,7 +1882,7 @@ class GoogleUrl(object):
             raise ValueError('Already at the first page.')
         self._start = 0
 
-    # Data source: https://en.wikipedia.org/wiki/List_of_Google_domains
+    # Data source: https://web.archive.org/web/20170615200243/https://en.wikipedia.org/wiki/List_of_Google_domains
     # Scraper script: https://gist.github.com/zmwangx/b976e83c14552fe18b71
     TLD_TO_DOMAIN_MAP = {
         'ac': 'google.ac',      'ad': 'google.ad',      'ae': 'google.ae',
@@ -506,22 +1966,27 @@ class GoogleUrl(object):
         """The query string."""
         qd = {}
         qd.update(self._query_dict)
-        qd['num'] = self._num
-        qd['start'] = self._start
+        if self._num != 10:  # Skip sending the default
+            qd['num'] = self._num
+        if self._start:  # Skip sending the default
+            qd['start'] = self._start
 
         # Construct the q query
         q = ''
         keywords = self._keywords
+        sites = self._sites
+        exclude = self._exclude
         if keywords:
             if isinstance(keywords, list):
-                q += '+'.join([urllib.parse.quote_plus(kw) for kw in keywords])
+                q += '+'.join(urllib.parse.quote_plus(kw) for kw in keywords)
             else:
                 q += urllib.parse.quote_plus(keywords)
-        if self._site:
-            q += '+site:' + urllib.parse.quote_plus(self._site)
+        if sites:
+            q += '+OR'.join('+site:' + urllib.parse.quote_plus(site) for site in sites)
+        if exclude:
+            q += ''.join('+-site:' + urllib.parse.quote_plus(e) for e in exclude)
         qd['q'] = q
-
-        return '&'.join(['%s=%s' % (k, qd[k]) for k in sorted(qd.keys())])
+        return '&'.join('%s=%s' % (k, qd[k]) for k in sorted(qd.keys()))
 
 
 class GoogleConnectionError(Exception):
@@ -556,10 +2021,12 @@ class GoogleConnection(object):
 
     """
 
-    def __init__(self, host, port=None, timeout=45, proxy=None):
+    def __init__(self, host, port=None, address_family=0, timeout=45, proxy=None, notweak=False):
         self._host = None
         self._port = None
+        self._address_family = address_family
         self._proxy = proxy
+        self._notweak = notweak
         self._conn = None
         self.new_connection(host, port=port, timeout=timeout)
         self.cookie = ''
@@ -594,23 +2061,33 @@ class GoogleConnection(object):
         host_display = host + (':%d' % port if port else '')
 
         proxy = self._proxy
-        if proxy:
-            logger.debug('Connecting to proxy server %s', proxy)
-            self._conn = TLS1_2Connection(proxy, timeout=timeout)
 
-            logger.debug('Tunneling to host %s' % host_display)
-            self._conn.set_tunnel(host, port=port)
+        if proxy:
+            proxy_user_passwd, proxy_host_port = parse_proxy_spec(proxy)
+
+            logger.debug('Connecting to proxy server %s', proxy_host_port)
+            self._conn = HardenedHTTPSConnection(proxy_host_port,
+                                                 address_family=self._address_family, timeout=timeout)
+
+            logger.debug('Tunnelling to host %s' % host_display)
+            connect_headers = {}
+            if proxy_user_passwd:
+                connect_headers['Proxy-Authorization'] = 'Basic %s' % base64.b64encode(
+                    proxy_user_passwd.encode('utf-8')
+                ).decode('utf-8')
+            self._conn.set_tunnel(host, port=port, headers=connect_headers)
 
             try:
-                self._conn.connect()
+                self._conn.connect(self._notweak)
             except Exception as e:
                 msg = 'Failed to connect to proxy server %s: %s.' % (proxy, e)
                 raise GoogleConnectionError(msg)
         else:
             logger.debug('Connecting to new host %s', host_display)
-            self._conn = TLS1_2Connection(host, port=port, timeout=timeout)
+            self._conn = HardenedHTTPSConnection(host, port=port,
+                                                 address_family=self._address_family, timeout=timeout)
             try:
-                self._conn.connect()
+                self._conn.connect(self._notweak)
             except Exception as e:
                 msg = 'Failed to connect to %s: %s.' % (host_display, e)
                 raise GoogleConnectionError(msg)
@@ -626,8 +2103,8 @@ class GoogleConnection(object):
     def fetch_page(self, url):
         """Fetch a URL.
 
-        Allows one reconnection and one redirection before failing and
-        raising GoogleConnectionError.
+        Allows one reconnection and multiple redirections before failing
+        and raising GoogleConnectionError.
 
         Parameters
         ----------
@@ -639,7 +2116,7 @@ class GoogleConnection(object):
         GoogleConnectionError
             When not getting HTTP 200 even after the allowed one
             reconnection and/or one redirection, or when Google is
-            blocking query due to unsual activity.
+            blocking query due to unusual activity.
 
         Returns
         -------
@@ -660,12 +2137,32 @@ class GoogleConnection(object):
                 raise GoogleConnectionError("Failed to get '%s'." % url)
 
         resp = self._resp
-        if resp.status in {301, 302, 303, 307, 308}:
-            redirection_url = resp.getheader('location', '')
-            if 'sorry/IndexRedirect?' in redirection_url:
-                raise GoogleConnectionError('Connection blocked due to unusual activity.')
-            self._redirect(redirection_url)
-            resp = self._resp
+        redirect_counter = 0
+        while resp.status != 200 and redirect_counter < 3:
+            if resp.status in {301, 302, 303, 307, 308}:
+                redirection_url = resp.getheader('location', '')
+                if 'sorry/IndexRedirect?' in redirection_url or 'sorry/index?' in redirection_url:
+                    msg = "Connection blocked due to unusual activity.\n"
+                    if self._conn.address_family == socket.AF_INET6:
+                        msg += textwrap.dedent("""\
+                        You are connecting over IPv6 which is likely the problem. Try to make
+                        sure the machine has a working IPv4 network interface configured.
+                        See also the -4, --ipv4 option of googler.\n""")
+                    msg += textwrap.dedent("""\
+                    THIS IS NOT A BUG, please do NOT report it as a bug unless you have specific
+                    information that may lead to the development of a workaround.
+                    You IP address is temporarily or permanently blocked by Google and requires
+                    reCAPTCHA-solving to use the service, which googler is not capable of.
+                    Possible causes include issuing too many queries in a short time frame, or
+                    operating from a shared / low reputation IP with a history of abuse.
+                    Please do NOT use googler for automated scraping.""")
+                    msg = " ".join(msg.splitlines())
+                    raise GoogleConnectionError(msg)
+                self._redirect(redirection_url)
+                resp = self._resp
+                redirect_counter += 1
+            else:
+                break
 
         if resp.status != 200:
             raise GoogleConnectionError('Got HTTP %d: %s' % (resp.status, resp.reason))
@@ -726,6 +2223,7 @@ class GoogleConnection(object):
         """
         logger.debug('Fetching URL %s', url)
         self._conn.request('GET', url, None, {
+            'Accept': 'text/html',
             'Accept-Encoding': 'gzip',
             'User-Agent': USER_AGENT,
             'Cookie': self.cookie,
@@ -735,7 +2233,7 @@ class GoogleConnection(object):
         self._resp = self._conn.getresponse()
         if self.cookie == '':
             complete_cookie = self._resp.getheader('Set-Cookie')
-            # Cookie won't be available is already blocked
+            # Cookie won't be available if already blocked
             if complete_cookie is not None:
                 self.cookie = complete_cookie[:complete_cookie.find(';')]
                 logger.debug('Cookie: %s' % self.cookie)
@@ -746,610 +2244,188 @@ class GoogleConnection(object):
             self._conn.close()
 
 
-def annotate_tag(annotated_starttag_handler):
-    # See parser logic within the GoogleParser class for documentation.
-    #
-    # In particular, search for "Ignore List" to view detailed
-    # documentation of the ignore list.
-    #
-    # annotated_starttag_handler(self, tag: str, attrsdict: dict) -> annotation
-    # Returns: HTMLParser.handle_starttag(self, tag: str, attrs: list) -> None
+class GoogleParser(object):
 
-    def handler(self, tag, attrs):
-        # Get context; assumes that the handler is called SCOPE_start
-        context = annotated_starttag_handler.__name__[:-6]
-
-        # If context is 'ignore', ignore all tests
-        if context == 'ignore':
-            self.insert_annotation(tag, None)
-            return
-
-        attrs = dict(attrs)
-
-        # Compare against ignore list
-        ignored = False
-        for selector in self.IGNORE_LIST:
-            for attr in selector:
-                if attr == 'tag':
-                    if tag != selector['tag']:
-                        break
-                elif attr == 'class':
-                    tag_classes = set(self.classes(attrs))
-                    selector_classes = set(self.classes(selector))
-                    if not selector_classes.issubset(tag_classes):
-                        break
-                else:
-                    if attrs[attr] != selector[attr]:
-                        break
-            else:
-                # Passed all criterions of the selector
-                ignored = True
-                break
-
-        # If tag matches ignore list, annotate and hand over to ignore_*
-        if ignored:
-            self.insert_annotation(tag, context + '_ignored')
-            self.set_handlers_to('ignore')
-            return
-
-        # Standard
-        annotation = annotated_starttag_handler(self, tag, attrs)
-        self.insert_annotation(tag, annotation)
-
-    return handler
-
-def retrieve_tag_annotation(annotated_endtag_handler):
-    # See parser logic within the GoogleParser class for documentation.
-    #
-    # annotated_endtag_handler(self, tag: str, annotation) -> None
-    # Returns: HTMLParser.handle_endtag(self, tag: str) -> None
-
-    def handler(self, tag):
-        try:
-            annotation = self.tag_annotations[tag].pop()
-        except IndexError:
-            # Malformed HTML -- more close tags than open tags
-            annotation = None
-        annotated_endtag_handler(self, tag, annotation)
-
-    return handler
-
-class GoogleParser(html.parser.HTMLParser):
-    """The members of this class parse the result
-    HTML page fetched from Google server for a query.
-
-    The custom parser looks for tags enclosing search
-    results and extracts the URL, title and text for
-    each search result.
-
-    After parsing the complete HTML page results are
-    returned in a list of objects of class Result.
-    """
-
-    # Parser logic:
-    #
-    # - Guiding principles:
-    #
-    #   1. Tag handlers are contextual;
-    #
-    #   2. Contexual starttag and endtag handlers should come in pairs
-    #      and have a clear hierarchy;
-    #
-    #   3. Starttag handlers should only yield control to a pair of
-    #      child handlers (that is, one level down the hierachy), and
-    #      correspondingly, endtag handlers should only return control
-    #      to the parent (that is, the pair of handlers that gave it
-    #      control in the first place).
-    #
-    #   Principle 3 is meant to enforce a (possibly implicit) stack
-    #   structure and thus prevent careless jumps that result in what's
-    #   essentially spaghetti code with liberal use of GOTOs.
-    #
-    # - HTMLParser.handle_endtag gives us a bare tag name without
-    #   context, which is not good for enforcing principle 3 when we
-    #   have, say, nested div tags.
-    #
-    #   In order to precisely identify the matching opening tag, we
-    #   maintain a stack for each tag name with *annotations*. Important
-    #   opening tags (e.g., the ones where child handlers are
-    #   registered) can be annotated so that when we can watch for the
-    #   annotation in the endtag handler, and when the appropriate
-    #   annotation is popped, we perform the corresponding action (e.g.,
-    #   switch back to old handlers).
-    #
-    #   To facilitate this, each starttag handler is decorated with
-    #   @annotate_tag, which accepts a return value that is the
-    #   annotation (None by default), and additionally converts attrs to
-    #   a dict, which is much easier to work with; and each endtag
-    #   handler is decorated with @retrieve_tag_annotation which sends
-    #   an additional parameter that is the retrieved annotation to the
-    #   handler.
-    #
-    #   Note that some of our tag annotation stacks leak over time: this
-    #   happens to tags like <img> and <hr> which are not
-    #   closed. However, these tags play no structural role, and come
-    #   only in small quantities, so it's not really a problem.
-    #
-    # - All textual data (result title, result abstract, etc.) are
-    #   processed through a set of shared handlers. These handlers store
-    #   text in a shared buffer self.textbuf which can be retrieved and
-    #   cleared at appropriate times.
-    #
-    #   Data (including charrefs and entityrefs) are ignored initially,
-    #   and when data needs to be recorded, the start_populating_textbuf
-    #   method is called to register the appropriate data, charref and
-    #   entityref handlers so that they append to self.textbuf. When
-    #   recording ends, pop_textbuf should be called to extract the text
-    #   and clear the buffer. stop_populating_textbuf returns the
-    #   handlers to their pristine state (ignoring data).
-    #
-    #   Methods:
-    #   - start_populating_textbuf(self, data_transformer: Callable[[str], str]) -> None
-    #   - pop_textbuf(self) -> str
-    #   - stop_populating_textbuf(self) -> None
-    #
-    # - Outermost starttag and endtag handler methods: root_*. The whole
-    #   parser starts and ends in this state.
-    #
-    # - Each result is wrapped in a <div> tag with class "g".
-    #
-    #   <!-- within the scope of root_* -->
-    #   <div class="g">  <!-- annotate as 'result', hand over to result_* -->
-    #   </div>           <!-- hand back to root_*, register result -->
-    #
-    # - For each result, the first <h3> tag with class "r" contains the
-    #   hyperlinked title, and the (optional) first <div> tag with class
-    #   "s" contains the abstract of the result.
-    #
-    #   <!-- within the scope of result_* -->
-    #   <h3 class="r">   <!-- annotate as 'title', hand over to title_* -->
-    #   </h3>            <!-- hand back to result_* -->
-    #   <div class="s">  <!-- annotate as 'abstract', hand over to abstract_* -->
-    #   </div>           <!-- hand back to result_* -->
-    #
-    # - Each title looks like
-    #
-    #   <h3 class="r">
-    #     <!-- within the scope of title_* -->
-    #     <span>                 <!-- filetype (optional), annotate as title_filetype,
-    #                                 start_populating_textbuf -->
-    #       file type (e.g. [PDF])
-    #     </span>                <!-- stop_populating_textbuf -->
-    #     <a href="result url">  <!-- register self.url, annotate as 'title_link',
-    #                                 start_populating_textbuf -->
-    #       result title
-    #     </a>                   <!-- stop_populating_textbuf, pop to self.title -->
-    #   </h3>
-    #
-    # - For each abstract, the first <span> tag with class "st" contains
-    #   the body text of the abstract.
-    #
-    #   <!-- within the scope of abstract_* -->
-    #   <span class="st">  <!-- annotate as 'abstract_text', start_populating_textbuf -->
-    #     abstract text with <em> markup on keywords
-    #   </span>            <!-- stop_populating_textbuf, pop to self.abstract -->
-    #
-    # - Certain results may come with sitelinks, secondary results that
-    #   are usually subdomains or deep links within the primary
-    #   result. They are organized into a <table> tag, and each sitelink
-    #   is in a separate <td>:
-    #
-    #   <!-- within the scope of result_* -->
-    #   <table>    <!-- annotate as 'sitelink_table', hand over to sitelink_table_* -->
-    #     <tr>
-    #       <td>   <!-- annotate as 'sitelink', hand over to sitelink_* -->
-    #       </td>  <!-- append to self.sitelinks, hand back to sitelink_table_* -->
-    #       <td></td>
-    #       ...
-    #     </tr>
-    #     <tr></tr>
-    #     ...
-    #   </table>   <!-- hand back to result_* -->
-    #
-    #   Then for each sitelink, the hyperlinked title is in an <h3> tag
-    #   with class "r", and the abstract is in a <div> tag with class
-    #   "st". They are not necessarily on the same level, but we don't
-    #   really care.
-    #
-    #   <!-- within the scope of sitelink_* -->
-    #   <h3 class="r">             <!-- annotate as 'sitelink_title',
-    #                                   hand over to sitelink_title_* -->
-    #     <a href="sitelink url">  <!-- register sitelink url, annotate as 'sitelink_title_link',
-    #                                   start_populating_textbuf -->
-    #       sitelink title
-    #     </a>                     <!-- stop_populating_textbuf, pop to sitelink title -->
-    #   </h3>                      <!-- hand back to sitelink_* -->
-    #
-    #   <!-- still within the scope of sitelink_* -->
-    #   <div class="st">  <!-- annotate as 'sitelink_abstract', start_populating_textbuf -->
-    #     abstract text
-    #   </div>            <!-- stop_populating_textbuf, pop to sitelink abstract -->
-    #
-    # - Sometimes Google omits similar (more like duplicate) result
-    #   entries. Whenever this happens there will be a notice in p#ofr. The way
-    #   to unfilter is to simply add '&filter=0' to the query string.
-    #
-    #
-    # Google News
-    #
-    # - Google News results differ from Google Search results in the
-    #   following ways:
-    #
-    #   For each result, the title in the same format, but there's a
-    #   metadata field in a <div> tag with class "slp", and the abstract
-    #   isn't as deeply embedded: it's in a <div> tag on the same level
-    #   with class "st".
-    #
-    #   <!-- within the scope of result_* -->
-    #   <h3 class="r"></h3>  <!-- as before -->
-    #   <div class="slp">    <!-- annotate as 'news_metadata', start_populating_textbuf -->
-    #     ...
-    #     <span>source</span>
-    #     <span>-</span>     <!-- transform to ', ' -->
-    #     <span>publishing time</span>
-    #   </div>               <!-- stop_populating_textbuf, pop to self.metadata -->
-    #   <div class="st">     <!-- annotate as 'news_abstract', start_populating_textbuf -->
-    #     abstract text again with <em> markup on keywords
-    #   </div>               <!-- stop_populating_textbuf, pop to self.abstract -->
-    #
-    #
-    # Ignore List
-    #
-    # - As good as our result criteria might be, sometimes results of
-    #   dubious value (usually from Google's value-add features) slip
-    #   through. The "People also ask" feature is a good example of this
-    #   type (a sample query is "VPN"; see screenshot
-    #   https://i.imgur.com/yfcsoQz.png). In these cases, we may want to
-    #   skip enclosing containers entirely. The ignore list feature is
-    #   designed for this purpose.
-    #
-    #   The current ignore list is available in self.IGNORE_LIST. Each
-    #   entry (called a "selector") is a dict of attribute-value
-    #   pairs. Each attribute is matched verbatim to a tag's attribute,
-    #   except the "class" attribute, where we test for inclusion
-    #   instead (e.g. "c b a" matches "a b", just like it matches the
-    #   CSS selector ".a.b"). There's also a special "attribute" -- tag,
-    #   the meaning of which is obvious. A tag has to match all given
-    #   attributes to be considered a match for the selector.
-    #
-    #   When a match is found, the tag is annotated as SCOPE_ignored,
-    #   where SCOPE is the current handler scope (e.g., root, result,
-    #   title, etc.), and the scope is switched to 'ignore'. All
-    #   descendants of the tag are ignored. When the corresponding end
-    #   tag is finally reach, the former scope is restored.
-    #
-    #
-    # User Agent disabled (differences)
-    #
-    #   1. For Google News results, <div class="g"> is followed by <table> tag
-    #       <div class="g">
-    #           <table>
-    #
-    #   2. File mime type follows <div class="g">
-    #       <div class="g"><span style="float:left"><span class="mime">[PDF]</span>&nbsp;</span>
-    #
-    #   3. News metadata (source and time) comes within a single tag
-    #       <div class="slp"><span class="f">Reuters - 3 hours ago</span>
-    #
-    #   4. URLs are wrapped
-    #       <a href="/url?q=http://...&sa=...">
-    #
-    #   5. URLs are quoted
-    #       'https://vk.com/doc206446660_429188746%3Fhash%3D6097a8b0a41185cb90%26dl%3D03c63c1be5c02e8620'
-    #
-    #   6. Google Services links are returned as regular results,
-    #      start with '/search?q=' but no following 'http' or 'https'
-    #       <div class="g">
-    #           <div>
-    #               <h3 class="r"><a href="/search?q=india&...&sa=...">News for <b>india</b></a></h3>
-    #
-    #   7. YouTube specific results are returned within <table class="ts">
-    #       e.g. search - '3 hours youtube'
-    #
-    #       <span class="st">
-    #           <span class="f"><span class="nobr">10 Jun 2014</span> - <span class="nobr">179 min</span> -
-    #               <span class="nobr">Uploaded by Meditation Relax Music</span>
-    #           </span>
-    #           <br><b>3 HOURS Best Relaxing Music</b> &#39;Romantic <b>Piano</b>&quot; Background <b>Music</b> for Stress ... 3:03 <b>...</b>
-    #       </span>
-
-    def __init__(self, news=False):
-        html.parser.HTMLParser.__init__(self)
-
+    def __init__(self, html, *, news=False, videos=False):
         self.news = news
-
+        self.videos = videos
+        self.autocorrected = False
+        self.showing_results_for = None
         self.filtered = False
         self.results = []
+        self.parse(html)
 
-        self.index = 0
-        self.textbuf = ''
-        self.tag_annotations = {}
+    def parse(self, html):
+        tree = parse_html(html)
 
-        self.set_handlers_to('root')
+        if debugger:
+            printerr('\x1b[1mInspect the DOM through the \x1b[4mtree\x1b[24m variable.\x1b[0m')
+            printerr('')
+            try:
+                import IPython
+                IPython.embed()
+            except ImportError:
+                import pdb
+                pdb.set_trace()
 
-    ### Ignore list ###
-    IGNORE_LIST = [
-        # "People also ask"
-        # Sample query: VPN
-        # Screenshot: https://i.imgur.com/yfcsoQz.png
-        {
-            'tag': 'div',
-            'class': 'related-question-pair'
-        }
-    ]
+        # cw is short for collapse_whitespace.
+        cw = lambda s: re.sub(r'[ \t\n\r]+', ' ', s) if s is not None else s
 
-    ### Tag handlers ###
-
-    @annotate_tag
-    def root_start(self, tag, attrs):
-        # We omit Google's "smart card" results (term coined by me) by
-        # guarding against the 'g-blk' class (sample response: https://git.io/voJgB)
-        if tag == 'div' and 'g' in self.classes(attrs) and 'g-blk' not in self.classes(attrs):
-            # Initialize result field registers
-            self.title = ''
-            self.url = ''
-            self.abstract = ''
-            self.metadata = '' # Only used for Google News
-            self.sitelinks = []
-
-            # Guard against sitelinks, which also have titles and
-            # abstracts.  In the case of news, guard against "card
-            # sections" (secondary results to the same event).
-            self.title_registered = False
-            self.abstract_registered = False
-            self.metadata_registered = False # Only used for Google News
-
-            self.set_handlers_to('result')
-            return 'result'
-
-        # Omitted results
-        if tag == 'p' and attrs.get('id') == 'ofr':
-            self.filtered = True
-
-    @retrieve_tag_annotation
-    def root_end(self, tag, annotation):
-        pass
-
-    @annotate_tag
-    def result_start(self, tag, attrs):
-        if '' == USER_AGENT and tag == 'span' and 'mime' in self.classes(attrs):
-            self.start_populating_textbuf()
-            return 'title_filetype'
-
-        if not self.title_registered and tag == 'h3' and 'r' in self.classes(attrs):
-            self.set_handlers_to('title')
-            return 'title'
-
-        if not self.abstract_registered and tag == 'div' and 's' in self.classes(attrs):
-            self.set_handlers_to('abstract')
-            return 'abstract'
-
-        if '' == USER_AGENT and not self.abstract_registered \
-                and tag == 'span' and 'st' in self.classes(attrs):
-            self.start_populating_textbuf(lambda text: text + ' ')
-            return 'abstract_gservices'
-
-        if not self.sitelinks and tag == 'table':
-            if '' != USER_AGENT or (not self.news and 'ts' not in self.classes(attrs)):
-                self.set_handlers_to('sitelink_table')
-                return 'sitelink_table'
-
-        if self.news:
-            if not self.metadata_registered and tag == 'div' and 'slp' in self.classes(attrs):
-                # Change metadata field separator from '-' to ', ' for better appearance
-                if '' != USER_AGENT:
-                    self.start_populating_textbuf(lambda text: ', ' if text == '-' else text)
+        index = 0
+        for div_g in tree.select_all('div.g'):
+            if div_g.select('.hp-xpdbox'):
+                # Skip smart cards.
+                continue
+            try:
+                if div_g.select('.st'):
+                    # Old class structure, stopped working some time in
+                    # September 2020, but kept just in case.
+                    h3 = div_g.select('div.r h3')
+                    if h3:
+                        title = h3.text
+                        a = h3.parent
+                    else:
+                        h3 = div_g.select('h3.r')
+                        a = h3.select('a')
+                        title = a.text
+                        mime = div_g.select('.mime')
+                        if mime:
+                            title = mime.text + ' ' + title
+                    abstract_node = div_g.select('.st')
+                    metadata_node = div_g.select('.f')
                 else:
-                    self.start_populating_textbuf(lambda text:
-                                              text.replace(' -', ',', 1) if ' - ' in text else text)
-                return 'news_metadata'
-
-            if not self.abstract_registered and tag == 'div' and 'st' in self.classes(attrs):
-                self.start_populating_textbuf()
-                return 'news_abstract'
-
-    @retrieve_tag_annotation
-    def result_end(self, tag, annotation):
-        if annotation == 'result':
-            if self.url:
-                self.index += 1
-                result = Result(self.index, self.title, self.url, self.abstract,
-                                metadata=self.metadata if self.metadata else None,
-                                sitelinks=self.sitelinks)
+                    # Current structure as of October 2020.
+                    # Note that a filetype tag (e.g. PDF) is now pretty
+                    # damn hard to parse with confidence (that it'll
+                    # survive the slighest further change), so we don't.
+                    title_node, details_node, *_ = div_g.select_all('div.rc > div')
+                    if 'yuRUbf' not in title_node.classes:
+                        logger.debug('unexpected title node class(es): expected %r, got %r',
+                                     'yuRUbf', ' '.join(title_node.classes))
+                    if 'IsZvec' not in details_node.classes:
+                        logger.debug('unexpected details node class(es): expected %r, got %r',
+                                     'IsZvec', ' '.join(details_node.classes))
+                    a = title_node.select('a')
+                    h3 = a.select('h3')
+                    title = h3.text
+                    abstract_node = details_node.select('span')
+                    metadata_node = details_node.select('.f, span ~ div')
+                url = self.unwrap_link(a.attr('href'))
+                matched_keywords = []
+                abstract = ''
+                # BFS descendant nodes. Necessary to locate matches (b,
+                # em) while skipping metadata (.f).
+                abstract_nodes = collections.deque([abstract_node])
+                while abstract_nodes:
+                    node = abstract_nodes.popleft()
+                    if 'f' in node.classes:
+                        # .f is handled as metadata instead.
+                        continue
+                    if node.tag in ['b', 'em']:
+                        matched_keywords.append({'phrase': node.text, 'offset': len(abstract)})
+                        abstract += node.text
+                        continue
+                    if not node.children:
+                        abstract += node.text
+                        continue
+                    for child in node.children:
+                        abstract_nodes.append(child)
+                try:
+                    # Sometimes there are multiple metadata fields
+                    # associated with a single entry, e.g. "Released",
+                    # "Producer(s)", "Genre", etc. for a song (sample
+                    # query: "never gonna give you up"). These need to
+                    # be delimited when displayed.
+                    metadata_fields = metadata_node.select_all('div > div[data-ved]')
+                    if metadata_fields:
+                        metadata = ' | '.join(field.text for field in metadata_fields)
+                    else:
+                        metadata = metadata_node.text
+                    metadata = metadata.replace('\u200e', '').replace(' - ', ', ').strip().rstrip(',')
+                except AttributeError:
+                    metadata = None
+            except (AttributeError, ValueError):
+                continue
+            sitelinks = []
+            for td in div_g.select_all('td'):
+                try:
+                    a = td.select('a')
+                    sl_title = a.text
+                    sl_url = self.unwrap_link(a.attr('href'))
+                    sl_abstract = td.select('div.s.st, div.s .st').text
+                    sitelink = Sitelink(cw(sl_title), sl_url, cw(sl_abstract))
+                    if sitelink not in sitelinks:
+                        sitelinks.append(sitelink)
+                except (AttributeError, ValueError):
+                    continue
+            # cw cannot be applied to abstract here since it may screw
+            # up offsets of matches. Instead, each relevant node's text
+            # is whitespace-collapsed before being appended to abstract.
+            # We then hope for the best.
+            result = Result(index + 1, cw(title), url, abstract,
+                            metadata=cw(metadata), sitelinks=sitelinks, matches=matched_keywords)
+            if result not in self.results:
                 self.results.append(result)
-            self.set_handlers_to('root')
-        elif annotation == 'news_metadata':
-            self.stop_populating_textbuf()
-            self.metadata = self.pop_textbuf()
-            self.metadata_registered = True
-        elif annotation == 'news_abstract':
-            self.stop_populating_textbuf()
-            self.abstract = self.pop_textbuf()
-            self.abstract_registered = True
-        if annotation == 'abstract_gservices':
-            self.stop_populating_textbuf()
-            self.abstract = self.pop_textbuf().replace('  ', ' ')
-            self.abstract_registered = False
+                index += 1
 
-    @annotate_tag
-    def title_start(self, tag, attrs):
-        if '' != USER_AGENT and tag == 'span':
-            # Print a space after the filetype indicator
-            self.start_populating_textbuf(lambda text: text + ' ')
-            return 'title_filetype'
-        if tag == 'a' and 'href' in attrs:
-            # Skip 'News for', 'Images for' search links
-            if attrs['href'].startswith('/search'):
-                return
+        if not self.results:
+            for card in tree.select_all('g-card'):
+                a = card.select('a[href]')
+                if not a:
+                    continue
+                url = self.unwrap_link(a.attr('href'))
+                text_nodes = []
+                for node in a.descendants():
+                    if isinstance(node, TextNode) and node.strip():
+                        text_nodes.append(node.text)
+                if len(text_nodes) != 4:
+                    continue
+                publisher, title, abstract, publishing_time = text_nodes
+                metadata = '%s, %s' % (publisher, publishing_time)
+                index += 1
+                self.results.append(Result(index, cw(title), url, cw(abstract), metadata=cw(metadata)))
 
-            self.url = attrs['href']
-            try:
-                start = self.url.index('?q=') + len('?q=')
-                end = self.url.index('&sa=', start)
-                self.url = urllib.parse.unquote_plus(self.url[start:end])
-            except ValueError:
-                pass
-            self.start_populating_textbuf()
-            return 'title_link'
+        # Showing results for ...
+        # Search instead for ...
+        spell_orig = tree.select("span.spell_orig")
+        if spell_orig:
+            showing_results_for_link = next(
+                filter(lambda el: el.tag == "a", spell_orig.previous_siblings()), None
+            )
+            if showing_results_for_link:
+                self.autocorrected = True
+                self.showing_results_for = showing_results_for_link.text
 
-    @retrieve_tag_annotation
-    def title_end(self, tag, annotation):
-        if annotation == 'title_filetype':
-            self.stop_populating_textbuf()
-        elif annotation == 'title_link':
-            self.stop_populating_textbuf()
-            self.title = self.pop_textbuf()
-            self.title_registered = True
-        elif annotation == 'title':
-            self.set_handlers_to('result')
+        # No results found for ...
+        # Results for ...:
+        alt_query_infobox = tree.select('#topstuff')
+        if alt_query_infobox:
+            bolds = alt_query_infobox.select_all('div b')
+            if len(bolds) == 2:
+                self.showing_results_for = bolds[1].text
 
-    @annotate_tag
-    def abstract_start(self, tag, attrs):
-        if tag == 'span' and 'st' in self.classes(attrs):
-            self.start_populating_textbuf()
-            return 'abstract_text'
+        # In order to show you the most relevant results, we have
+        # omitted some entries very similar to the N already displayed.
+        # ...
+        self.filtered = tree.select('p#ofr') is not None
 
-    @retrieve_tag_annotation
-    def abstract_end(self, tag, annotation):
-        if annotation == 'abstract_text':
-            self.stop_populating_textbuf()
-            self.abstract = self.pop_textbuf()
-            self.abstract_registered = False
-        elif annotation == 'abstract':
-            self.set_handlers_to('result')
-
-    @annotate_tag
-    def sitelink_table_start(self, tag, attrs):
-        if tag == 'td':
-            # Initialize a new sitelink
-            self.current_sitelink = Sitelink('', '', '')
-            self.set_handlers_to('sitelink')
-            return 'sitelink'
-
-    @retrieve_tag_annotation
-    def sitelink_table_end(self, tag, annotation):
-        if annotation == 'sitelink_table':
-            self.set_handlers_to('result')
-
-    @annotate_tag
-    def sitelink_start(self, tag, attrs):
-        if tag == 'h3' and 'r' in self.classes(attrs):
-            self.set_handlers_to('sitelink_title')
-            return 'sitelink_title'
-        if tag == 'div' and 'st' in self.classes(attrs):
-            self.start_populating_textbuf()
-            return 'sitelink_abstract'
-
-    @retrieve_tag_annotation
-    def sitelink_end(self, tag, annotation):
-        if annotation == 'sitelink_abstract':
-            self.stop_populating_textbuf()
-            self.current_sitelink.abstract = self.pop_textbuf()
-        elif annotation == 'sitelink':
-            if self.current_sitelink.url:
-                self.sitelinks.append(self.current_sitelink)
-            self.set_handlers_to('sitelink_table')
-
-    @annotate_tag
-    def sitelink_title_start(self, tag, attrs):
-        if tag == 'a' and 'href' in attrs:
-            self.current_sitelink.url = attrs['href']
-            try:
-                start = self.current_sitelink.url.index('?q=') + len('?q=')
-                end = self.current_sitelink.url.index('&sa=', start)
-                self.current_sitelink.url = urllib.parse.unquote_plus(self.current_sitelink.url[start:end])
-            except ValueError:
-                pass
-            self.start_populating_textbuf()
-            return 'sitelink_title_link'
-
-    @retrieve_tag_annotation
-    def sitelink_title_end(self, tag, annotation):
-        if annotation == 'sitelink_title_link':
-            self.stop_populating_textbuf()
-            self.current_sitelink.title = self.pop_textbuf()
-        elif annotation == 'sitelink_title':
-            self.set_handlers_to('sitelink')
-
-    ### Generic methods ###
-
-    # Set handle_starttag to SCOPE_start, and handle_endtag to SCOPE_end.
-    def set_handlers_to(self, scope):
-        self.handle_starttag = getattr(self, scope + '_start')
-        self.handle_endtag = getattr(self, scope + '_end')
-
-    def insert_annotation(self, tag, annotation):
-        if tag not in self.tag_annotations:
-            self.tag_annotations[tag] = []
-        self.tag_annotations[tag].append(annotation)
-
-    @annotate_tag
-    def ignore_start(self, tag, attrs):
-        pass
-
-    @retrieve_tag_annotation
-    def ignore_end(self, tag, annotation):
-        if annotation and annotation.endswith('_ignored'):
-            # Strip '-ignore' suffix from annotation to obtain the outer
-            # context name.
-            context = annotation[:-8]
-            self.set_handlers_to(context)
-
-    def start_populating_textbuf(self, data_transformer=None):
-        if data_transformer is None:
-            # Record data verbatim
-            self.handle_data = self.record_data
-        else:
-            def record_transformed_data(data):
-                self.textbuf += data_transformer(data)
-
-            self.handle_data = record_transformed_data
-
-        self.handle_entityref = self.record_entityref
-        self.handle_charref = self.record_charref
-
-    def pop_textbuf(self):
-        text = self.textbuf
-        self.textbuf = ''
-        return text
-
-    def stop_populating_textbuf(self):
-        self.handle_data = lambda data: None
-        self.handle_entityref = lambda ref: None
-        self.handle_charref = lambda ref: None
-
-    def record_data(self, data):
-        self.textbuf += data
-
-    def record_entityref(self, ref):
-        try:
-            self.textbuf += chr(html.entities.name2codepoint[ref])
-        except KeyError:
-            # Entity name not found; most likely rather sloppy HTML
-            # where a literal ampersand is not escaped; For instance,
-            # the HTML response returned by
-            #
-            #     googler -c au -l ko expected
-            #
-            # contains the following tag
-            #
-            #     <p class="_e4b"><a href="...">expected market return s&p 500</a></p>
-            #
-            # where &p is interpreted by HTMLParser as an entity (this
-            # behaviour seems to be specific to Python 2.7).
-            self.textbuf += '&' + ref
-
-    def record_charref(self, ref):
-        if ref.startswith('x'):
-            char = chr(int(ref[1:], 16))
-        else:
-            char = chr(int(ref))
-        self.textbuf += char
-
+    # Unwraps /url?q=http://...&sa=...
+    # TODO: don't unwrap if URL isn't in this form.
     @staticmethod
-    def classes(attrs):
-        """Get tag's classes from its attribute dict."""
-        return attrs.get('class', '').split()
+    def unwrap_link(link):
+        qs = urllib.parse.urlparse(link).query
+        try:
+            url = urllib.parse.parse_qs(qs)['q'][0]
+        except KeyError:
+            return link
+        else:
+            if "://" in url:
+                return url
+            else:
+                # Google's internal services link, e.g.,
+                # /search?q=google&..., which cannot be unwrapped into
+                # an actual URL.
+                raise ValueError(link)
 
 
 class Sitelink(object):
@@ -1360,6 +2436,16 @@ class Sitelink(object):
         self.url = url
         self.abstract = abstract
         self.index = ''
+
+    def __eq__(self, other):
+        return (
+            self.title == other.title and
+            self.url == other.url and
+            self.abstract == other.abstract
+        )
+
+    def __hash__(self):
+        return hash((self.title, self.url, self.abstract))
 
 
 Colors = collections.namedtuple('Colors', 'index, title, url, metadata, abstract, prompt, reset')
@@ -1389,6 +2475,7 @@ class Result(object):
     abstract : str
     metadata : str or None
     sitelinks : list
+    matches : list
 
     Class Variables
     ---------------
@@ -1404,8 +2491,9 @@ class Result(object):
 
     # Class variables
     colors = None
+    urlexpand = True
 
-    def __init__(self, index, title, url, abstract, metadata=None, sitelinks=None):
+    def __init__(self, index, title, url, abstract, metadata=None, sitelinks=None, matches=None):
         index = str(index)
         self.index = index
         self.title = title
@@ -1413,29 +2501,53 @@ class Result(object):
         self.abstract = abstract
         self.metadata = metadata
         self.sitelinks = [] if sitelinks is None else sitelinks
+        self.matches = [] if matches is None else matches
 
         self._urltable = {index: url}
         subindex = 'a'
-        for sitelink in sitelinks:
+        for sitelink in self.sitelinks:
             fullindex = index + subindex
             sitelink.index = fullindex
             self._urltable[fullindex] = sitelink.url
             subindex = chr(ord(subindex) + 1)
 
+    def __eq__(self, other):
+        return (
+            self.title == other.title and
+            self.url == other.url and
+            self.abstract == other.abstract and
+            self.metadata == other.metadata and
+            self.sitelinks == other.sitelinks and
+            self.matches == other.matches
+        )
+
+    def __hash__(self):
+        sitelinks_hashable = tuple(self.sitelinks) if self.sitelinks is not None else None
+        matches_hashable = tuple(self.matches) if self.matches is not None else None
+        return hash(self.title, self.url, self.abstract, self.metadata, sitelinks_hashable, matches_hashable)
+
     def _print_title_and_url(self, index, title, url, indent=0):
         colors = self.colors
 
-        # Pad index and url with `indent` number of spaces
-        index = ' ' * indent + str(index)
-        url = ' ' * indent + url
-        if colors:
-            print(colors.index + index + colors.reset, end='')
-            print(' ' + colors.title + title + colors.reset)
-            print(colors.url + url + colors.reset)
-        else:
-            print(' %s %s\n%s' % (index, title, url))
+        if not self.urlexpand:
+            url = '[' + urllib.parse.urlparse(url).netloc + ']'
 
-    def _print_metadata_and_abstract(self, abstract, metadata=None, indent=0):
+        if colors:
+            # Adjust index to print result index clearly
+            print(" %s%s%-3s%s" % (' ' * indent, colors.index, index + '.', colors.reset), end='')
+            if not self.urlexpand:
+                print(' ' + colors.title + title + colors.reset + ' ' + colors.url + url + colors.reset)
+            else:
+                print(' ' + colors.title + title + colors.reset)
+                print(' ' * (indent + 5) + colors.url + url + colors.reset)
+        else:
+            if self.urlexpand:
+                print(' %s%-3s %s' % (' ' * indent, index + '.', title))
+                print(' %s%s' % (' ' * (indent + 4), url))
+            else:
+                print(' %s%-3s %s %s' % (' ' * indent, index + '.', title, url))
+
+    def _print_metadata_and_abstract(self, abstract, metadata=None, matches=None, indent=0):
         colors = self.colors
         try:
             columns, _ = os.get_terminal_size()
@@ -1444,27 +2556,34 @@ class Result(object):
 
         if metadata:
             if colors:
-                print(colors.metadata + metadata + colors.reset)
+                print(' ' * (indent + 5) + colors.metadata + metadata + colors.reset)
             else:
-                print(metadata)
+                print(' ' * (indent + 5) + metadata)
 
-        if colors:
-            print(colors.abstract, end='')
-        if columns > indent + 1:
-            # Try to fill to columns
-            fillwidth = columns - indent - 1
-            for line in textwrap.wrap(abstract.replace('\n', ''), width=fillwidth):
-                print('%s%s' % (' ' * indent, line))
-            print('')
-        else:
-            print('%s\n' % abstract.replace('\n', ' '))
-        if colors:
-            print(colors.reset, end='')
+        if abstract:
+            fillwidth = (columns - (indent + 6)) if columns > indent + 6 else len(abstract)
+            wrapped_abstract = TrackedTextwrap(abstract, fillwidth)
+            if colors:
+                # Highlight matches.
+                for match in matches or []:
+                    offset = match['offset']
+                    span = len(match['phrase'])
+                    wrapped_abstract.insert_zero_width_sequence('\x1b[1m', offset)
+                    wrapped_abstract.insert_zero_width_sequence('\x1b[0m', offset + span)
+
+            if colors:
+                print(colors.abstract, end='')
+            for line in wrapped_abstract.lines:
+                print('%s%s' % (' ' * (indent + 5), line))
+            if colors:
+                print(colors.reset, end='')
+
+        print('')
 
     def print(self):
         """Print the result entry."""
         self._print_title_and_url(self.index, self.title, self.url)
-        self._print_metadata_and_abstract(self.abstract, metadata=self.metadata)
+        self._print_metadata_and_abstract(self.abstract, metadata=self.metadata, matches=self.matches)
 
         for sitelink in self.sitelinks:
             self._print_title_and_url(sitelink.index, sitelink.title, sitelink.url, indent=4)
@@ -1481,13 +2600,15 @@ class Result(object):
             obj['metadata'] = self.metadata
         if self.sitelinks:
             obj['sitelinks'] = [sitelink.__dict__ for sitelink in self.sitelinks]
+        if self.matches:
+            obj['matches'] = self.matches
         return obj
 
     def urltable(self):
         """Return a index-to-URL table for the current result.
 
         Normally, the table contains only a single entry, but when the result
-        contains sidelinks, all sidelinks are included in this table.
+        contains sitelinks, all sitelinks are included in this table.
 
         Returns
         -------
@@ -1498,6 +2619,10 @@ class Result(object):
 
         """
         return self._urltable
+
+    @staticmethod
+    def collapse_whitespace(s):
+        return re.sub(r'[ \t\n\r]+', ' ', s)
 
 
 class GooglerCmdException(Exception):
@@ -1519,6 +2644,7 @@ def require_keywords(method):
 
     return enforced_method
 
+
 def no_argument(method):
     # Normalize a do_* method of GooglerCmd that takes no argument to
     # one that takes an arg, but issue a warning when an nonempty
@@ -1532,6 +2658,7 @@ def no_argument(method):
         method(self)
 
     return enforced_method
+
 
 class GooglerCmd(object):
     """
@@ -1563,6 +2690,7 @@ class GooglerCmd(object):
 
     # Class variables
     colors = None
+    re_url_index = re.compile(r"\d+(a-z)?")
 
     def __init__(self, opts):
         super().__init__()
@@ -1570,13 +2698,29 @@ class GooglerCmd(object):
         self._opts = opts
 
         self._google_url = GoogleUrl(opts)
-        proxy = opts.proxy if hasattr(opts, 'proxy') else None
-        self._conn = GoogleConnection(self._google_url.hostname, proxy=proxy)
-        atexit.register(self._conn.close)
+
+        if opts.html_file:
+            # Preloaded HTML parsing mode, do not initialize connection.
+            self._preload_from_file = opts.html_file
+            self._conn = None
+        else:
+            self._preload_from_file = None
+            proxy = opts.proxy if hasattr(opts, 'proxy') else None
+            self._conn = GoogleConnection(self._google_url.hostname,
+                                        address_family=opts.address_family,
+                                        proxy=proxy,
+                                        notweak=opts.notweak)
+            atexit.register(self._conn.close)
 
         self.results = []
+        self._autocorrected = None
+        self._showing_results_for = None
         self._results_filtered = False
         self._urltable = {}
+
+        self.promptcolor = True if os.getenv('DISABLE_PROMPT_COLOR') is None else False
+
+        self.no_results_instructions_shown = False
 
     @property
     def options(self):
@@ -1605,24 +2749,71 @@ class GooglerCmd(object):
         """
         # This method also sets self._results_filtered and
         # self._urltable.
-        page = self._conn.fetch_page(self._google_url.relative())
+        if self._preload_from_file:
+            with open(self._preload_from_file, encoding='utf-8') as fp:
+                page = fp.read()
+        else:
+            page = self._conn.fetch_page(self._google_url.relative())
+            if logger.isEnabledFor(logging.DEBUG):
+                import tempfile
+                fd, tmpfile = tempfile.mkstemp(prefix='googler-response-', suffix='.html')
+                os.close(fd)
+                with open(tmpfile, 'w', encoding='utf-8') as fp:
+                    fp.write(page)
+                logger.debug("Response body written to '%s'.", tmpfile)
 
-        if logger.isEnabledFor(logging.DEBUG):
-            import tempfile
-            fd, tmpfile = tempfile.mkstemp(prefix='googler-response-')
-            os.close(fd)
-            with open(tmpfile, 'w', encoding='utf-8') as fp:
-                fp.write(page)
-            logger.debug("Response body written to '%s'.", tmpfile)
-
-        parser = GoogleParser(news=self._google_url.news)
-        parser.feed(page)
+        parser = GoogleParser(page, news=self._google_url.news, videos=self._google_url.videos)
 
         self.results = parser.results
+        self._autocorrected = parser.autocorrected
+        self._showing_results_for = parser.showing_results_for
         self._results_filtered = parser.filtered
         self._urltable = {}
         for r in self.results:
             self._urltable.update(r.urltable())
+
+    def warn_no_results(self):
+        printerr('No results.')
+        if self.no_results_instructions_shown:
+            return
+
+        try:
+            import json
+            import urllib.error
+            import urllib.request
+            info_json_url = '%s/master/info.json' % RAW_DOWNLOAD_REPO_BASE
+            logger.debug('Fetching %s for project status...', info_json_url)
+            try:
+                with urllib.request.urlopen(info_json_url, timeout=5) as response:
+                    try:
+                        info = json.load(response)
+                    except Exception:
+                        logger.error('Failed to decode project status from %s', info_json_url)
+                        raise RuntimeError
+            except urllib.error.HTTPError as e:
+                logger.error('Failed to fetch project status from %s: HTTP %d', info_json_url, e.code)
+                raise RuntimeError
+            epoch = info.get('epoch')
+            if epoch > _EPOCH_:
+                printerr('Your version of googler is broken due to Google-side changes.')
+                tracking_issue = info.get('tracking_issue')
+                fixed_on_master = info.get('fixed_on_master')
+                fixed_in_release = info.get('fixed_in_release')
+                if fixed_in_release:
+                    printerr('A new version, %s, has been released to address the changes.' % fixed_in_release)
+                    printerr('Please upgrade to the latest version.')
+                elif fixed_on_master:
+                    printerr('The fix has been pushed to master, pending a release.')
+                    printerr('Please download the master version https://git.io/googler or wait for a release.')
+                else:
+                    printerr('The issue is tracked at https://github.com/jarun/googler/issues/%s.' % tracking_issue)
+                return
+        except RuntimeError:
+            pass
+
+        printerr('If you believe this is a bug, please review '
+                 'https://git.io/googler-no-results before submitting a bug report.')
+        self.no_results_instructions_shown = True
 
     @require_keywords
     def display_results(self, prelude='\n', json_output=False):
@@ -1641,11 +2832,34 @@ class GooglerCmd(object):
         else:
             # Regular output
             if not self.results:
-                print('No results.', file=sys.stderr)
+                self.warn_no_results()
             else:
                 sys.stderr.write(prelude)
                 for r in self.results:
                     r.print()
+
+    @require_keywords
+    def showing_results_for_alert(self, interactive=True):
+        colors = self.colors
+        if self._showing_results_for:
+            if colors:
+                # Underline the query
+                actual_query = '\x1b[4m' + self._showing_results_for + '\x1b[24m'
+            else:
+                actual_query = self._showing_results_for
+            if self._autocorrected:
+                if interactive:
+                    info = 'Showing results for %s; enter "x" for an exact search.' % actual_query
+                else:
+                    info = 'Showing results for %s; use -x, --exact for an exact search.' % actual_query
+            else:
+                info = 'No results found; showing results for %s.' % actual_query
+            if interactive:
+                printerr('')
+            if colors:
+                printerr(colors.prompt + info + colors.reset)
+            else:
+                printerr('** ' + info)
 
     @require_keywords
     def fetch_and_display(self, prelude='\n', json_output=False, interactive=True):
@@ -1675,15 +2889,22 @@ class GooglerCmd(object):
 
         """
         self.fetch()
+        self.showing_results_for_alert()
         self.display_results(prelude=prelude, json_output=json_output)
         if self._results_filtered:
-            printerr('** Enter "unfilter" to show similar results Google omitted.')
+            colors = self.colors
+            info = 'Enter "unfilter" to show similar results Google omitted.'
+            if colors:
+                printerr(colors.prompt + info + colors.reset)
+            else:
+                printerr('** ' + info)
+            printerr('')
 
     def read_next_command(self):
         """Show omniprompt and read user command line.
 
         Command line is always stripped, and each consecutive group of
-        whitespace is replaced with a single space charater. If the
+        whitespace is replaced with a single space character. If the
         command line is empty after stripping, when ignore it and keep
         reading. Exit with status 0 if we get EOF or an empty line
         (pre-strip, that is, a raw <enter>) twice in a row.
@@ -1693,7 +2914,7 @@ class GooglerCmd(object):
         """
         colors = self.colors
         message = 'googler (? for help)'
-        prompt = (colors.prompt + message + colors.reset + ' ') if colors else (message + ': ')
+        prompt = (colors.prompt + message + colors.reset + ' ') if (colors and self.promptcolor) else (message + ': ')
         enter_count = 0
         while True:
             try:
@@ -1722,7 +2943,12 @@ class GooglerCmd(object):
     @require_keywords
     @no_argument
     def do_first(self):
-        self._google_url.first_page()
+        try:
+            self._google_url.first_page()
+        except ValueError as e:
+            print(e, file=sys.stderr)
+            return
+
         self.fetch_and_display()
 
     def do_google(self, arg):
@@ -1737,15 +2963,42 @@ class GooglerCmd(object):
         # If > 5 results are being fetched each time,
         # block next when no parsed results in current fetch
         if not self.results and self._google_url._num > 5:
-            print('No results.', file=sys.stderr)
+            printerr('No results.')
         else:
             self._google_url.next_page()
             self.fetch_and_display()
 
     @require_keywords
-    @no_argument
-    def do_open(self):
-        open_url(self._google_url.full())
+    def do_open(self, *args):
+        if not args:
+            open_url(self._google_url.full())
+            return
+
+        for nav in args:
+            if nav == 'a':
+                for key, value in sorted(self._urltable.items()):
+                    open_url(self._urltable[key])
+            elif nav in self._urltable:
+                open_url(self._urltable[nav])
+            elif '-' in nav:
+                try:
+                    vals = [int(x) for x in nav.split('-')]
+                    if (len(vals) != 2):
+                        printerr('Invalid range %s.' % nav)
+                        continue
+
+                    if vals[0] > vals[1]:
+                        vals[0], vals[1] = vals[1], vals[0]
+
+                    for _id in range(vals[0], vals[1] + 1):
+                        if str(_id) in self._urltable:
+                            open_url(self._urltable[str(_id)])
+                        else:
+                            printerr('Invalid index %s.' % _id)
+                except ValueError:
+                    printerr('Invalid range %s.' % nav)
+            else:
+                printerr('Invalid index %s.' % nav)
 
     @require_keywords
     @no_argument
@@ -1760,11 +3013,71 @@ class GooglerCmd(object):
 
     @require_keywords
     @no_argument
+    def do_exact(self):
+        # Reset start to 0 when exact is applied.
+        self._google_url.update(start=0, exact=True)
+        self.fetch_and_display()
+
+    @require_keywords
+    @no_argument
     def do_unfilter(self):
         # Reset start to 0 when unfilter is applied.
-        self._google_url.update(None, **{'start':0,})
+        self._google_url.update(start=0)
         self._google_url.set_queries(filter=0)
         self.fetch_and_display()
+
+    def copy_url(self, idx):
+        try:
+            try:
+                content = self._urltable[idx].encode('utf-8')
+            except KeyError:
+                printerr('Invalid index.')
+                return
+
+            # try copying the url to clipboard using native utilities
+            copier_params = []
+            if sys.platform.startswith(('linux', 'freebsd', 'openbsd')):
+                if shutil.which('xsel') is not None:
+                    copier_params = ['xsel', '-b', '-i']
+                elif shutil.which('xclip') is not None:
+                    copier_params = ['xclip', '-selection', 'clipboard']
+                elif shutil.which('wl-copy') is not None:
+                    copier_params = ['wl-copy']
+                elif shutil.which('termux-clipboard-set') is not None:
+                    copier_params = ['termux-clipboard-set']
+            elif sys.platform == 'darwin':
+                copier_params = ['pbcopy']
+            elif sys.platform == 'win32':
+                copier_params = ['clip']
+
+            if copier_params:
+                Popen(copier_params, stdin=PIPE, stdout=DEVNULL, stderr=DEVNULL).communicate(content)
+                return
+
+            # If native clipboard utilities are absent, try to use terminal multiplexers
+            # tmux
+            if os.getenv('TMUX_PANE'):
+                copier_params = ['tmux', 'set-buffer']
+                Popen(copier_params + [content], stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL).communicate()
+                return
+
+            # GNU Screen paste buffer
+            if os.getenv('STY'):
+                import tempfile
+                copier_params = ['screen', '-X', 'readbuf', '-e', 'utf8']
+                tmpfd, tmppath = tempfile.mkstemp()
+                try:
+                    with os.fdopen(tmpfd, 'wb') as fp:
+                        fp.write(content)
+                    copier_params.append(tmppath)
+                    Popen(copier_params, stdin=DEVNULL, stdout=DEVNULL, stderr=DEVNULL).communicate()
+                finally:
+                    os.unlink(tmppath)
+                return
+
+            printerr('failed to locate suitable clipboard utility')
+        except Exception:
+            raise NoKeywordsException
 
     def cmdloop(self):
         """Run REPL."""
@@ -1778,7 +3091,7 @@ class GooglerCmd(object):
             # TODO: Automatic dispatcher
             #
             # We can't write a dispatcher for now because that could
-            # change behaviors of the prompt. However, we have already
+            # change behaviour of the prompt. However, we have already
             # laid a lot of ground work for the dispatcher, e.g., the
             # `no_argument' decorator.
             try:
@@ -1790,11 +3103,19 @@ class GooglerCmd(object):
                 elif cmd == 'n':
                     self.do_next('')
                 elif cmd == 'o':
-                    self.do_open('')
+                    self.do_open()
+                elif cmd.startswith('o '):
+                    self.do_open(*cmd[2:].split())
+                elif cmd.startswith('O '):
+                    open_url.override_text_browser = True
+                    self.do_open(*cmd[2:].split())
+                    open_url.override_text_browser = False
                 elif cmd == 'p':
                     self.do_previous('')
                 elif cmd == 'q':
                     break
+                elif cmd == 'x':
+                    self.do_exact('')
                 elif cmd == 'unfilter':
                     self.do_unfilter('')
                 elif cmd == '?':
@@ -1803,6 +3124,11 @@ class GooglerCmd(object):
                     open_url(self._urltable[cmd])
                 elif self.keywords and cmd.isdigit() and int(cmd) < 100:
                     printerr('Index out of bound. To search for the number, use g.')
+                elif cmd == 'u':
+                    Result.urlexpand = not Result.urlexpand
+                    self.display_results()
+                elif cmd.startswith('c ') and self.re_url_index.match(cmd[2:]):
+                    self.copy_url(cmd[2:])
                 else:
                     self.do_google(cmd)
             except NoKeywordsException:
@@ -1821,11 +3147,17 @@ class GooglerArgumentParser(argparse.ArgumentParser):
           n, p                  fetch the next or previous set of search results
           index                 open the result corresponding to index in browser
           f                     jump to the first page
-          o                     open the current search in browser
-          g keywords            initiate a new Google search for 'keywords' with original options
+          o [index|range|a ...] open space-separated result indices, numeric ranges
+                                (sitelinks unsupported in ranges), or all, in browser
+                                open the current search in browser, if no arguments
+          O [index|range|a ...] like key 'o', but try to open in a GUI browser
+          g keywords            new Google search for 'keywords' with original options
+                                should be used to search omniprompt keys and indices
+          c index               copy url to clipboard
+          u                     toggle url expansion
           q, ^D, double Enter   exit googler
           ?                     show omniprompt help
-          *                     any other string initiates a new search with original options
+          *                     other inputs issue a new search with original options
         """))
 
     # Print information on googler
@@ -1834,8 +3166,8 @@ class GooglerArgumentParser(argparse.ArgumentParser):
         file = sys.stderr if file is None else file
         file.write(textwrap.dedent("""
         Version %s
-        Copyright (C) 2008 Henri Hakkinen
-        Copyright (C) 2015-2016 Arun Prakash Jana <engineerarun@gmail.com>
+        Copyright © 2008 Henri Hakkinen
+        Copyright © 2015-2020 Arun Prakash Jana <engineerarun@gmail.com>
         Zhiming Wang <zmwangx@gmail.com>
         License: GPLv3
         Webpage: https://github.com/jarun/googler
@@ -1890,6 +3222,15 @@ class GooglerArgumentParser(argparse.ArgumentParser):
         return arg
 
     @staticmethod
+    def is_date(arg):
+        """Check if a string is a valid date/month/year accepted by Google."""
+        if re.match(r'^(\d+/){0,2}\d+$', arg):
+            return arg
+        else:
+            raise argparse.ArgumentTypeError('%s is not a valid date/month/year; '
+                                             'use the American date format with slashes')
+
+    @staticmethod
     def is_colorstr(arg):
         """Check if a string is a valid color string."""
         try:
@@ -1906,6 +3247,29 @@ class GooglerArgumentParser(argparse.ArgumentParser):
 def system_is_windows():
     """Checks if the underlying system is Windows (Cygwin included)."""
     return sys.platform in {'win32', 'cygwin'}
+
+
+def get_latest_ref(include_git=False):
+    """Helper for download_latest_googler."""
+    import urllib.request
+
+    if include_git:
+        # Get SHA of latest commit on master
+        request = urllib.request.Request('%s/commits/master' % API_REPO_BASE,
+                                         headers={'Accept': 'application/vnd.github.v3.sha'})
+        response = urllib.request.urlopen(request)
+        if response.status != 200:
+            raise http.client.HTTPException(response.reason)
+        return response.read().decode('utf-8')
+    else:
+        # Get name of latest tag
+        request = urllib.request.Request('%s/releases?per_page=1' % API_REPO_BASE,
+                                         headers={'Accept': 'application/vnd.github.v3+json'})
+        response = urllib.request.urlopen(request)
+        if response.status != 200:
+            raise http.client.HTTPException(response.reason)
+        import json
+        return json.loads(response.read().decode('utf-8'))[0]['tag_name']
 
 
 def download_latest_googler(include_git=False):
@@ -1928,27 +3292,8 @@ def download_latest_googler(include_git=False):
          file.
 
     """
-    import urllib.request
-
-    if include_git:
-        # Get SHA of latest commit on master
-        request = urllib.request.Request('%s/commits/master' % API_REPO_BASE,
-                                         headers={'Accept': 'application/vnd.github.v3.sha'})
-        response = urllib.request.urlopen(request)
-        if response.status != 200:
-            raise http.client.HTTPException(response.reason)
-        git_ref = response.read().decode('utf-8')
-    else:
-        # Get name of latest tag
-        request = urllib.request.Request('%s/tags?per_page=1' % API_REPO_BASE,
-                                         headers={'Accept': 'application/vnd.github.v3+json'})
-        response = urllib.request.urlopen(request)
-        if response.status != 200:
-            raise http.client.HTTPException(response.reason)
-        import json
-        git_ref = json.loads(response.read().decode('utf-8'))[0]['name']
-
     # Download googler to a tempfile
+    git_ref = get_latest_ref(include_git=include_git)
     googler_download_url = '%s/%s/googler' % (RAW_DOWNLOAD_REPO_BASE, git_ref)
     printerr('Downloading %s' % googler_download_url)
     request = urllib.request.Request(googler_download_url,
@@ -2028,7 +3373,163 @@ def self_upgrade(include_git=False):
         printerr('Already up to date.')
 
 
+def check_new_version():
+    try:
+        from distutils.version import StrictVersion as Version
+    except ImportError:
+        # distutils not available (thanks distros), use a concise poor
+        # man's version parser.
+        class Version(tuple):
+            def __new__(cls, version_str):
+                def parseint(s):
+                    try:
+                        return int(s)
+                    except ValueError:
+                        return 0
+                return tuple.__new__(cls, [parseint(s) for s in version_str.split('.')])
+
+    import pathlib
+    import tempfile
+    import time
+    cache = pathlib.Path(tempfile.gettempdir()) / 'googler-latest-version'
+    latest_version_str = None
+    # Try to load latest version string from cached location, if it
+    # exists and is fresh enough.
+    try:
+        if cache.is_file() and time.time() - cache.stat().st_mtime < 86400:
+            latest_version_str = cache.read_text().strip()
+    except OSError:
+        pass
+    if not latest_version_str:
+        try:
+            latest_version_str = get_latest_ref().lstrip('v')
+            cache.write_text(latest_version_str)
+        except Exception:
+            pass
+    if not latest_version_str:
+        return
+    # Try to fetch latest version string from GitHub.
+    try:
+        current_version = Version(_VERSION_)
+        latest_version = Version(latest_version_str)
+    except ValueError:
+        return
+    if latest_version > current_version:
+        print('\x1b[33;1mThe latest release of googler is v%s, please upgrade.\x1b[0m'
+              % latest_version_str,
+              file=sys.stderr)
+
+
 # Miscellaneous functions
+
+def python_version():
+    return '%d.%d.%d' % sys.version_info[:3]
+
+
+def https_proxy_from_environment():
+    return os.getenv('https_proxy')
+
+
+def parse_proxy_spec(proxyspec):
+    if '://' in proxyspec:
+        pos = proxyspec.find('://')
+        scheme = proxyspec[:pos]
+        proxyspec = proxyspec[pos+3:]
+        if scheme.lower() != 'http':
+            # Only support HTTP proxies.
+            #
+            # In particular, we don't support HTTPS proxies since we
+            # only speak plain HTTP to the proxy server, so don't give
+            # users a false sense of security.
+            raise NotImplementedError('Unsupported proxy scheme %s.' % scheme)
+
+    if '@' in proxyspec:
+        pos = proxyspec.find('@')
+        user_passwd = urllib.parse.unquote(proxyspec[:pos])
+        # Remove trailing '/' if any
+        host_port = proxyspec[pos+1:].rstrip('/')
+    else:
+        user_passwd = None
+        host_port = proxyspec.rstrip('/')
+
+    if ':' not in host_port:
+        # Use port 1080 as default, following curl.
+        host_port += ':1080'
+
+    return user_passwd, host_port
+
+
+def set_win_console_mode():
+    # VT100 control sequences are supported on Windows 10 Anniversary Update and later.
+    # https://docs.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences
+    # https://docs.microsoft.com/en-us/windows/console/setconsolemode
+    if platform.release() == '10':
+        STD_OUTPUT_HANDLE = -11
+        STD_ERROR_HANDLE = -12
+        ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004
+        try:
+            from ctypes import windll, wintypes, byref
+            kernel32 = windll.kernel32
+            for nhandle in (STD_OUTPUT_HANDLE, STD_ERROR_HANDLE):
+                handle = kernel32.GetStdHandle(nhandle)
+                old_mode = wintypes.DWORD()
+                if not kernel32.GetConsoleMode(handle, byref(old_mode)):
+                    raise RuntimeError('GetConsoleMode failed')
+                new_mode = old_mode.value | ENABLE_VIRTUAL_TERMINAL_PROCESSING
+                if not kernel32.SetConsoleMode(handle, new_mode):
+                    raise RuntimeError('SetConsoleMode failed')
+            # Note: No need to restore at exit. SetConsoleMode seems to
+            # be limited to the calling process.
+        except Exception:
+            pass
+
+
+# Query autocompleter
+
+# This function is largely experimental and could raise any exception;
+# you should be prepared to catch anything. When it works though, it
+# returns a list of strings the prefix could autocomplete to (however,
+# it is not guaranteed that they start with the specified prefix; for
+# instance, they won't if the specified prefix ends in a punctuation
+# mark.)
+def completer_fetch_completions(prefix):
+    import html
+    import json
+    import re
+    import urllib.request
+
+    # One can pass the 'hl' query param to specify the language. We
+    # ignore that for now.
+    api_url = ('https://www.google.com/complete/search?client=psy-ab&q=%s' %
+               urllib.parse.quote(prefix, safe=''))
+    # A timeout of 3 seconds seems to be overly generous already.
+    resp = urllib.request.urlopen(api_url, timeout=3)
+    charset = resp.headers.get_content_charset()
+    logger.debug('Completions charset: %s', charset)
+    respobj = json.loads(resp.read().decode(charset))
+
+    # The response object, once parsed as JSON, should look like
+    #
+    # ['git',
+    #  [['git<b>hub</b>', 0],
+    #   ['git', 0],
+    #   ['git<b>lab</b>', 0],
+    #   ['git<b> stash</b>', 0]],
+    #  {'q': 'oooAhRzoChqNmMbNaaDKXk1YY4k', 't': {'bpc': False, 'tlw': False}}]
+    #
+    # Note the each result entry need not have two members; e.g., for
+    # 'gi', there is an entry ['gi<b>f</b>', 0, [131]].
+    HTML_TAG = re.compile(r'<[^>]+>')
+    return [html.unescape(HTML_TAG.sub('', entry[0])) for entry in respobj[1]]
+
+
+def completer_run(prefix):
+    if prefix:
+        completions = completer_fetch_completions(prefix)
+        if completions:
+            print('\n'.join(completions))
+    sys.exit(0)
+
 
 def parse_args(args=None, namespace=None):
     """Parse googler arguments/options.
@@ -2051,92 +3552,164 @@ def parse_args(args=None, namespace=None):
 
     argparser = GooglerArgumentParser(description='Google from the command-line.')
     addarg = argparser.add_argument
-    addarg('-s', '--start', dest='start', type=argparser.nonnegative_int,
-           default=0, metavar='N',
-           help='start at the Nth result')
+    addarg('-s', '--start', type=argparser.nonnegative_int, default=0,
+           metavar='N', help='start at the Nth result')
     addarg('-n', '--count', dest='num', type=argparser.positive_int,
-           default=10, metavar='N',
-           help='show N results (default 10)')
-    addarg('-N', '--news', dest='news', action='store_true',
+           default=10, metavar='N', help='show N results (default 10)')
+    addarg('-N', '--news', action='store_true',
            help='show results from news section')
-    addarg('-c', '--tld', dest='tld', metavar='TLD',
+    addarg('-V', '--videos', action='store_true',
+           help='show results from videos section')
+    addarg('-c', '--tld', metavar='TLD',
            help="""country-specific search with top-level domain .TLD, e.g., 'in'
-           for India. Ref: https://en.wikipedia.org/wiki/List_of_Google_domains""")
-    addarg('-l', '--lang', dest='lang', metavar='LANG',
-           help='display in language LANG')
-    addarg('-x', '--exact', dest='exact', action='store_true',
+           for India""")
+    addarg('-l', '--lang', metavar='LANG', help='display in language LANG')
+    addarg('-g', '--geoloc', metavar='CC',
+           help="""country-specific geolocation search with country code CC, e.g.
+           'in' for India. Country codes are the same as top-level domains""")
+    addarg('-x', '--exact', action='store_true',
            help='disable automatic spelling correction')
-    addarg('-C', '--nocolor', dest='colorize', action='store_false',
-           help='disable color output')
+    addarg('--colorize', nargs='?', choices=['auto', 'always', 'never'],
+           const='always', default='auto',
+           help="""whether to colorize output; defaults to 'auto', which enables
+           color when stdout is a tty device; using --colorize without an argument
+           is equivalent to --colorize=always""")
+    addarg('-C', '--nocolor', action='store_true',
+           help='equivalent to --colorize=never')
     addarg('--colors', dest='colorstr', type=argparser.is_colorstr,
            default=colorstr_env if colorstr_env else 'GKlgxy', metavar='COLORS',
            help='set output colors (see man page for details)')
     addarg('-j', '--first', '--lucky', dest='lucky', action='store_true',
-           help='open the first result in a web browser; implies --noprompt')
-    addarg('-t', '--time', dest='duration', type=argparser.is_duration, metavar='dN',
-           help='time limit search '
+           help='open the first result in web browser and exit')
+    addarg('-t', '--time', dest='duration', type=argparser.is_duration,
+           metavar='dN', help='time limit search '
            '[h5 (5 hrs), d5 (5 days), w5 (5 weeks), m5 (5 months), y5 (5 years)]')
-    addarg('-w', '--site', dest='site', metavar='SITE',
+    addarg('--from', type=argparser.is_date,
+           help="""starting date/month/year of date range; must use American date
+           format with slashes, e.g., 2/24/2020, 2/2020, 2020; can be used in
+           conjunction with --to, and overrides -t, --time""")
+    addarg('--to', type=argparser.is_date,
+           help='ending date/month/year of date range; see --from')
+    addarg('-w', '--site', dest='sites', action='append', metavar='SITE',
            help='search a site using Google')
-    addarg('-p', '--proxy', dest='proxy',
-           help='tunnel traffic through an HTTPS proxy (HOST:PORT)')
-    addarg('--noua', dest='noua', action='store_true',
-           help='disable user agent')
-    addarg('--json', dest='json', action='store_true',
+    addarg('-e', '--exclude', dest='exclude', action='append', metavar='SITE',
+           help='exclude site from results')
+    addarg('--unfilter', action='store_true', help='do not omit similar results')
+    addarg('-p', '--proxy', default=https_proxy_from_environment(),
+           help="""tunnel traffic through an HTTP proxy;
+           PROXY is of the form [http://][user:password@]proxyhost[:port]""")
+    addarg('--noua', action='store_true', help=argparse.SUPPRESS)
+    addarg('--notweak', action='store_true',
+           help='disable TCP optimizations and forced TLS 1.2')
+    addarg('--json', action='store_true',
            help='output in JSON format; implies --noprompt')
-    addarg('--enable-browser-output', dest='enable_browser_output', action='store_true',
+    addarg('--url-handler', metavar='UTIL',
+           help='custom script or cli utility to open results')
+    addarg('--show-browser-logs', action='store_true',
            help='do not suppress browser output (stdout and stderr)')
     addarg('--np', '--noprompt', dest='noninteractive', action='store_true',
-           help='perform search and exit, do not prompt for further interactions')
-    addarg('-d', '--debug', dest='debug', action='store_true',
-           help='enable debugging')
-    addarg('keywords', nargs='*', metavar='KEYWORD',
-           help='search keywords')
-
+           help='search and exit, do not prompt')
+    addarg('-4', '--ipv4', action='store_const', dest='address_family',
+           const=socket.AF_INET, default=0,
+           help="""only connect over IPv4
+           (by default, IPv4 is preferred but IPv6 is used as a fallback)""")
+    addarg('-6', '--ipv6', action='store_const', dest='address_family',
+           const=socket.AF_INET6, default=0,
+           help='only connect over IPv6')
+    addarg('keywords', nargs='*', metavar='KEYWORD', help='search keywords')
     if ENABLE_SELF_UPGRADE_MECHANISM and not system_is_windows():
-        addarg('-U', '--upgrade', '--update', dest='upgrade', action='store_true',
+        addarg('-u', '--upgrade', action='store_true',
                help='perform in-place self-upgrade')
-        addarg('--include-git', dest='include_git', action='store_true',
-               help='when used in conjuction with --upgrade, upgrade to latest git master')
+        addarg('--include-git', action='store_true',
+               help='when used with --upgrade, get latest git master')
+    addarg('-v', '--version', action='version', version=_VERSION_)
+    addarg('-d', '--debug', action='store_true', help='enable debugging')
+    # Hidden option for interacting with DOM in an IPython/pdb shell
+    addarg('-D', '--debugger', action='store_true', help=argparse.SUPPRESS)
+    # Hidden option for parsing dumped HTML
+    addarg('--parse', dest='html_file', help=argparse.SUPPRESS)
+    addarg('--complete', help=argparse.SUPPRESS)
 
-    return argparser.parse_args(args, namespace)
+    parsed = argparser.parse_args(args, namespace)
+    if parsed.nocolor:
+        parsed.colorize = 'never'
+
+    return parsed
 
 
 def main():
     try:
-        global USER_AGENT
-
         opts = parse_args()
 
         # Set logging level
         if opts.debug:
             logger.setLevel(logging.DEBUG)
-            logger.debug('Version %s', _VERSION_)
+            logger.debug('googler version %s', _VERSION_)
+            logger.debug('Python version %s', python_version())
+            logger.debug('Platform: %s', platform.platform())
+            check_new_version()
+
+        if opts.debugger:
+            global debugger
+            debugger = True
+
+        # Handle query completer
+        if opts.complete is not None:
+            completer_run(opts.complete)
 
         # Handle self-upgrade
         if hasattr(opts, 'upgrade') and opts.upgrade:
             self_upgrade(include_git=opts.include_git)
             sys.exit(0)
 
+        check_stdout_encoding()
+
+        if opts.keywords:
+            try:
+                # Add cmdline args to readline history
+                readline.add_history(' '.join(opts.keywords))
+            except Exception:
+                pass
+
         # Set colors
-        if opts.colorize:
+        if opts.colorize == 'always':
+            colorize = True
+        elif opts.colorize == 'auto':
+            colorize = sys.stdout.isatty()
+        else:  # opts.colorize == 'never'
+            colorize = False
+
+        if colorize:
             colors = Colors(*[COLORMAP[c] for c in opts.colorstr], reset=COLORMAP['x'])
         else:
             colors = None
         Result.colors = colors
+        Result.urlexpand = True if os.getenv('DISABLE_URL_EXPANSION') is None else False
         GooglerCmd.colors = colors
 
-        # Handle browser output suppression
-        if opts.enable_browser_output:
-            open_url.suppress_browser_output = False
+        # Try to enable ANSI color support in cmd or PowerShell on Windows 10
+        if sys.platform == 'win32' and sys.stdout.isatty() and colorize:
+            set_win_console_mode()
+
+        if opts.url_handler is not None:
+            open_url.url_handler = opts.url_handler
+        else:
+            # Set text browser override to False
+            open_url.override_text_browser = False
+
+            # Handle browser output suppression
+            if opts.show_browser_logs or (os.getenv('BROWSER') in text_browsers):
+                open_url.suppress_browser_output = False
+            else:
+                open_url.suppress_browser_output = True
 
         if opts.noua:
-            USER_AGENT = ''
+            logger.warning('--noua option has been deprecated and has no effect (see #284)')
 
         repl = GooglerCmd(opts)
 
-        if opts.json or opts.lucky or opts.noninteractive:
-            # Non-interactive mode
+        # Non-interactive mode
+        if opts.json or opts.lucky or opts.noninteractive or opts.html_file:
             repl.fetch()
             if opts.lucky:
                 if repl.results:
@@ -2144,13 +3717,14 @@ def main():
                 else:
                     print('No results.', file=sys.stderr)
             else:
-                repl.display_results(prelude='', json_output=opts.json)
+                repl.showing_results_for_alert(interactive=False)
+                repl.display_results(json_output=opts.json)
             sys.exit(0)
-        else:
-            # Interactive mode
-            repl.cmdloop()
+
+        # Interactive mode
+        repl.cmdloop()
     except Exception as e:
-        # If debugging mode is enabled, let the exception through for a traceback;
+        # With debugging on, let the exception through for a traceback;
         # otherwise, only print the exception error message.
         if logger.isEnabledFor(logging.DEBUG):
             raise
@@ -2160,4 +3734,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    atexit.register(logging.shutdown)
