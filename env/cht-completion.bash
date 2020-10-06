@@ -9,8 +9,8 @@ _cht_complete()
     opts="$(curl -s cheat.sh/:list)"
 
     if [ ${COMP_CWORD} = 1 ]; then
-	  COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-	  __ltrim_colon_completions "$cur"
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    __ltrim_colon_completions "$cur"
     fi
     return 0
 }

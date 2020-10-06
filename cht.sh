@@ -24,8 +24,8 @@
 # count words in text counter
 # group elements list
 
-__CHTSH_VERSION=6
-__CHTSH_DATETIME="2019-06-05 18:00:46 +0200"
+__CHTSH_VERSION=0.0.1
+__CHTSH_DATETIME="2020-08-05 09:30:30 +0200"
 
 # cht.sh configuration loading
 #
@@ -80,6 +80,8 @@ cheatsh_standalone_install()
   local installdir; installdir="$1"
   local default_installdir="$HOME/.cheat.sh"
 
+  [ -z "$installdir" ] && installdir=${default_installdir}
+
   if [ "$installdir" = help ]; then
     cat <<EOF
 Install cheat.sh in the standalone mode.
@@ -95,7 +97,7 @@ cheat sheets repositories will be fetched.
 It takes approximately 1G of the disk space.
 
 Default installation location:  ~/.cheat.sh/
-It can be overriden by a command line parameter to this script:
+It can be overridden by a command line parameter to this script:
 
     ${0##*/} --standalone-install DIR
 
@@ -128,8 +130,9 @@ EOF
   [ "$_exit_code" -ne 0 ] && return "$_exit_code"
 
   while true; do
-    echo -n "Where should cheat.sh be installed [$default_installdir]? "; read -r installdir
-    [ -n "$installdir" ] || installdir="$default_installdir"
+    local _installdir
+    echo -n "Where should cheat.sh be installed [$installdir]? "; read -r _installdir
+    [ -n "$_installdir" ] && installdir=$_installdir
 
     if [ "$installdir" = y ] \
         || [ "$installdir" = Y ] \
@@ -169,22 +172,47 @@ EOF
   rmdir "$installdir"
   git clone "$url" "$installdir" || fatal Could not clone "$url" with git into "$installdir"
   cd "$installdir" || fatal "Cannot cd into $installdir"
-  git checkout offline_usage
 
   # after the repository cloned, we may have the log directory
   # and we can write our installation log into it
-  mkdir -p "$installdir/log/"
-  LOG="$installdir/log/install.log"
+  mkdir -p "log/"
+  LOG="$PWD/log/install.log"
 
   # we use tee everywhere so we should set -o pipefail
   set -o pipefail
 
+  # currently the script uses python 2,
+  # but cheat.sh supports python 3 too
+  # if you want to switch it to python 3
+  # set PYTHON2 to NO:
+  # PYTHON2=NO
+  #
+  PYTHON2=NO
+  if [[ $PYTHON2 = YES ]]; then
+    python="python2"
+    pip="pip"
+    virtualenv_python3_option=()
+  else
+    python="python3"
+    pip="pip3"
+    virtualenv_python3_option=(-p python3)
+  fi
+
   _say_what_i_do Creating virtual environment
-  python2 "$(command -v virtualenv)" ve \
+  "$python" "$(command -v virtualenv)" "${virtualenv_python3_option[@]}" ve \
       || fatal Could not create virtual environment with "python2 $(command -v virtualenv) ve"
 
+  export CHEATSH_PATH_WORKDIR=$PWD
+
+  # rapidfuzz does not support Python 2,
+  # so if we are using Python 2, install fuzzywuzzy instead
+  if [[ $PYTHON2 = YES ]]; then
+    sed -i s/rapidfuzz/fuzzywuzzy/ requirements.txt
+    echo "python-Levenshtein" >> requirements.txt
+  fi
+
   _say_what_i_do Installing python requirements into the virtual environment
-  ve/bin/pip install -r requirements.txt > "$LOG" \
+  ve/bin/"$pip" install -r requirements.txt > "$LOG" \
       || {
 
     echo "ERROR:"
@@ -192,9 +220,9 @@ EOF
     tail -n 10 "$LOG"
     echo "---"
     echo "See $LOG for more"
-    fatal Could not install python dependecies into the virtual environment
+    fatal Could not install python dependencies into the virtual environment
   }
-  echo "$(ve/bin/pip freeze | wc -l) dependencies were successfully installed"
+  echo "$(ve/bin/"$pip" freeze | wc -l) dependencies were successfully installed"
 
   _say_what_i_do Fetching the upstream cheat sheets repositories
   ve/bin/python lib/fetch.py fetch-all | tee -a "$LOG"
@@ -283,8 +311,8 @@ chtsh_mode()
       echo "Configured mode: $mode"
     fi
   else
-    echo "Uknown mode: $mode"
-    echo Suported modes:
+    echo "Unknown mode: $mode"
+    echo Supported modes:
     echo "  auto    use the standalone installation first"
     echo "  lite    use the cheat sheets server directly"
   fi
@@ -575,7 +603,7 @@ stealth - stealth mode (automatic queries for selected text)
 update  - self update (only if the scriptfile is writeable)
 version - show current cht.sh version
 /:help  - service help
-QUERY   - space ceparated query staring (examples are below)
+QUERY   - space separated query staring (examples are below)
               cht.sh> python zip list
               cht.sh/python> zip list
               cht.sh/go> /python zip list
