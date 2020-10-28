@@ -1,2 +1,2 @@
 #!/bin/bash
-git fetch -t --all && git pull --rebase
+git fetch -f -t --all && git pull --rebase
