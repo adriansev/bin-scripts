@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+[[ ! -e ${HOME}/.workenv ]] && { echo "There is no ${HOME}/.workenv"; exit 1; }
+
+ARG="${1}"
+
+case ${ARG} in
+    "0"|"off"|"disable" )
+    /usr/bin/sed -i '/ENVLOAD=/s/.*/export ENVLOAD=/' ${HOME}/.workenv
+    ;;
+    "1"|"on"|"enable" )
+    /usr/bin/sed -i '/ENVLOAD=/s/.*/export ENVLOAD=1/' ${HOME}/.workenv
+    ;;
+    *) echo "Options are 0|off|disable or 1|on|enable"
+esac
+
