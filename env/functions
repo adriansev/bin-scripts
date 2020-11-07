@@ -108,15 +108,9 @@ local fullhost=$(hostname -f)
 echo $host
 }
 
-
 cxxflags () {
-CXXFLAGS='-march=native -O2'
-
-local avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
-[[ ${avx_enable} == "yes" ]] && CXXFLAGS="${CXXFLAGS} -mavx"
-
-export CXXFLAGS
-export CFLAGS=${CXXFLAGS}
+export CXXFLAGS='-march=native -mtune=native -O2'
+export CFLAGS="${CXXFLAGS}"
 }
 
 mymake () {
@@ -223,7 +217,7 @@ g++root () {
 g++ $(root-config --libs) $(root-config --cflags) "${@}"
 }
 
-root-module () {
+root5-module () {
   if [ $# -lt 1 ] ; then
     echo "root-module need exactly one argument"
     return 1
@@ -290,11 +284,7 @@ transfer () {
 
 job_start_local () { cd $1 && (nohup ./cmd &>cmd_output.txt &) && cd .. ; }
 
-date_baby () {
-    local d1=$(date -d "$1" +%s)
-    local d2=$(date +%s)
-    echo $(( (d2 - d1) / 86400 )) days
-}
+uriencode () { jq -nr --arg v "${1}" '$v|@uri'; }
 
 function __wget() {
     : ${DEBUG:=0}
