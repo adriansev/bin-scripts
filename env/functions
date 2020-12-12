@@ -366,12 +366,12 @@ meteo () {
 
 gogo () { python2 ${HOME}/bin/gogo.py "${@}" ;}
 
-j_compile () {
+jpy_compile () {
     DIR=$(dirname $(which alien.py))
     pushd "${DIR}"
     python3 -OO -m py_compile alien.py
     popd
 }
 
-j () { python3 $(which alien.py) "${@}" ;}
+jpy () { python3 $(which alien.py) "${@}" ;}
 
