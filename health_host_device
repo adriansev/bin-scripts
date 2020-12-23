@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+SUDO="sudo"
+
+DEV_TYPE=($(lsblk -dno NAME,TYPE /dev/$(lsblk -no PKNAME $(df -P $(realpath "${1}") | awk '/\/dev/ {print $1}'))))
+DEVICE=${DEV_TYPE[0]}
+TYPE=${DEV_TYPE[1]}
+
+if [[ "${TYPE}" == "disk" ]]; then
+    STATUS=$(${SUDO} smartctl -H --json=cg "/dev/${DEVICE}" | awk -F= '/json\.smart_status\.passed/ {gsub(";","",$2); print $2}') #'
+    [[ "${STATUS}" == "true" ]] && { echo "SMART: OK"; exit; } || { echo "SMART: FAIL"; exit; }
+fi
+
+if [[ "${TYPE}" =~ raid* ]]; then
+    echo "MD: $(</sys/block/${DEVICE}/md/array_state)"
+fi
+
