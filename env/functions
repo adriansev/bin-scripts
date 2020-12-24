@@ -355,6 +355,8 @@ function __wget() {
     exec 3>&-
 }
 
+make_qr () { printf "$@" | curl -F-=\<- qrenco.de ; }
+
 meteo () {
     if [[ "${1}" == "nice" ]]; then
         local request="wttr.in/Bucharest?format=v2"
@@ -363,8 +365,6 @@ meteo () {
     fi
     curl -H "Accept-Language: ${LANG%_*}" --compressed "${request}"
 }
-
-gogo () { python2 ${HOME}/bin/gogo.py "${@}" ;}
 
 jpy_compile () {
     DIR=$(dirname $(which alien.py))
