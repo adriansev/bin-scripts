@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync ESP1 to ESP2
+After=boot-efi.mount boot-efi2.mount
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rsync -aWc /boot/efi/ /boot/efi2/
+ExecStart=/usr/bin/cp --preserve=all -f /boot/efi/EFI/fedora/grub.cfg /boot/grub2/
+
+[Install]
+WantedBy=multi-user.target

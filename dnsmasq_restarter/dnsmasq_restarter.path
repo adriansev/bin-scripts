@@ -1,0 +1,6 @@
+[Path]
+Unit=dnsmasq_restarter.service
+PathModified=/etc/dnsmasq.d
+
+[Install]
+WantedBy=multi-user.target
