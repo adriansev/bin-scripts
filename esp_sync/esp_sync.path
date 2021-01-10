@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync ESP1 to ESP2
+
+[Path]
+Unit=esp_sync.service
+PathModified=/boot/efi/EFI/fedora
+
+[Install]
+WantedBy=multi-user.target
+
