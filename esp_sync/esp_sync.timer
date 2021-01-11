@@ -1,0 +1,8 @@
+[Unit]
+Description=Run esp_sync
+
+[Timer]
+OnStartupSec=10
+
+[Install]
+WantedBy=timers.target
