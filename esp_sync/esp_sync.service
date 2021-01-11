@@ -1,11 +1,14 @@
 [Unit]
 Description=Sync ESP1 to ESP2
-After=boot-efi.mount boot-efi2.mount
+DefaultDependencies=no
+ConditionPathIsDirectory=/boot/efi/EFI/fedora/
+ConditionPathIsDirectory=/boot/efi2/EFI/fedora/
+After=final.target
 
 [Service]
 Type=oneshot
+ExecStart=/usr/bin/cp --preserve=all -f -t /boot/grub2/ /boot/efi/EFI/fedora/grub.cfg /boot/efi/EFI/fedora/grubenv
 ExecStart=/usr/bin/rsync -aWc /boot/efi/ /boot/efi2/
-ExecStart=/usr/bin/cp --preserve=all -f /boot/efi/EFI/fedora/grub.cfg /boot/grub2/
 
 [Install]
 WantedBy=multi-user.target
