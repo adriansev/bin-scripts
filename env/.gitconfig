@@ -19,6 +19,8 @@
     pick = cherry-pick
 
     lognice = log --graph --decorate --pretty=oneline --abbrev-commit --all
+    logrpm = log --date=format:'%a %b %d %Y' --pretty=format:'* %ad %an%n- %s%n'
+
     logbranch = log --graph --decorate --pretty=oneline --abbrev-commit --first-parent --no-merges
     branchlog = logbranch
 
