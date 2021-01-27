@@ -7,7 +7,7 @@ source ${HOME}/.mail_issues_secrets
 
 /home/adrian/bin/alimon_iss_issues > ${FILE}
 echo >> ${FILE}
-/usr/bin/ssh eos_mgm_root eos -b fs ls >> ${FILE}
+/usr/bin/ssh eos_mgm eos -b fs ls >> ${FILE}
 echo >> ${FILE}
 xrdmapc --list s -r rd.spacescience.ro:1094 | sort >> ${FILE}
 
