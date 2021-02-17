@@ -1,0 +1,3 @@
+curl -k https://download.edge.mysocket.io/linux_amd64/mysocketctl --output $HOME/bin/mysocketctl
+chmod +x $HOME/bin/mysocketctl
+
