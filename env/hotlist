@@ -32,6 +32,7 @@ GROUP "AUGER"
   ENTRY "/sh://augerkit/gluster/users/sevcenco" URL "/sh://augerkit/gluster/users/sevcenco"
   ENTRY "/sh://auger1/home/asevcenc" URL "/sh://auger1/home/asevcenc"
   ENTRY "/sh://auger01_root/root" URL "/sh://auger01_root/root"
+  ENTRY "/sh://auger1/home/asevcenc" URL "/#sh:auger1/home/asevcenc"
 ENDGROUP
 GROUP "ALICE"
   ENTRY "/sh://alien_adrian/~" URL "/sh://alien_adrian/~"
@@ -112,6 +113,14 @@ GROUP "WORK"
 ENDGROUP
 GROUP "WORK-GRID"
   ENTRY "/home/adrian/work-GRID/ALICEXRD" URL "/home/adrian/work-GRID/ALICEXRD"
+ENDGROUP
+GROUP "ISSAF-dirs"
+  ENTRY "/home/adrian/AUGER-GRID/auger-dirac" URL "/home/adrian/AUGER-GRID/auger-dirac"
+  ENTRY "/home/adrian/work/jobs/GRID" URL "/home/adrian/work/jobs/GRID"
+  ENTRY "/home/adrian/bin/env" URL "/home/adrian/bin/env"
+  ENTRY "/software/physics-tools/physics-kits" URL "/software/physics-tools/physics-kits"
+  ENTRY "/home/adrian/rpmbuild" URL "/home/adrian/rpmbuild"
+  ENTRY "/software/physics-tools/ALIBUILD/ali-latest" URL "/software/physics-tools/ALIBUILD/ali-latest"
 ENDGROUP
 ENTRY "/run/media/adrian" URL "/run/media/adrian"
 ENTRY "/home/adrian/Download" URL "/home/adrian/Download"
