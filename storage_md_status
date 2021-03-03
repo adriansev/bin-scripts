@@ -4,5 +4,4 @@ srv_list="storage02_root storage03_root storage04_root storage05_root storage06_
 
 for srv in ${srv_list}; do
     ssh ${srv} 'echo -e "\n#########\n   $(hostname)\n#########";sed "/unused devices.*/d; /Personalities.*/d ;/bitmap.*/d;" /proc/mdstat'
-    echo
 done
