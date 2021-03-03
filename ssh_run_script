@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+help () {
+echo "${0} ssh_alias file other_scp_or_ssh_options"
+exit
+}
+
+SRV="${1}"
+shift
+SCRIPT="${1}"
+shift
+
+if [[ -f "${SCRIPT}" ]]; then
+  FULL_NAME=$(realpath "${SCRIPT}")
+  NAME=$(basename ${FULL_NAME})
+  scp -pq "${@}" "${FULL_NAME}" ${SRV}:/tmp/${NAME}
+  REZ=$?
+fi
+
+[[ "${REZ}" -eq "0" ]] && ssh "${@}" ${SRV} "chmod +x /tmp/${NAME} && /tmp/${NAME}; rm -f /tmp/${NAME}"
+
