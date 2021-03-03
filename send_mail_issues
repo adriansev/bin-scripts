@@ -7,11 +7,11 @@ source ${HOME}/.mail_issues_secrets
 
 /home/adrian/bin/alimon_iss_issues > ${FILE}
 echo >> ${FILE}
-/usr/bin/ssh eos_mgm eos -b fs ls >> ${FILE}
+/usr/bin/ssh eos_mgm eos -b fs ls -b | tail -n +4 | column -t >> ${FILE}
 echo >> ${FILE}
 xrdmapc --list s -r rd.spacescience.ro:1094 | sort >> ${FILE}
 echo >> ${FILE}
-/home/adrian/bin/storage_md_status >> ${FILE}
+$HOME/bin/storage_md_status >> ${FILE}
 
 /usr/bin/curl --url 'smtp://mail2.spacescience.ro:587' \
 --ssl-reqd \
