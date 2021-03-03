@@ -2,6 +2,9 @@
 
 redir="${1:-rd.spacescience.ro}"
 
+xrdmapc --list s -r ${redir}:1094 &> /dev/null
+sleep 1
+
 SRV_LIST=$(xrdmapc --list s -r ${redir}:1094 | awk '/Srv/ {print $2}' | sort)
 
 XRD_QUERY () {
@@ -28,6 +31,7 @@ XRD_QUERY () {
 }
 
 
+rm -rf /tmp/*.xrdinfo
 for srv in ${SRV_LIST} ; do
     name=$(awk -F: '{printf("%s_%s\n",$1,$2);}' <<< "${srv}" ) #'
     ( XRD_QUERY ${srv} &> /tmp/${name}.xrdinfo ) &
