@@ -11,7 +11,9 @@ echo >> ${FILE}
 echo >> ${FILE}
 xrdmapc --list s -r rd.spacescience.ro:1094 | sort >> ${FILE}
 echo >> ${FILE}
-$HOME/bin/storage_md_status >> ${FILE}
+$HOME/bin/storage_md_status &>> ${FILE}
+echo >> ${FILE}
+$HOME/bin/storage_smart_status &>> ${FILE}
 
 /usr/bin/curl --url 'smtp://mail2.spacescience.ro:587' \
 --ssl-reqd \
