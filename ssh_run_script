@@ -13,9 +13,10 @@ shift
 if [[ -f "${SCRIPT}" ]]; then
   FULL_NAME=$(realpath "${SCRIPT}")
   NAME=$(basename ${FULL_NAME})
+  [[ -z "${FULL_NAME}" || -z "${NAME}" ]] && { echo "could not find the actual script: ${SCRIPT}"; exit 1; }
   scp -pq "${@}" "${FULL_NAME}" ${SRV}:/tmp/${NAME}
   REZ=$?
 fi
 
-[[ "${REZ}" -eq "0" ]] && ssh "${@}" ${SRV} "chmod +x /tmp/${NAME} && /tmp/${NAME}; rm -f /tmp/${NAME}"
+[[ "${REZ}" -eq "0" ]] && ssh "${@}" ${SRV} "[[ -f /tmp/${NAME} ]] && { chmod +x /tmp/${NAME} && /tmp/${NAME}; rm -f /tmp/${NAME}; }"
 
