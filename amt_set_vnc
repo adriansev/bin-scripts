@@ -1,0 +1,23 @@
+#!/usr/bin/bash
+
+xIP="${1}"
+[[ -z "${1}" ]] && { echo "1st arg is the target ip"; exit 1; }
+shift
+
+xPASSWORD="${1}"
+[[ -z "${1}" ]] && { echo "2nd arg is the target amt password"; exit 1; }
+shift
+
+xVNC_PWD="${1}" # random but must be 8 charter long
+[[ -z "${1}" ]] && { echo "3rd arg is the target amt vnc password - 8 chars"; exit 1; }
+shift
+
+xVNC_PORT='5900'
+
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${xIP} -P 16992 -u admin -p "${xPASSWORD}" -k RFBPassword="${xVNC_PWD}"
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${xIP} -P 16992 -u admin -p "${xPASSWORD}" -k Is5900PortEnabled=true
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${xIP} -P 16992 -u admin -p "${xPASSWORD}" -k OptInPolicy=false
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${xIP} -P 16992 -u admin -p "${xPASSWORD}" -k SessionTimeout=0
+wsman invoke -a RequestStateChange http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_KVMRedirectionSAP -h ${xIP} -P 16992 -u admin -p "${xPASSWORD}" -k RequestedState=2
+echo "Open Linux vnc client. Use \"$xIP:$xVNC_PORT\" as host and when promoted enter \"$xVNC_PWD\" as password"
+
