@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+echo "Checking for SMART errors on $(hostname) ..."
+for d in $(lsblk -dnp -o NAME); do smartctl -q errorsonly -H ${d};done
+echo "done"
