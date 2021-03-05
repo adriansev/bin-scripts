@@ -1,0 +1,76 @@
+# 
+# enable KVM (VNC)
+#
+# install wsman
+#wget http://ppa.launchpad.net/jared-dominguez/wsmancli/ubuntu/pool/main/w/wsmancli/wsmancli_2.2.6-1_amd64.deb -O /tmp/wsmancli_2.2.6-1_amd64.deb
+#sudo dpkg -i /tmp/wsmancli_2.2.6-1_amd64.deb
+sudo apt-get install -y wsmancli
+ 
+# configure parameter
+export AMT_HOST=192.168.254.10
+export AMT_PASSWORD=Admin123$
+export VNC_PASSWORD=P@ssw0rd
+ 
+# set the vnc password
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${AMT_HOST} -P 16992 -u admin -p ${AMT_PASSWORD} -k RFBPassword=${VNC_PASSWORD}
+ 
+# enable KVM redirection to port 5900
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${AMT_HOST} -P 16992 -u admin -p ${AMT_PASSWORD} -k Is5900PortEnabled=true
+ 
+# disable opt-in policy
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${AMT_HOST} -P 16992 -u admin -p ${AMT_PASSWORD} -k OptInPolicy=false
+ 
+# disable session timeout
+wsman put http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${AMT_HOST} -P 16992 -u admin -p ${AMT_PASSWORD} -k SessionTimeout=0
+ 
+# enable KVM
+wsman invoke -a RequestStateChange http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_KVMRedirectionSAP -h ${AMT_HOST} -P 16992 -u admin -p ${AMT_PASSWORD} -k RequestedState=2
+ 
+# OPTIONAL: view settings
+wsman get http://intel.com/wbem/wscim/1/ips-schema/1/IPS_KVMRedirectionSettingData -h ${AMT_HOST} -P 16992 -u admin -p ${AMT_PASSWORD}
+ 
+ 
+#
+# install amtterm (including amttool)
+#
+sudo apt-get install amtterm
+ 
+# reboot remote pc
+export AMT_PASSWORD=Admin123$; echo y | amttool 192.168.254.10 reset
+ 
+ 
+ 
+#
+# SERIAL over LAN (SOL)
+#
+# dmesg | grep ttyS1
+# get tty:
+# dmesg | grep ttyS | grep irq | grep 0000 | tr -s " " | cut -d" " -f4
+# get I/O:
+# dmesg | grep ttyS1 | grep irq | tr -s " " | cut -d" " -f7
+ 
+# enable tty login
+echo "S1:2345:respawn:/sbin/agetty ttyS1 115200 vt100-nav" >> /etc/inittab 
+init q
+ 
+# enable kernel messages and grup serial output
+echo 'GRUB_CMDLINE_LINUX="console=ttyS1,115200"' >> /etc/default/grub
+echo 'GRUB_TERMINAL="serial console"' >> /etc/default/grub
+echo 'GRUB_SERIAL_COMMAND="serial --speed=115200 --port=0xf0e0"' >> /etc/default/grub
+update-grub
+ 
+# connect
+amtterm 192.168.254.10
+ 
+ 
+ 
+# links
+http://linux.die.net/man/7/amt-howto
+http://blog.yarda.eu/
+http://www.gnu.org/software/grub/manual/grub.html
+http://wiki.debian.org/AMT/SerialOverLan
+http://ppa.launchpad.net/jared-dominguez/wsmancli/ubuntu/pool/main/w/wsmancli/
+http://www.cyberciti.biz/faq/howto-setup-serial-console-on-debian-linux/
+http://software.intel.com/sites/manageability/AMT_Implementation_and_Reference_Guide/DOCS/Implementation%20and%20Reference%20Guide/default.htm?turl=WordDocuments%2Fmanagingthekvmfeature.htm
+http://support.radmin.com/index.php?/Knowledgebase/Article/View/9/9/how-to-set-up-intel-amt-features
+
