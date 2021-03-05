@@ -1,0 +1,1 @@
+sudo -- bash -c 'systemctl stop tftp-rw.service ; systemctl status tftp-rw.service'

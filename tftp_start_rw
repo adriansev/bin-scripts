@@ -1,0 +1,1 @@
+sudo -- bash -c 'systemctl restart tftp-rw.service ; systemctl status tftp-rw.service'
