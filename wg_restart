@@ -1,13 +1,19 @@
 #!/bin/bash
 
-sudo -s -- <<EOF
-/home/adrian/bin/wg_service /etc/wireguard/server.conf stop
-/home/adrian/bin/wg_service /etc/wireguard/server.conf show
-/home/adrian/bin/wg_service /etc/wireguard/server.conf show
+ARG="${1}"
 
-/home/adrian/bin/wg_service /etc/wireguard/server443.conf stop
-/home/adrian/bin/wg_service /etc/wireguard/server443.conf show
-/home/adrian/bin/wg_service /etc/wireguard/server443.conf show
-
+if [[ "${ARG}" == "list" || -z "${ARG}" ]]; then
+    sudo -s -- <<EOF
+ls -la /etc/wireguard/*.conf
 EOF
+else
+    sudo -s -- <<EOF
+/home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf stop
+sleep 1
+/home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf show
+/home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf show
+sleep 1
+EOF
+
+fi
 
