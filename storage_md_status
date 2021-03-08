@@ -1,6 +1,6 @@
 #!/bin/bash
 
-srv_list="storage02_root storage03_root storage04_root storage05_root storage06_root storage07_root storage08_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02"
+srv_list="storage02_root storage03_root storage04_root storage05_root storage06_root storage07_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03"
 
 for srv in ${srv_list}; do
     ssh ${srv} 'echo -e "\n#########\n   $(hostname)\n#########";sed "/unused devices.*/d; /Personalities.*/d ;/bitmap.*/d;" /proc/mdstat'
