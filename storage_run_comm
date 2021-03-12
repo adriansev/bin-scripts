@@ -1,6 +1,6 @@
 #!/bin/bash
 
-storage_hosts="storage02 storage03 storage04 storage05 storage06 storage07 storage08 eos_fst01"
+storage_hosts="storage02 storage03 storage04 storage05 storage06 storage07 eos_fst01 eos_fst02 eos_fst03"
 
 [[ "${1}" == "root" ]] && { RUN_AS_ROOT=1; shift; }
 
