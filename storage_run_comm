@@ -1,11 +1,18 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-storage_hosts="storage02 storage03 storage04 storage05 storage06 storage07 eos_fst01 eos_fst02 eos_fst03"
+xrd_servers="storage02 storage03 storage04 storage05 storage06 storage07 storage09 storage10"
+eos_servers="eos_fst01 eos_fst02 eos_fst03"
 
 [[ "${1}" == "root" ]] && { RUN_AS_ROOT=1; shift; }
 
-for srv in ${storage_hosts} ; do
+for srv in ${xrd_servers} ; do
   [[ -n "${RUN_AS_ROOT}" ]] && srv="${srv}_root"
+  echo ${srv}
+  ssh_run_cmd ${srv} "${@}"
+  echo
+done
+
+for srv in ${eos_servers} ; do
   echo ${srv}
   ssh_run_cmd ${srv} "${@}"
   echo
