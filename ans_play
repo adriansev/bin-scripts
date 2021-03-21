@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+ARG1="${1}"
+IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
+
+if [[ -n "${IS_HOST}" ]]; then
+  TGT_SPEC="-e target=${ARG1}"
+  shift
+fi
+
+exec ansible-playbook ${TGT_SPEC} "${@}"
+
