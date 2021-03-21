@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
-[[ -z ${1} ]] && { echo "${0} host_name task1_file task2_file .."; exit; }
+[[ -z "${1}" ]] && { echo "${0} host_name task1_file task2_file .."; exit; }
 
 HOST="${1}"
 shift
+
+cd "${HOME}/ansible/playbooks" || exit 1
 
 NOW="$(date +%Y%m%d_%H%M%S)"
 PBOOK_TMP="${HOST}_play.tmp${NOW}.yml"
@@ -30,6 +32,6 @@ for task in "${task_list[@]}"; do
   ARGS=( "${ARGS[@]/${task}/}" )
 done
 
-echo ansible-playbook "${ARGS[@]}" ${PBOOK_TMP}
-[[ -e ${PBOOK_TMP} ]] && rm -rf ${PBOOK_TMP}
+ansible-playbook "${ARGS[@]}" ${PBOOK_TMP}
+[[ -e "${PBOOK_TMP}" ]] && rm -f "${PBOOK_TMP}"
 
