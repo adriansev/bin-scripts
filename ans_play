@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+OLD_PWD="$(pwd)"
+cd "${HOME}/ansible/playbooks"
+
 ARG1="${1}"
 IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
 
@@ -8,5 +11,7 @@ if [[ -n "${IS_HOST}" ]]; then
   shift
 fi
 
-exec ansible-playbook ${TGT_SPEC} "${@}"
+ansible-playbook ${TGT_SPEC} "${@}"
+
+cd "${OLD_PWD}"
 
