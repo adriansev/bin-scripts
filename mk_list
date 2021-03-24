@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+items_arr=( "${@}" )
+LIST="[ "
+for i in "${items_arr[@]}"; do LIST="${LIST}'${i}', "; done
+echo "${LIST%??} ]"
+
