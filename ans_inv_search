@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+ansible_hosts="$(ansible all --list-hosts | tail -n +2 | sed 's/[[:space:]]//g')"
+readarray -t host_list <<< "$(echo ${ansible_hosts})"
+
+HOST="${1}"
+shift
+
+[[ "${HOST}" == "list" ]] && { echo "${ansible_hosts}"; exit; }
+
+if [[ ! "${host_list[@]}" =~ "${HOST}" ]]; then
+  echo "Host >${HOST}< not found in the list of inventory devices: ${host_list[@]}";
+  exit 1
+fi
+
+ISS=".spacescience.ro"
+FULL_NAME=""
+for i in ${host_list[@]}; do
+  I_SHORT=${i%${ISS}} # remove domain from ansible host
+  HOST_SHORT=${HOST%${ISS}} # remove domain from input arg
+  [[ "${I_SHORT}" == ${HOST_SHORT} ]] && { FULL_NAME="${i}"; break; } || continue
+done
+[[ -z "${FULL_NAME}" ]] && { echo "No host defined by >${HOST}< was found in inventory"; exit 1; }
+
+redis-cli get "${FULL_NAME}" | jq "${@}"
+
