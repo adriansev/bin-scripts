@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-ansible ${1:-all} -m ansible.builtin.setup --tree ${HOME}/ansible/facts
+[[ "${1}" == "files" ]] && DO_LOCALFILES="--tree ${HOME}/ansible/facts"
+ansible ${1:-all} -m ansible.builtin.setup ${DO_LOCALFILES}

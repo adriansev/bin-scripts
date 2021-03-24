@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+ansible ${1:-all} -m ping
