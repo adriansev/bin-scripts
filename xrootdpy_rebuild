@@ -1,5 +1,8 @@
 #!/bin/bash
 
+rm -rf ~/.local/lib/python*/site-packages/{XRootD,pyxrootd,xrootd*}
+
 rm -rf MANIFEST.in install.sh publish.sh setup.py
 cp packaging/wheel/* .
+
 python3 ./setup.py install --user
