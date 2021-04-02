@@ -1,2 +1,2 @@
 #!/bin/bash
-curl -fsSLk 'https://www.cursbnr.ro/insert/cursvalutar.php?w=200&b=ffffff&bl=ffffff&ttc=000000&tc=000000&diff=0&ron=0&cb=0&pics=0' --output - | gunzip | html2text --ignore-links --ignore-tables --ignore-emphasis --ignore-images -b 0
+curl -fsSLk 'https://www.cursbnr.ro/insert/cursvalutar.php?w=200&b=ffffff&bl=ffffff&ttc=000000&tc=000000&diff=0&ron=0&cb=0&pics=0' --output - | html2text --ignore-links --ignore-tables --ignore-emphasis --ignore-images -b 0
