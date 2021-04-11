@@ -1,0 +1,11 @@
+## Git autocomplete
+export GIT_PS1_SHOWDIRTYSTATE=1
+export GIT_PS1_SHOWSTASHSTATE=1
+export GIT_PS1_SHOWCOLORHINTS=true
+
+## Git autocomplete
+SourceIfValid ${scrdir}/git-completion.bash
+SourceIfValid ${scrdir}/git-prompt.sh
+
+complete -o default -o nospace -F _git g
+
