@@ -1,0 +1,11 @@
+## TEMP LOCATIONS
+export TMPDIR="${HOME}/tmp"
+export TMP="${TMPDIR}"
+export TEMP="${TMPDIR}"
+export TEMPDIR="${TMPDIR}"
+
+KDETMP="${HOME}/tmpkde"
+KDEVARTMP="${KDETMP}/var"
+export KDETMP KDEVARTMP
+/usr/bin/mkdir -p "${TMPDIR}" "${KDEVARTMP}" &>/dev/null
+

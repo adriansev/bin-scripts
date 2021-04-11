@@ -1,0 +1,16 @@
+############
+## PROMPT ##
+############
+export PS1="\[$BGreen\][\D{%A %d.%m.%y %H:%M}] \u@\h : \[$BBlue\]\w \[$White\]\$(__git_ps1) \[$BGreen\]\$ \[$Color_Off\]\n"
+export PS2="continue-> "
+
+case $TERM in
+xterm*|rxvt*|eterm)
+    PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%,*}:${PWD/$HOME/~}\007" '
+    ;;
+screen)
+    PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%,*}:${PWD/$HOME/~}\033\\" '
+    ;;
+esac
+
+
