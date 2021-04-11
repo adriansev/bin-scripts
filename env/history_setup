@@ -4,8 +4,11 @@
 set -m
 shopt -s histappend cdspell cmdhist dirspell autocd checkwinsize    #makes bash append to history rather than overwrite
 export PROMPT_COMMAND='history -a'  #write to history whenever the prompt is displayed
+#export PROMPT_COMMAND="history -a; history -c; history -r; ${PROMPT_COMMAND}"
+
 export HISTCONTROL=ignoreboth
-export HISTIGNORE="&:[ ]*:exit:ls:cd"
-export HISTSIZE=1000000
-export HISTFILESIZE=1000000
+export HISTIGNORE="&:[ ]*:exit:ls:cd:man"
+export HISTSIZE=10000000
+export HISTFILESIZE=10000000
 ##export HISTTIMEFORMAT='%F %T'
+
