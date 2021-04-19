@@ -56,7 +56,7 @@ GROUP "EMI-Servers"
   ENTRY "/sh://grid04/home/asevcenc" URL "/sh://grid04/home/asevcenc"
   ENTRY "/sh://grid05_root/root" URL "/sh://grid05_root/root"
   ENTRY "/sh://alibox_root/root" URL "/sh://alibox_root/root"
-  ENTRY "/sh://alibox_alice/home/alicesgm" URL "/sh://alibox_alice/home/alicesgm"
+  ENTRY "/sh://alibox_alice/home/egiusers/alice/alicesgm" URL "/sh://alibox_alice/home/egiusers/alice/alicesgm"
 ENDGROUP
 GROUP "STORAGE"
   ENTRY "/sh://rd/home/aliprod" URL "/sh://rd/home/aliprod"
