@@ -233,6 +233,20 @@ root5-module () {
   rm -f ${name}Cint.cxx ${name}Cint.h ${name}Cint.o ${name}.o
 }
 
+root.sing () {
+local SING_CMD EXEC
+stat /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject &> /dev/null || { echo "no access"; return 1; }
+SING_CMD="${1}"
+if [[ "${SING_CMD}" == "shell" ]]; then
+    shift
+    singularity shell "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
+elif [[ "${SING_CMD}" == "run" ]]; then
+    shift
+    singularity run "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
+else
+    singularity exec /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest "${@}"
+fi
+}
 
 transfer () {
     # check arguments
