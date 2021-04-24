@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+exec nohup /usr/libexec/icedtea-web/javaws MonaLisaNo3D.jnlp &> "${HOME}/MLclient.log" &
+
