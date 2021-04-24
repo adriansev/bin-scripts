@@ -12,8 +12,9 @@ sed 's/^[ \t]*//;s/[ \t]*$//' "${HIST}" > "${HIST2}"
 sort -b "${HIST2}" | uniq > "${HIST2}.tmp"
 mv -f "${HIST2}.tmp" "${HIST2}"
 
-sed -i '/^:>/d; /^cd /d; /^alias /d; /^cat /d; /^cp /d; /^diff /d; /^git checkout /d; /^history /d; /^h /d; /^ll /d; /^ls /d; /^mkdir /d; /^mkcd /d;' "${HIST2}"
+sed -i '/^:>/d; /^cd$/d; /^cd /d; /^alias /d; /^cat /d; /^cp /d; /^diff /d; /^history /d; /^h /d; /^ll /d; /^ls /d; /^mkdir /d; /^mkcd /d;' "${HIST2}"
 sed -i '/^locate /d; /^man /d; /^mc&/d; /^mcedit /d; /^mv /d; /^which /d; /^make /d; /^kate /d; /^kdevelop /d; /^okular /d; /^rpm -qa/d; /^chmod +x /d;' "${HIST2}"
+sed -i '/^git checkout$/d; /^git diff$/d; /^git co$/d; /^ag /d; /^rm /d;' "${HIST2}"
 
 mv -f "${HIST2}" "${HIST}"
 
