@@ -1,5 +1,17 @@
-cvmfs_load_alice ()   { eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@${1}); }
-cvmfs_load_aliphys () { eval $(/cvmfs/alice.cern.ch/bin/alienv printenv VO_ALICE@AliPhysics::${1}); }
+cvmfs_load_alice () {
+local list output_str list_arr
+list="$( echo ${1} | sed 's/VO_ALICE@//g' )"
+output_str=""
+
+IFS=',' read -ra list_arr <<< "${list}"
+for tag in "${list_arr[@]}"; do
+    output_str="${output_str}${output_str:+,}VO_ALICE@${tag}"
+done
+eval $(/cvmfs/alice.cern.ch/bin/alienv printenv "${output_str}");
+}
+
+cvmfs_load_aliphys () { cvmfs_load_alice "AliPhysics::${1}"; }
+
 
 cvmfs_load_aliphys_latest () {
 local latest
