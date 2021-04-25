@@ -1,0 +1,15 @@
+#!/usr/bin/bash
+
+NOW () { date +%Y%m%d_%H%M%S; }
+
+file -b "${1}" | grep -E 'GPG.*encrypted.*' &> /dev/null || { echo "${1} is not GPG encrypted"; exit 1; }
+
+fn="$(realpath ${1})"
+outfile="$(dirname ${fn})/$(basename ${fn} .gpg)"
+if [[ -f "${outfile}" ]]; then
+    echo "${outfile} exists, rename to ${outfile}_$(NOW)"
+    mv "${outfile}" "${outfile}_$(NOW)"
+fi
+
+gpg -o "${outfile}" -d "${1}"
+
