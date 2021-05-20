@@ -69,5 +69,5 @@ ${CMAKE} \
 
 echo "Build cmds:
 cmake --build . -- -j16
-cmake --target install
+ninja install
 "
