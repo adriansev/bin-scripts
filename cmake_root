@@ -8,8 +8,10 @@ ROOT_BUILD_DIR="${tools}/ROOT/BUILD"
 mkdir -p "${ROOT_BUILD_DIR}"
 
 TAG="${1}"
+[[ -z "${TAG}" ]] && { echo -e "A tag/destination is required. Choose from:\n$(ls -1 --hide=BUILD  ${ROOT_BASEDIR}/)"; exit 1; }
+shift
 ROOT_INSTALL="${ROOT_BASEDIR}/${TAG}"
-[[ ! -e "${ROOT_INSTALL}" ]] && { echo "Directory ${TAG} not found in ${ROOT_BASEDIR}"; exit 1; }
+[[ ! -e "${ROOT_INSTALL}" ]] && { echo -e "Directory ${TAG} not found in ${ROOT_BASEDIR}. Choose from \n$(ls -1 --hide=BUILD  ${ROOT_BASEDIR}/)"; exit 1; }
 [[ -d "${ROOT_BUILD_DIR}" ]] && rm -rf ${ROOT_BUILD_DIR}/*
 cd "${ROOT_BUILD_DIR}"
 
@@ -68,6 +70,6 @@ ${CMAKE} \
 #-DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
 
 echo "Build cmds:
-cmake --build . -- -j16
+ninja
 ninja install
 "
