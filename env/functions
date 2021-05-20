@@ -225,24 +225,15 @@ diff_wu_long () { diff -wu $1 $2; }
 diff_code   () { diff  -u "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
 diff_code_w () { diff -wu "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
 
-g++root () {
-g++ $(root-config --libs) $(root-config --cflags) "${@}"
-}
-
-root5-module () {
-  if [ $# -lt 1 ] ; then
-    echo "root-module need exactly one argument"
-    return 1
-  fi
-
-  local name=$(basename $1 .cxx)
-  local root_cflags = $(root-config --cflags)
-
-  g++ -fPIC -Wall -g -c $name.cxx -o $name.o ${root_cflags}
-  rootcint -f ${name}Cint.cxx -c ${name}.h
-  g++ -fPIC -Wall -g -c ${name}Cint.cxx -o ${name}Cint.o ${root_cflags}
-  g++ -fPIC -shared -Wl,-soname,${name}.so -o ${name}.so ${name}Cint.o ${name}.o
-  rm -f ${name}Cint.cxx ${name}Cint.h ${name}Cint.o ${name}.o
+root_compile () {
+local FILE FN DIR NAME FULLNAME
+FILE="${1}"
+shift
+FN="$(realpath ${FILE})"
+DIR=$(dirname ${FN})
+FULLNAME=$(basename -- ${FN})
+NAME="${FULLNAME%.*}"
+g++ ${FN} $(root-config --glibs --cflags --libs) "${@}" -o "${NAME}"
 }
 
 root.sing () {
