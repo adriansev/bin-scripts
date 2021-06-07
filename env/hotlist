@@ -25,6 +25,7 @@ GROUP "remote"
   ENTRY "/sh://rocksfe_root/root" URL "/sh://rocksfe_root/root"
   ENTRY "/sh://haiduc/home/maria" URL "/sh://haiduc/home/maria"
   ENTRY "/ftp://MARGARETA@10.10.8.28/" URL "/ftp://MARGARETA@10.10.8.28/"
+  ENTRY "/sh://alibuildmac/Users/alibuild" URL "/sh://alibuildmac/Users/alibuild"
 ENDGROUP
 GROUP "AUGER"
   ENTRY "/sh://paoshift_root/root" URL "/sh://paoshift_root/root"
