@@ -1,5 +1,8 @@
 #!/bin/bash
 
-MYIP=$(curl -s https://ipinfo.io/ip)
+API_URL="https://api.my-ip.io/ip" # https://ipinfo.io/ip
+
+MYIP=$(curl -s ${API_URL})
+
 [[ -z "${MYIP}" ]] && MYIP=$(curl -s checkip.dyndns.org 2>&1| grep -oP -e '(?<=(<body>))(.*?)(?=(<\/body>))' | sed 's/Current IP Address: //') #'
 echo "${MYIP}"
