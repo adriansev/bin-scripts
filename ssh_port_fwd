@@ -30,16 +30,15 @@ split_sshremote () {
     echo -ne "${ARGLIST}"
 }
 
-SSHREMOTE="${1}"
-[[ -z "${SSHREMOTE}" ]] && { echo "1st arg should be the remote host id or ssh alias OR <list|show> <|port> OR kill port"; exit 1; }
-shift
+help () {
+echo "${0} [[<host_name> | <ssh_alias>] <target_port> <local_port>   ] | [ [list | show] port ] ] | [ kill <port> ] <more ssh args>
+The remote port of the destination machine will be made available on the specified local port.
+target_port can be of the form: internal_fqdn:port to create a tunnel directly to the internal_fqdn machine"
+}
 
-if [[ "${SSHREMOTE}" == "kill" ]]; then
-    port_to_be_killed="${1}"
-    [[ -z "${port_to_be_killed}" ]] && { echo "2nd arg should be the local listening port"; exit 1; }
-    kill_port "${port_to_be_killed}"
-    exit $?
-fi
+SSHREMOTE="${1}"
+shift
+[[ -z "${SSHREMOTE}" ]] && { help; exit 1; }
 
 if [[ "${SSHREMOTE}" == "list" || "${SSHREMOTE}" == "show" ]]; then
     port_to_be_listed="${1}"
@@ -51,18 +50,38 @@ if [[ "${SSHREMOTE}" == "list" || "${SSHREMOTE}" == "show" ]]; then
     exit;
 fi
 
-PORT_REMOTE="${1}"
-[[ -z "${PORT_REMOTE}" ]] && { echo "2nd arg should be the remote port"; exit 1; }
+if [[ "${SSHREMOTE}" == "kill" ]]; then
+    port_to_be_killed="${1}"
+    [[ -z "${port_to_be_killed}" ]] && { echo "No port specified for killing ssh tunnel"; help; exit 1; }
+    kill_port "${port_to_be_killed}"
+    exit $?
+fi
+
+
+TARGET_PORT="${1}"
+[[ -z "${TARGET_PORT}" ]] && { help; exit 1; }
 shift
 
+TARGET_HOST="localhost"
+IFS=':' read -ra TARGET_ARR <<< "${TARGET_PORT}"
+if [[ ${#TARGET_ARR[@]} == 2 ]]; then
+    TARGET_HOST=${TARGET_ARR[0]}
+    TARGET_PORT=${TARGET_ARR[1]}
+elif [[ ${#TARGET_ARR[@]} == 1 ]]; then
+    TARGET_PORT=${TARGET_ARR[0]}
+else
+    echo "something is wrong with target_port specification!
+it should be either just port (of the ssh destination machine) or fdqn:port for a machine that is seen by ssh destination"
+    exit 1;
+fi
+
 PORT_LOCAL="${1}"
-[[ -z "${PORT_LOCAL}" ]] && { echo "3rd arg should be the local port"; exit 1; }
+[[ -z "${PORT_LOCAL}" ]] && { help; exit 1; }
 shift
 
 ARGUMENTS="${@}"
 [[ -n "${ARGUMENTS}" ]] && ARGUMENTS=$(sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' <<< ${ARGUMENTS})
 
 kill_port ${PORT_LOCAL}
-
-exec ssh -f -q -NTC ${ARGUMENTS} -o ServerAliveInterval=10 -o ServerAliveCountMax=6 -o ExitOnForwardFailure=no -L localhost:${PORT_LOCAL}:localhost:${PORT_REMOTE} $(split_sshremote "${SSHREMOTE}")
+exec ssh -f -q -NTC ${ARGUMENTS} -o ServerAliveInterval=5 -o ServerAliveCountMax=6 -o ExitOnForwardFailure=no -L localhost:${PORT_LOCAL}:${TARGET_HOST}:${TARGET_PORT} $(split_sshremote "${SSHREMOTE}")
 
