@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+FILE="${1}"
+
+[[ -z "${FILE}" ]] && { echo "argument needed: the file to check"; exit 1; }
+[[ ! -f "${FILE}" ]] && { echo "File not found"; exit 1; }
+
+git log --all --first-parent --remotes --reflog --author-date-order -- "${FILE}"
