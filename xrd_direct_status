@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 redir="rd.spacescience.ro"
 
-MYCMD=$(echo 'for d in /storage*; do rm -f ${d}/xrddata/xrd-test 2>/dev/null && touch ${d}/xrddata/xrd-test 2>/dev/null && echo "$(/bin/hostname -s) :: ${d} OK" || echo "$(/bin/hostname -s) :: ${d} FAIL <<<<<<<<<<<<<<<<<<<<<<<"; done' | /usr/bin/base64 -w0)
+MYCMD=$(echo 'for d in /storage*; do { echo -ne "$(/bin/hostname -s) :: ${d} " && /usr/bin/mountpoint -q ${d} && echo > ${d}/xrd-test; } && echo "OK" || echo "FAIL <<<<<<<<<<<"; done' | /usr/bin/base64 -w0)
 
-for srv in $(/usr/bin/xrdmapc --list s -r ${redir}:1094 | /bin/awk '/Srv/ {gsub(":1094","",$2);print $2}' | sort); do
+for srv in $(/usr/bin/xrdmapc --list s -r ${redir}:1094 | /bin/awk '/Srv/ {gsub(":1094","",$2);gsub(":1095","",$2);print $2}' | sort -u); do
     /usr/bin/ssh -p 60000 aliprod@${srv} "echo $MYCMD | /usr/bin/base64 -d | /bin/bash"
     echo
 done
