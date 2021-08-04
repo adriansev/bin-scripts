@@ -1,49 +1,49 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+exec 100>/var/tmp/xrdstatus.lock || exit 1
+flock 100 || exit 1
+trap 'rm -f /var/tmp/xrdstatus.lock' EXIT
 
 redir="${1:-rd.spacescience.ro}"
-
-xrdmapc --list s -r ${redir}:1094 &> /dev/null
-sleep 1
 
 SRV_LIST=$(xrdmapc --list s -r ${redir}:1094 | awk '/Srv/ {print $2}' | sort)
 
 XRD_QUERY () {
-    local srv xrdfs_cmd xrdinfo stats arrstats totsp freesp
-    srv="${1}"
+local srv xrdfs_cmd xrdinfo stats arrstats totsp freesp
+srv="${1}"
 
-    xrdinfo=$(echo -ne "query stats i\nspaceinfo /\nexit\n" | xrdfs ${srv})
+xrdinfo=$(echo -ne "query stats i\nspaceinfo /\nexit\n" | xrdfs ${srv})
 
-    stats=$(awk -F'[<>]' '/statistics/ {print $2}' <<< "${xrdinfo}" )
-    arrstats=($stats)
-    eval ${arrstats[2]}
-    eval ${arrstats[8]}
+stats=$(awk -F'[<>]' '/statistics/ {print $2}' <<< "${xrdinfo}" )
+arrstats=($stats)
+eval ${arrstats[2]}
+eval ${arrstats[8]}
 
-    echo "Xrootd server cluster name is : ${site} and is running xrootd version ${ver}"
+echo "Xrootd server cluster name is : ${site} and is running xrootd version ${ver}"
 
-    # get xrd space info; Reported size in bytes; convert to GiB with 2 decimals
-    totsp=$(echo "${xrdinfo}" | awk -F: '/Total/ {printf "%.2f\n",$2/1073741824}')
-    freesp=$(echo "${xrdinfo}" | awk -F: '/Free/ {printf "%.2f\n",$2/1073741824}')
+# get xrd space info; Reported size in bytes; convert to GiB with 2 decimals
+totsp=$(echo "${xrdinfo}" | awk -F: '/Total/ {printf "%.2f\n",$2/1073741824}')
+freesp=$(echo "${xrdinfo}" | awk -F: '/Free/ {printf "%.2f\n",$2/1073741824}')
 
-    echo "xrootd storage server : ${srv}"
-    echo -e "Total space (GiB) :\t${totsp}"
-    echo -e "Free space (GiB) :\t${freesp}"
-    echo
+echo "xrootd storage server : ${srv}"
+echo -e "Total space (GiB) :\t${totsp}"
+echo -e "Free space (GiB) :\t${freesp}"
+echo
 }
 
 
-rm -rf /tmp/*.xrdinfo
 for srv in ${SRV_LIST} ; do
-    name=$(awk -F: '{printf("%s_%s\n",$1,$2);}' <<< "${srv}" ) #'
-    ( XRD_QUERY ${srv} &> /tmp/${name}.xrdinfo ) &
+  name=$(awk -F: '{print $1}' <<< "${srv}" )
+  ( XRD_QUERY ${srv} &> /tmp/${name}.xrdinfo ) &
 done
 
 ( XRD_QUERY ${redir}:1094 &> /tmp/${redir}.xrdinfo ) &
 wait
-cat /tmp/${redir}.xrdinfo
 
+cat /tmp/${redir}.xrdinfo
 for srv in ${SRV_LIST} ; do
-    name=$(awk -F: '{printf("%s_%s\n",$1,$2);}' <<< "${srv}" ) #'
-    cat /tmp/${name}.xrdinfo
+  name=$(awk -F: '{print $1}' <<< "${srv}" )
+  cat /tmp/${name}.xrdinfo
 done
 
 rm -rf /tmp/*.xrdinfo
