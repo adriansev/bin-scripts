@@ -1,0 +1,7 @@
+#!/bin/bash
+
+INITDIR="${1}"
+shift
+
+alibuild_build_initdir_default ${INITDIR} AliPhysics o2 "${@}"
+

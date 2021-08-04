@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+[[ -z ${ALIBUILD_WORK_DIR} ]] && { echo "ALIBUILD_WORK_DIR not defined"; exit 1; }
+[[ -d ${ALIBUILD_WORK_DIR} ]] || { echo "ALIBUILD_WORK_DIR directory does not exists"; exit 1; }
+
+ARCH="$(aliBuild architecture 2>/dev/null)"
+[[ -z ${ARCH} ]] && { echo "Platform not found or not aliBuild command"; exit 1; }
+
+rm -rf ${ALIBUILD_WORK_DIR}/${ARCH}
+rm -rf ${ALIBUILD_WORK_DIR}/BUILD/*
+rm -rf ${ALIBUILD_WORK_DIR}/INSTALLROOT/*
+rm -rf ${ALIBUILD_WORK_DIR}/SOURCES/*
+rm -rf ${ALIBUILD_WORK_DIR}/MODULES/${ARCH}
+rm -rf ${ALIBUILD_WORK_DIR}/SPECS/${ARCH}
+rm -rf ${ALIBUILD_WORK_DIR}/TARS/${ARCH}
+
