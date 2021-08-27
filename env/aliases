@@ -222,7 +222,7 @@ alias l1='ls -1'
 alias l.='ls -d .*'
 
 ## List only subdirectories
-alias lsd='ls -al -d * | egrep "^d"'
+alias lsdir='ls -al -d * | egrep "^d"'
 ## List the most recently modified files and directories
 alias ls_mod='ls -lAt'
 
