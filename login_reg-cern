@@ -1,0 +1,1 @@
+oras login -u asevcenc -p $(< ~/registry-cern.token) registry.cern.ch
