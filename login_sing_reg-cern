@@ -1,0 +1,1 @@
+singularity remote login -u asevcenc -p $(< ~/registry-cern.token) oras://registry.cern.ch

@@ -1,0 +1,1 @@
+singularity remote login -u adriansev --tokenfile ~/sing_sylabs.token
