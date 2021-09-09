@@ -15,7 +15,7 @@ local LIST_STR ITEM path_arr n
 [[ -z "${2}" ]] && return 1;
 LIST_STR="${1}"
 ITEM="${2}"
-readarray -d : -t path_arr <<< "${LIST_STR}"
+read -d : -a path_arr <<< "${LIST_STR}"
 for (( n=0; n < ${#path_arr[*]}; n++)); do
     [[ "${path_arr[n]}" == "${ITEM}" ]] && return 0;
 done
