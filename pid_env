@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+[[ -e "/proc/${1}" ]] || { echo "not such process"; exit 1; }
+
+xargs --null --max-args=1 echo < "/proc/${1}/environ"
+
