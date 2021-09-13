@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+command -v ag &> /dev/null || { echo "ag command not found"; exit 1; }
+command -v sed &> /dev/null || { echo "sed command not found"; exit 1; }
+
+TERM1="${1}"
+shift
+TERM2="${1}"
+shift
+WRITE="${1}"
+shift
+
+[[ -z ${TERM1} || -z ${TERM2} ]] && { echo "arg1 is term to be replaced with arg2"; exit 1; }
+
+for f in $(ag -l "${TERM1}"); do
+    sed ${WRITE} "s@${TERM1}@${TERM2}@g" $f;
+done
+
