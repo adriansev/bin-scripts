@@ -18,7 +18,8 @@
     st = status
     pick = cherry-pick
 
-    lognice = log --graph --decorate --pretty=oneline --abbrev-commit --all
+    lognice = log --graph --decorate --pretty=oneline --abbrev-commit
+    logniceall = log --graph --decorate --pretty=oneline --abbrev-commit --all
     logrpm = log --date=format:'%a %b %d %Y' --pretty=format:'* %ad %an%n- %s%n'
 
     logbranch = log --graph --decorate --pretty=oneline --abbrev-commit --first-parent --no-merges
@@ -26,7 +27,7 @@
 
     l = log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset'
     ll = log --stat --abbrev-commit
-    list = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+    list = log --graph --pretty=format:'%h %ad | %s%d [%an]' --date=short
 
     changes = diff --name-status
     diffstat = diff --stat
