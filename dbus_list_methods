@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-for serv in $(qdbus | grep org.) ; do
-    for path in $(qdbus ${serv}) ; do
-        qdbus ${serv} ${path}
+for serv in $(qdbus | grep org. | xargs); do
+    for path in $(qdbus "${serv}" | xargs); do
+        while read -r meth; do
+            echo -e "${serv}::${path}::${meth}"
+        done < <(qdbus "${serv}" "${path}")
     done
+echo
 done
+
