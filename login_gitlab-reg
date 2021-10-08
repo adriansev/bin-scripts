@@ -1,1 +1,1 @@
-docker login -u asevcenc -p $(< ~/gitlab_cern.token) gitlab-registry.cern.ch
+podman login -u asevcenc -p $(< ~/gitlab_cern.token) gitlab-registry.cern.ch
