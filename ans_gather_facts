@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 [[ "${1}" == "files" ]] && DO_LOCALFILES="--tree ${HOME}/ansible/facts"
-ansible ${1:-all} -m ansible.builtin.setup ${DO_LOCALFILES}
+ansible ${1:-all} -m ansible.builtin.setup ${DO_LOCALFILES} -a 'gather_timeout=15'
