@@ -88,7 +88,7 @@ git fetch -p origin
 
 root_local_enable () {
 local ROOT_BASEDIR TAG ROOT_INSTALL
-[[ -z "${1}" ]] && { echo -e "TAG should be supplied as argument"; return 1; }
+[[ -z "${1}" ]] && { echo -e "TAG should be supplied as argument!! options:\n$(ls -1 --hide=BUILD ${ROOT_BASEDIR}/)"; return 1; }
 [[ -z "${tools}" ]] && { echo "tools env var not defined" ; return 1; }
 [[ ! -d "${tools}" ]]&& { echo "${tools} directory does not exists" ; return 1; }
 ROOT_BASEDIR="${tools}/ROOT"
