@@ -52,6 +52,7 @@ ${CMAKE} \
 -G Ninja \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} -DCMAKE_CXX_STANDARD=17 \
 -DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
+-DCHROME_EXECUTABLE=/usr/bin/google-chrome-stable \
 -Dbuiltin_openssl=0 -Dbuiltin_davix=0 -Dbuiltin_fftw3=0 -Dbuiltin_gl2ps=0 -Dbuiltin_unuran=0 \
 -Dbuiltin_cfitsio=0 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_lz4=0 -Dbuiltin_lzma=0 -Dbuiltin_zlib=0 \
 -Dbuiltin_gsl=0 -Dbuiltin_pcre=0 -Dbuiltin_afterimage=0 -Dbuiltin_freetype=0 -Dbuiltin_xrootd=0 \
@@ -60,9 +61,12 @@ ${CMAKE} \
 -Droot7=1 -Dbuiltin_llvm=1 -Dimt=1 -Dvecgeom=1 -Dveccore=1 -Dbuiltin_veccore=1 -Dfitsio=1 \
 -Ddavix=1 -Dgviz=1 -Dqt5web=1 -During=1 -Droofit=1 -Dminuit2=1 -Dminuit2_omp=1 -Dunuran=1 -Dgdml=1 -Dhttp=1 \
 -Dccache=1 -Dsoversion=1 -Dgsl_shared=1 ${CUDA} -Dfgci=1 -Dcefweb=1 -Dwebgui=1 \
+-Djemalloc=1 \
+-Drpath=1 \
 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dcompression_default=zstd \
 "${ROOT_SRC}" | tee cmake_out.txt
 
+# -Dmpi=1 -Dminuit2_mpiL=1 \
 # -Dcuda=ON -Dcudnn=ON -Dtmva-gpu=ON
 # -DPYTHIA6_LIBRARY="${tools}/heplibs/pythia6/libPythia6.so" \
 # -Djemalloc="1" -Dtcmalloc="1"
