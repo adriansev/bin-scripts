@@ -61,7 +61,6 @@ ${CMAKE} \
 -Droot7=1 -Dbuiltin_llvm=1 -Dimt=1 -Dvecgeom=1 -Dveccore=1 -Dbuiltin_veccore=1 -Dfitsio=1 \
 -Ddavix=1 -Dgviz=1 -Dqt5web=1 -During=1 -Droofit=1 -Dminuit2=1 -Dminuit2_omp=1 -Dunuran=1 -Dgdml=1 -Dhttp=1 \
 -Dccache=1 -Dsoversion=1 -Dgsl_shared=1 ${CUDA} -Dfgci=1 -Dcefweb=1 -Dwebgui=1 \
--Djemalloc=1 \
 -Drpath=1 \
 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dcompression_default=zstd \
 "${ROOT_SRC}" | tee cmake_out.txt
@@ -72,6 +71,8 @@ ${CMAKE} \
 # -Djemalloc="1" -Dtcmalloc="1"
 #-DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
 #-DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
+### -Djemalloc=1 \ breaks cppyyy
+
 
 echo "Build cmds:
 ninja
