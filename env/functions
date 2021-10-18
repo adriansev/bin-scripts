@@ -235,8 +235,25 @@ diff_long ()    { diff $1 $2; }
 diff_u_long ()  { diff -u $1 $2; }
 diff_wu_long () { diff -wu $1 $2; }
 
-diff_code   () { diff  -u "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
-diff_code_w () { diff -wu "$@" <(grep -vE '^\s*(#|$|//)' $1)  <(grep -vE '^\s*(#|$|//)' $2); }
+diff_code   () {
+TMP1=$(mktemp ${TMPDIR:-/tmp}/diff-XXXXXX)
+TMP2=$(mktemp ${TMPDIR:-/tmp}/diff-XXXXXX)
+trap "rm -f $TMP1 $TMP2" RETURN
+
+grep -Ev "^\s*#.*|^\s*\/\/.*|^$" "${1}" > ${TMP1}
+grep -Ev "^\s*#.*|^\s*\/\/.*|^$" "${2}" > ${TMP2}
+diff -u ${TMP1} ${TMP2}
+}
+
+diff_code_w   () {
+TMP1=$(mktemp ${TMPDIR:-/tmp}/diff-XXXXXX)
+TMP2=$(mktemp ${TMPDIR:-/tmp}/diff-XXXXXX)
+trap "rm -f $TMP1 $TMP2" RETURN
+
+grep -Ev "^\s*#.*|^\s*\/\/.*|^$" "${1}" > ${TMP1}
+grep -Ev "^\s*#.*|^\s*\/\/.*|^$" "${2}" > ${TMP2}
+diff -wu ${TMP1} ${TMP2}
+}
 
 root_compile () {
 local FILE FN DIR NAME FULLNAME
