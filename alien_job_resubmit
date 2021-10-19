@@ -1,0 +1,1 @@
+alien.py resubmit $(alien.py ps -E -id | xargs)
