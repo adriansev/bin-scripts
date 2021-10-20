@@ -1,1 +1,1 @@
-docker login -u adriansevcenco -p $(< ~/docker_hub.token)
+podman login -u adriansevcenco -p $(< ~/docker_hub.token)
