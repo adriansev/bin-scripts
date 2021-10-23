@@ -5,4 +5,4 @@ shift
 PACKAGE="${1}"
 shift
 
-alibuild_build ${INITDIR} build ${PACKAGE} "${@}"
+alibuild_label ${INITDIR} build ${PACKAGE} "${@}"

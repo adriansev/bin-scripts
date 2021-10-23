@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; exit 1; }
+
+tags="$(ls --hide=sw ${ALIBUILD_WORK_DIR}/../)"
+
+[[ -z "${1}" ]] && { echo -e "Specify the software config! Options:\n$(echo ${tags} | xargs -n 1)"; exit 1; }
+BUILDNAME="${1}"
+shift
+
+NAME_VALID=$(echo "${tags}" | grep "${BUILDNAME}")
+[[ -z "${NAME_VALID}" ]] && { echo -e "Name not found in list:\n$(echo ${tags} | xargs -n 1)" ; exit 1;}
+[[ ! -d "${ALIBUILD_WORK_DIR}/../${BUILDNAME}" ]] && { echo -e "Name is not a directory"; exit 1; }
+
+pushd ${ALIBUILD_WORK_DIR}/../${BUILDNAME} || { echo "Could not cd to: ${ALIBUILD_WORK_DIR}/../${BUILDNAME}"; exit 1; }
+
+aliBuild -d --force-unknown-architecture --work-dir ../sw "${@}"
+popd
+
