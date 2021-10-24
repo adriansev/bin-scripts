@@ -3,5 +3,5 @@
 INITDIR="${1}"
 shift
 
-alibuild_build_initdir_default ${INITDIR} O2Physics o2 "${@}"
+alibuild_build_default ${INITDIR} O2Physics o2 "${@}"
 
