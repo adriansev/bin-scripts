@@ -62,6 +62,7 @@ ${CMAKE} \
 -Ddavix=1 -Dgviz=1 -Dqt5web=1 -During=1 -Droofit=1 -Dminuit2=1 -Dminuit2_omp=1 -Dunuran=1 -Dgdml=1 -Dhttp=1 \
 -Dccache=1 -Dsoversion=1 -Dgsl_shared=1 ${CUDA} -Dfgci=1 -Dcefweb=1 -Dwebgui=1 \
 -Drpath=1 \
+-Dpyroot=ON -DPYTHON_EXECUTABLE=$(type -p python3) \
 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dcompression_default=zstd \
 "${ROOT_SRC}" | tee cmake_out.txt
 
