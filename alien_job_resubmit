@@ -1,1 +1,1 @@
-alien.py resubmit $(alien.py ps -E -id | xargs)
+alien.py ps -E -id | xargs -n 50 alien.py resubmit
