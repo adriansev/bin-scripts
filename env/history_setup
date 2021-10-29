@@ -1,11 +1,19 @@
 ###################
 ###   HISTORY   ###
 ###################
-set -m
-shopt -s histappend cdspell cmdhist dirspell autocd checkwinsize    #makes bash append to history rather than overwrite
-export PROMPT_COMMAND="history -a; history -c; history -r; ${PROMPT_COMMAND}" #write to history whenever the prompt is displayed and reload the whole history
 
-export HISTCONTROL=ignoreboth
+# Monitor mode. Job control is enabled.
+# set -m
+
+# makes bash append to history rather than overwrite
+shopt -s histappend cdspell dirspell autocd
+
+# write to history whenever the prompt is displayed and reload the whole history
+# PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
+# PROMPT_COMMAND="history -a;$PROMPT_COMMAND"
+PROMPT_COMMAND="history -n; history -w; history -c; history -r; $PROMPT_COMMAND"
+
+HISTCONTROL=ignoredups:erasedups
 export HISTIGNORE="&:[ ]*:exit:ls:cd:man"
 export HISTSIZE=10000000
 export HISTFILESIZE=10000000
