@@ -1,0 +1,15 @@
+#!/bin/bash
+
+#CA="-CAfile ${HOME}/.globus/AliEn-CA.pem"
+#CA="-CAfile ${HOME}/.globus/AliEn-CA-NEW.pem"
+
+if [[ -z "${X509_CERT_DIR}" ]]; then
+    if [[ -e /cvmfs/alice.cern.ch/etc/grid-security/certificates ]]; then
+        CA="-CApath /cvmfs/alice.cern.ch/etc/grid-security/certificates"
+    else
+        CA="-CApath /etc/grid-security/certificates"
+    fi
+fi
+
+openssl s_client ${CA} -cert ${TMPDIR}/tokencert_$(id -u).pem -key ${TMPDIR}/tokenkey_$(id -u).pem "${@}" -connect alice-jcentral.cern.ch:8097
+
