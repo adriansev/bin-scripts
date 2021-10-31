@@ -1,7 +1,0 @@
-#!/bin/bash
-
-INITDIR="${1}"
-shift
-
-exec alibuild_build_default ${INITDIR} AliPhysics user "${@}"
-

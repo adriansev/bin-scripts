@@ -1,6 +1,0 @@
-#!/bin/bash
-[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
-
-ALIBUILD_ARCH=$(aliBuild architecture 2> /dev/null);
-[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -printf "%f\n";

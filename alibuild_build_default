@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-help () {
-echo "${0} initDir packageName defaultName [any other aliBuild build args]"
-exit 1
-}
+help () { echo "${0} initDir packageName defaultName [any other aliBuild build args]"; }
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; exit 1; }
 
 INITDIR="${1}"
 shift
@@ -12,23 +11,31 @@ shift
 DEFAULT="${1}"
 shift
 
-[[ -z "${INITDIR}" || -z "${PACKAGE}" || -z "${DEFAULT}" ]] && help
-
+##   INIT DIR
 tags="$(ls --hide=sw ${ALIBUILD_WORK_DIR}/../)"
+[[ -z "${INITDIR}" ]] && { help; echo -e "List of found init dirs:\n$(echo ${tags} | xargs -n 6 | column -t)" ; exit 1; }
+
 NAME_VALID=$(echo "${tags}" | grep "${INITDIR}")
-[[ -z "${NAME_VALID}" ]] && { echo -e "Name not found in list:\n$(echo ${tags} | xargs -n 3)" ; exit 1;}
+[[ -z "${NAME_VALID}" ]] && { echo -e "Name not found in init dirs list:\n$(echo ${tags} | xargs -n 6 | column -t)" ; exit 1; }
 [[ ! -d "${ALIBUILD_WORK_DIR}/../${INITDIR}" ]] && { echo -e "${INITDIR} is not a directory"; exit 1; }
 
+##   PACKAGES
 alidist_dir="${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist"
 [[ ! -d "${alidist_dir}" ]] && { echo -e "no alidist directory in ${INITDIR} !!!"; exit 1; }
 
-package_list=$(grep -h "package: " ${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist/*.sh | sed 's/package: //g')
+packages_file_list="$(ls -1 -f ${ALIBUILD_WORK_DIR}/../o2/alidist/*.sh | grep -v 'defaults-.*.sh')"
+package_list=$(for f in ${packages_file_list}; do grep "package: " $f | sed 's/package: //g'; done)
+[[ -z "${PACKAGE}" ]] && { help; echo -e "Packages list (mind the caps):\n$(echo ${package_list} | sort |xargs -n 4 | column -t)" ; exit 1; }
+
 PACKAGE_VALID=$(echo "${package_list}" | grep "${PACKAGE}")
-[[ -z "${PACKAGE_VALID}" ]] && { echo -e "Package not found in list (mind the caps):\n$(echo ${package_list} | sort |xargs -n 3 | column -t)" ; exit 1;}
+[[ -z "${PACKAGE_VALID}" ]] && { echo -e "Package not found in list (mind the caps):\n$(echo ${package_list} | grep -v '^defaults-' | sort |xargs -n 4 | column -t)" ; exit 1; }
 
+##   DEFAULTS
 defaults_list=$(find ${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist/ -type f -name "defaults-*" -printf "%P\n" | sed 's/defaults-//g;s/.sh$//g')
-DEFAULT_VALID=$(echo "${defaults_list}" | grep "${DEFAULT}")
-[[ -z "${DEFAULT_VALID}" ]] && { echo -e "Default not found in list (mind the caps):\n$(echo ${defaults_list} | sort | xargs -n 3 | column -t)" ; exit 1;}
+[[ -z "${DEFAULT}" ]] && { help; echo -e "Default list (mind the caps):\n$(echo ${defaults_list} | sort | xargs -n 3 | column -t)" ; exit 1; }
 
-exec alibuild_label ${INITDIR} "${@}" build ${PACKAGE} --defaults ${DEFAULT}
+DEFAULT_VALID=$(echo "${defaults_list}" | grep "${DEFAULT}")
+[[ -z "${DEFAULT_VALID}" ]] && { echo -e "Default not found in list (mind the caps):\n$(echo ${defaults_list} | sort | xargs -n 3 | column -t)" ; exit 1; }
+
+aliBuild -d --force-unknown-architecture --work-dir "${ALIBUILD_WORK_DIR}" "${@}" build ${PACKAGE} --defaults ${DEFAULT}
 

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-INITDIR="${1}"
-shift
-PACKAGE="${1}"
-shift
-
-alibuild_label ${INITDIR} build ${PACKAGE} --remote-store /dev/null "${@}"

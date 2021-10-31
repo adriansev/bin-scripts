@@ -1,7 +1,23 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 [[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
 
 ALIBUILD_ARCH=$(aliBuild architecture);
 [[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
-find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/AliPhysics -mindepth 1 -maxdepth 1 -type d -printf "%f\n";
+
+PACKAGE="${1}"
+shift
+
+PACKAGE_LIST="$(ls -1 ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/ | sort)"
+[[ -z "${PACKAGE}" ]] && { echo -e "Specify the package! List:\n$(echo ${PACKAGE_LIST}| xargs -n 4 | column -t)" ; exit 1; }
+
+PACKAGE_VALID=$(echo "${PACKAGE_LIST}" | grep "${PACKAGE}")
+[[ -z "${PACKAGE_VALID}" ]] && { echo -e "Package not found in list (mind the caps):\n$(echo ${PACKAGE_LIST} | xargs -n 4 | column -t)" ; exit 1; }
+
+echo "Builds:"
+echo "$(find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/${PACKAGE}/ -mindepth 1 -maxdepth 1 -type d -printf '%P\n')"
+echo
+echo "Labels to builds maps"
+echo "$(find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/${PACKAGE}/ -mindepth 1 -maxdepth 1 -type l -printf '%P -> %l\n')"
+
+
