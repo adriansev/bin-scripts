@@ -1,1 +1,1 @@
-podman login -u asevcenc -p $(< ~/registry-cern.token) registry.cern.ch
+oras login -u asevcenc -p "$(< ~/registry-cern.token)" registry.cern.ch
