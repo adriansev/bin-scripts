@@ -1,22 +1,26 @@
 #!/bin/bash
 
-list=$(find $1 -type f -name AnalysisResults.root -printf '%h \n')
-dir_list=($list)
+CURDIR="$(pwd -P)"
+LIST="/tmp/merge_list"
 
-PREV_FILE="result.root"
+DIR="${1}"
+[[ -z "${DIR}" ]] && { echo "Which directory to search for inputs?"; exit 1; }
+shift
+cd "${DIR}" || { echo "Could not cd to ${DIR}"; exit 1; }
 
-TARGET="AnalysisResults.root"
+INPUTFILE="${1}"
+[[ -z "${INPUTFILE}" ]] && { echo "Which file to search for merging?"; exit 1; }
+shift
 
-rm -rf ${PREV_FILE}
+NOW=$(date +%Y%m%d_%H%M%S)
+OUTFILE="$(basename ${INPUTFILE} .root)_${NOW}_merge.root"
 
-for dir in "${dir_list[@]}"; do
-  if [ ! -e "$PREV_FILE" ]; then 
-    cp "${dir}"/AnalysisResults.root ${PREV_FILE}
-    continue
-  fi
+IS_ABSOLUTE="${DIR:0:1}"
+[[ "${IS_ABSOLUTE}" != "/" ]] && DIR="${CURDIR}/${DIR}"
 
-  hadd -T -k result_new.root ${PREV_FILE} "${dir}"/${TARGET}
-  mv -f result_new.root ${PREV_FILE}
-done
+find "${DIR}/" -type f -name "${INPUTFILE}" -printf '%p\n' > "${LIST}"
 
+hadd -f6 -k -n 10 "$@" "${OUTFILE}" @"${LIST}"
+
+rm -rf "${LIST}"
 
