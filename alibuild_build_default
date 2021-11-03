@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-help () { echo "${0} initDir packageName defaultName [any other aliBuild build args]"; }
-
 [[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; exit 1; }
+
+help () { echo "${0} initDir packageName defaultName [any other aliBuild build args]"; }
 
 INITDIR="${1}"
 shift
@@ -18,6 +18,11 @@ tags="$(ls --hide=sw ${ALIBUILD_WORK_DIR}/../)"
 NAME_VALID=$(echo "${tags}" | grep "${INITDIR}")
 [[ -z "${NAME_VALID}" ]] && { echo -e "Name not found in init dirs list:\n$(echo ${tags} | xargs -n 6 | column -t)" ; exit 1; }
 [[ ! -d "${ALIBUILD_WORK_DIR}/../${INITDIR}" ]] && { echo -e "${INITDIR} is not a directory"; exit 1; }
+
+pushd ${ALIBUILD_WORK_DIR}/../${INITDIR} || { echo "Could not cd to: ${ALIBUILD_WORK_DIR}/../${INITDIR}"; exit 1; }
+mkdir -p "${ALIBUILD_WORK_DIR}/../${INITDIR}/tmp"
+export TMPDIR="${ALIBUILD_WORK_DIR}/../${INITDIR}/tmp"
+export TMP="${TMPDIR}"
 
 ##   PACKAGES
 alidist_dir="${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist"
@@ -37,5 +42,10 @@ defaults_list=$(find ${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist/ -type f -name "
 DEFAULT_VALID=$(echo "${defaults_list}" | grep "${DEFAULT}")
 [[ -z "${DEFAULT_VALID}" ]] && { echo -e "Default not found in list (mind the caps):\n$(echo ${defaults_list} | sort | xargs -n 3 | column -t)" ; exit 1; }
 
-aliBuild -d --force-unknown-architecture --work-dir "${ALIBUILD_WORK_DIR}" "${@}" build ${PACKAGE} --defaults ${DEFAULT}
+## Architecture
+ARCH_ARG=""
+local_arch="$(aliBuild architecture)"
+[[ "${local_arch}" != "slc8_x86-64" || "${local_arch}" != "slc7_x86-64" ]] && ARCH_ARG="--force-unknown-architecture"
 
+aliBuild -d ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" "${@}" build ${PACKAGE} --defaults ${DEFAULT} -z "${INITDIR}"
+popd
