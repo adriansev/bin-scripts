@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+[[ -z "${LD_LIBRARY_PATH}" ]] && { echo "LD_LIBRARY_PATH not set"; exit; }
+
+for libpath in $(echo $LD_LIBRARY_PATH | xargs -d ":"); do
+    for lib in $(find ${libpath} -name '*.so'); do
+
+        while read dep_line; do
+            line_ldd=$(echo ${dep_line}| sed 's/        //')
+            echo "${lib}    ${line_ldd}"
+        done < <(ldd ${lib}) >> "${TMPLIST}"
+
+        while read dep_line; do
+            line_ldd=$(echo ${dep_line}| sed 's/        //')
+            echo "${lib}    ${dep_line}    UNUSED"
+        done < <(ldd -u ${lib}) >> "${TMPLIST}"
+
+    done
+done
+
