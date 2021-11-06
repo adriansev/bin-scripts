@@ -263,7 +263,7 @@ FN="$(realpath ${FILE})"
 DIR=$(dirname ${FN})
 FULLNAME=$(basename -- ${FN})
 NAME="${FULLNAME%.*}"
-g++ ${FN} $(root-config --glibs --cflags --libs) "${@}" -o "${NAME}"
+$(root-config --cxx --glibs --cflags --libs) "${@}" -o "${NAME}" ${FN}
 }
 
 root.sing () {
@@ -276,7 +276,8 @@ if [[ "${SING_CMD}" == "shell" ]]; then
 elif [[ "${SING_CMD}" == "run" ]]; then
     shift
     singularity run "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
-else
+elif [[ "${SING_CMD}" == "exec" ]]; then
+    shift
     singularity exec /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest "${@}"
 fi
 }
