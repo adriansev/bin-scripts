@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+H="${1}"
+shift
+
+ldapsearch -x -H ldap://${H} -b o=Infosys
+ldapsearch -x -H ldap://${H} -b o=Infosys "*" modifyTimestamp
+
