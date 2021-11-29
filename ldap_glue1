@@ -3,5 +3,5 @@
 H="${1}"
 shift
 
-ldapsearch -x -H ldap://${H} -b mds-vo-name=resource,o=grid "${@}"
+ldapsearch -o ldif-wrap=no -x -LLL -H ldap://${H} -b o=grid "${@}"
 
