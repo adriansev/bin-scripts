@@ -1,0 +1,3 @@
+for line in $(alien.py ps -A -id | xargs -n 50 | sed 's/ /,/g'); do
+    alien.py kill "${line}"
+done
