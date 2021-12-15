@@ -9,9 +9,9 @@ cd ${CONF_DIR} && ls -1 *.sshmount | sed 's/.sshmount//g'
 echo " Action  : mount or umount"
 }
 
-[[ -z "$1" ]] && help && exit 1
+[[ -z "${1}" ]] && help && exit 1
 
-cfgid=$1
+cfgid="${1}"
 cfg="${CONF_DIR}/${cfgid}.sshmount"
 
 [[ ! -e ${cfg} || ! -f ${cfg} ]] && echo "Configuration file not found or not a file" && help && exit 1
@@ -20,7 +20,7 @@ source ${cfg}
 SSHFS_OPTS="compression=yes,sshfs_sync,noatime,reconnect,Cipher=arcfour256,follow_symlinks,transform_symlinks"
 
 mount_f () {
-local mount_ok=$(grep ${dir_local} /proc/mounts)
+local mount_ok=$(grep ${dir_local} /proc/mounts | grep fuse.sshfs)
 
 if [[ -z "$mount_ok" ]] ; then
     echo -e "\t mount sshfs"
@@ -37,13 +37,13 @@ umount_f () {
 fusermount -u ${dir_local} && echo -e "\t ${dir_local} sshfs umounted"
 }
 
-if [ "$2" = "mount" ]; then
+if [ "${2}" = "mount" ]; then
     exec &>> ~/loginout.sshfs
-    echo -ne `date +%d.%m.%Y%t%k:%M:%S`
+    echo -ne $(date +%d.%m.%Y%t%k:%M:%S)
     mount_f
-elif [ "$2" = "umount" ] ; then
+elif [ "${2}" = "umount" ] ; then
     exec &>> ~/loginout.sshfs
-    echo -ne `date +%d.%m.%Y%t%k:%M:%S`
+    echo -ne $(date +%d.%m.%Y%t%k:%M:%S)
     umount_f
 else
     help
