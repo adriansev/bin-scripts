@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+if [[ -z "${X509_CERT_DIR}" ]]; then
+    if [[ -e /cvmfs/alice.cern.ch/etc/grid-security/certificates ]]; then
+        CA="-CApath /cvmfs/alice.cern.ch/etc/grid-security/certificates"
+    else
+        CA="-CApath /etc/grid-security/certificates"
+    fi
+fi
+
+CERT="${1}"
+shift
+
+openssl verify ${CA} "${@}" ${CERT}
+

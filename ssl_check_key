@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+CERT="${1}"
+shift
+
+openssl rsa "${@}" -in ${CERT} -check
+

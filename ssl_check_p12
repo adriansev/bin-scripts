@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+CERT="${1}"
+shift
+
+openssl pkcs12 -info "${@}" -in ${CERT}
+

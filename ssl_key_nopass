@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 priv1=$(basename "${1}")
 ext="${priv1##*.}"
