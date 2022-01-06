@@ -1,4 +1,5 @@
 GROUP "remote"
+  ENTRY "/sh://root@192.168.1.85:1/root" URL "/sh://root@192.168.1.85:1/root"
   ENTRY "/sh://iss/home/adrian" URL "/sh://iss/home/adrian"
   ENTRY "/sh://iss/home/adrian/work/jets" URL "/sh://iss/home/adrian/work/jets"
   ENTRY "/sh://iss/home/adrian/work-GRID" URL "/sh://iss/home/adrian/work-GRID"
