@@ -87,15 +87,26 @@ git fetch -p origin
 ###########################################################
 
 root_local_enable () {
-local ROOT_BASEDIR TAG ROOT_INSTALL
-ROOT_BASEDIR="${tools}/ROOT"
-[[ -z "${1}" ]] && { echo -e "TAG should be supplied as argument!! options:\n$(ls -1 --hide=BUILD ${ROOT_BASEDIR}/)"; return 1; }
+local ROOT_BASEDIR TAG TAG_FOUND tag_list ROOT_INSTALL root_list
 [[ -z "${tools}" ]] && { echo "tools env var not defined" ; return 1; }
 [[ ! -d "${tools}" ]]&& { echo "${tools} directory does not exists" ; return 1; }
+
+ROOT_BASEDIR="${tools}/ROOT"
+pushd "${ROOT_BASEDIR}" &> /dev/null || { echo "Could not cd to ${ROOT_BASEDIR}"; return 1; }
+
+root_list=$(command ls -1 --hide=BUILD --hide=root ${ROOT_BASEDIR}/)
+[[ -z "${1}" ]] && { echo -e "TAG should be supplied as argument!! options:\n${root_list}"; return 1; }
+
 TAG="${1}"
-ROOT_INSTALL="${ROOT_BASEDIR}/${TAG}"
-[[ ! -e "${ROOT_INSTALL}" ]] && { echo -e "Directory ${TAG} not found in ${ROOT_BASEDIR}! options:\n$(ls -1 --hide=BUILD ${ROOT_BASEDIR}/)"; return 1; }
-source "${ROOT_INSTALL}/bin/thisroot.sh"
+TAG_FOUND=""
+IFS=' ' read -a tag_list <<< "$(echo ${root_list} | xargs)"
+for i in "${tag_list[@]}"; do [[ "${i}" == "${TAG}" ]] && TAG_FOUND="y"; done
+[[ -z "${TAG_FOUND}" ]] && { echo -e "${TAG} not found!! options:\n${root_list}"; return 1; }
+
+unlink root &> /dev/null
+ln -s "${TAG}" root
+source "${ROOT_BASEDIR}/root/bin/thisroot.sh"
+popd &> /dev/null
 }
 
 now_str () { date +%Y%m%d_%H%M%S; }
