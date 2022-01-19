@@ -106,6 +106,8 @@ for i in "${tag_list[@]}"; do [[ "${i}" == "${TAG}" ]] && TAG_FOUND="y"; done
 unlink root &> /dev/null
 ln -s "${TAG}" root
 source "${ROOT_BASEDIR}/root/bin/thisroot.sh"
+export C_INCLUDE_PATH="${C_INCLUDE_PATH}${C_INCLUDE_PATH:+:}${ROOTSYS}/include"
+export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}${CPLUS_INCLUDE_PATH:+:}${ROOTSYS}/include"
 popd &> /dev/null
 }
 
