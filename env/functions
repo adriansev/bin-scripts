@@ -94,13 +94,13 @@ ROOT_BASEDIR="${tools}/ROOT"
 pushd "${ROOT_BASEDIR}" &> /dev/null || { echo "Could not cd to ${ROOT_BASEDIR}"; return 1; }
 
 root_list=$(command ls -1 --hide=BUILD --hide=root ${ROOT_BASEDIR}/)
-[[ -z "${1}" ]] && { echo -e "TAG should be supplied as argument!! options:\n${root_list}"; return 1; }
+[[ -z "${1}" ]] && { echo -e "TAG should be supplied as argument!! options:\n${root_list}"; popd &> /dev/null; return 1; }
 
 TAG="${1}"
 TAG_FOUND=""
 IFS=' ' read -a tag_list <<< "$(echo ${root_list} | xargs)"
 for i in "${tag_list[@]}"; do [[ "${i}" == "${TAG}" ]] && TAG_FOUND="y"; done
-[[ -z "${TAG_FOUND}" ]] && { echo -e "${TAG} not found!! options:\n${root_list}"; return 1; }
+[[ -z "${TAG_FOUND}" ]] && { echo -e "${TAG} not found!! options:\n${root_list}"; popd &> /dev/null; return 1; }
 
 unlink root &> /dev/null
 ln -s "${TAG}" root
