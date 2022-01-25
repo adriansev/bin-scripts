@@ -2,24 +2,34 @@
 
 [[ -z "${tools}" ]]&& { echo "tools env var not defined" ; exit 1; }
 [[ ! -d "${tools}" ]]&& { echo "${tools} directory does not exists" ; exit 1; }
+
 ROOT_SRC="${tools}/root_git"
 ROOT_BASEDIR="${tools}/ROOT"
 ROOT_BUILD_DIR="${tools}/ROOT/BUILD"
 mkdir -p "${ROOT_BUILD_DIR}"
 
 TAG="${1}"
-[[ -z "${TAG}" ]] && { echo -e "A tag/destination is required. Choose from:\n$(ls -1 --hide=BUILD  ${ROOT_BASEDIR}/)"; exit 1; }
+[[ -z "${TAG}" ]] && { echo -e "A tag/destination is required. Choose from:\n$(ls -1 --hide=BUILD --hide=root ${ROOT_BASEDIR}/)"; exit 1; }
 shift
 ROOT_INSTALL="${ROOT_BASEDIR}/${TAG}"
-[[ ! -e "${ROOT_INSTALL}" ]] && { echo -e "Directory ${TAG} not found in ${ROOT_BASEDIR}. Choose from \n$(ls -1 --hide=BUILD  ${ROOT_BASEDIR}/)"; exit 1; }
-[[ -d "${ROOT_BUILD_DIR}" ]] && rm -rf ${ROOT_BUILD_DIR}/*
-cd "${ROOT_BUILD_DIR}"
+mkdir -p "${ROOT_INSTALL}"
 
-if [[ "${2}" == "release" ]]; then
+if [[ "${1}" == "release" ]]; then
   BUILDTYPE="Release"
+  shift
 else
   BUILDTYPE="RelWithDebInfo"
 fi
+
+NOBUILDDEL=""
+if [[ "${1}" == "nobuilddel" ]]; then
+    NOBUILDDEL="1"
+    shift
+fi
+
+[[ -z "${NOBUILDDEL}" ]] && [[ -d "${ROOT_BUILD_DIR}" ]] && rm -rf ${ROOT_BUILD_DIR}/*
+
+pushd "${ROOT_BUILD_DIR}"
 
 OS_VER=$(lsb_release -sr)
 OS_MAJOR_VER=$(awk -F. '{print $1}' <<< "${OS_VER}")
@@ -31,13 +41,14 @@ GCC_MAJOR=$( echo ${GCCVERSION}| cut -f1 -d. )
 
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
-
 GCCARCH="-march=native"
+
 avx2_enable=$(grep avx2 /proc/cpuinfo &> /dev/null && echo yes)
+avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
+
 [[ "${avx2_enable}" == "yes" ]] && AVX="-mavx2"
 
 if [[ -z "${avx2_enable}" ]]; then
-avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
 [[ "${avx_enable}" == "yes" ]] && AVX="-mavx"
 fi
 
@@ -46,12 +57,11 @@ CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
 #command -v nvcc &> /dev/null && CUDA="-DCMAKE_CUDA_STANDARD=14 -Dcuda=1 -Dcudnn=1 -Dtmva-gpu=1"
 
-#command -v ninja &> /dev/null && NINJA="-G Ninja"
-#${NINJA} \
+command -v ninja &> /dev/null && NINJA="-G Ninja"
 
 CMAKE=cmake
 command -v cmake3 &> /dev/null && CMAKE=cmake3
-${CMAKE} \
+${CMAKE} ${NINJA} \
 -DCMAKE_INSTALL_PREFIX=${ROOT_INSTALL} -DCMAKE_BUILD_TYPE=${BUILDTYPE} -DCMAKE_CXX_STANDARD=17 \
 -DCMAKE_C_FLAGS="${CXXFLAGS}" -DCMAKE_CXX_FLAGS="${CXXFLAGS}" \
 -DCHROME_EXECUTABLE=/usr/bin/google-chrome-stable \
@@ -66,7 +76,7 @@ ${CMAKE} \
 -Drpath=1 \
 -Dpyroot=ON -DPYTHON_EXECUTABLE=$(type -p python3) \
 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dcompression_default=zstd \
-"${ROOT_SRC}" | tee cmake_out.txt
+"${ROOT_SRC}" "${@}" | tee cmake_out.txt
 
 # -Dmpi=1 -Dminuit2_mpiL=1 \
 # -Dcuda=ON -Dcudnn=ON -Dtmva-gpu=ON
