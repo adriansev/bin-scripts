@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
-ans_play "${@}" get_facts.yml
-
+~/bin/ans_play --flush-cache "${@}" get_facts.yml

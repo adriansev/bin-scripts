@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-OLD_PWD="$(pwd)"
-cd "${HOME}/ansible/playbooks"
+pushd "${HOME}/ansible/playbooks" &> /dev/null
 
 ARG1="${1}"
-IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
+
+[[ "${ARG1}" == -* ]] || IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
 
 if [[ -n "${IS_HOST}" ]]; then
   TGT_SPEC="-e target=${ARG1}"
@@ -13,5 +13,5 @@ fi
 
 ansible-playbook ${TGT_SPEC} "${@}"
 
-cd "${OLD_PWD}"
+popd &> /dev/null
 
