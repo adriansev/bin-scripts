@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-[[ "${1}" == "files" ]] && DO_LOCALFILES="--tree ${HOME}/ansible/facts"
-ansible ${1:-all} -m ansible.builtin.setup ${DO_LOCALFILES} -a 'gather_timeout=15'
+# [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
+ans_play "${@}" get_facts.yml
+
