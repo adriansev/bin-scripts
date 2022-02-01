@@ -1,0 +1,100 @@
+#!/bin/bash
+
+UUID="${1}"
+shift
+
+[[ -z "${UUID}" ]] && { echo "UUID of machine is required" ; exit 1;}
+
+vminfo=$(VBoxManage showvminfo --machinereadable ${UUID} | grep -v "not set" | head -n -4 )
+
+eval $(echo "${vminfo}" | grep ^name)
+echo -e "UUID=${UUID} \t Name=\"${name}\""
+
+controler_present=$(echo "${vminfo}" | grep -oP 'storagecontrollername\K\d+(?=\=)' | sed ':a;N;$!ba;s/\n/ /g') #'
+for i in ${controler_present}; do
+    NAME=$(echo "storagecontrollername${i}")
+    TYPE=$(echo "storagecontrollertype${i}")
+    INSTANCE=$(echo "storagecontrollerinstance${i}")
+    PORTCOUNT=$(echo "storagecontrollerportcount${i}")
+    PORTCOUNTMAX=$(echo "storagecontrollermaxportcount${i}")
+    BOOTABLE=$(echo "storagecontrollerbootable${i}")
+
+    eval $(echo "${vminfo}" | grep ${NAME}=)
+    eval $(echo "${vminfo}" | grep ${TYPE}=)
+    eval $(echo "${vminfo}" | grep ${INSTANCE}=)
+    eval $(echo "${vminfo}" | grep ${PORTCOUNT}=)
+    eval $(echo "${vminfo}" | grep ${PORTCOUNTMAX}=)
+    eval $(echo "${vminfo}" | grep ${BOOTABLE}=)
+
+    NAMEID=$(sed 's/ //g;' <<< ${!NAME})
+
+    echo -ne "$i ${NAMEID}/${!TYPE} INSTANCE=${!INSTANCE} PORTS=${!PORTCOUNT}/${!PORTCOUNTMAX} BOOTABLE=${!BOOTABLE}\n"
+
+    CTRL_NAME="${!NAME}"
+
+    for i in $(seq 0 ${!PORTCOUNT}); do
+      SLAVE="0"
+      [[ "${CTRL_NAME}" =~ IDE ]] && SLAVE="1"
+      for f in $(seq 0 ${SLAVE}); do
+        IDX="-${i}-${f}"
+        PORT="${CTRL_NAME}${IDX}"
+        PORT_REGEX=$(sed 's/ /[[:space:]]/g' <<< "${PORT}"  )
+        PORT_REGEX="\"${PORT_REGEX}\""
+        #echo "$PORT"
+        echo "$PORT_REGEX"
+        IMG=$(echo "${vminfo}" | awk -F= -v port="${PORT_REGEX}" '/port/ {print $0}' )
+        echo "IMG = ${IMG}"
+
+#        IMG_UUID_NAME="${CTRL_NAME}-ImageUUID${IDX}"
+#        IMG_UUID=$(echo "${vminfo}" | awk -F= -v uuid="${IMG_UUID_NAME}" '/\"uuid\"/ {print $2}' )
+#        PORT_NAME=$(sed 's/ /_/g' <<< "${PORT}")
+#        echo -ne "\t${PORT_NAME}\t${IMG}\t${IMG_UUID}\n"
+      done
+    done
+
+
+
+
+done | column -t
+
+#"IDE-0-0"="/home/adrian/distros/FreeDOS/FD12CD.iso"
+#"IDE-ImageUUID-0-0"="ad21ea4e-c91f-41c6-9a95-60a6c7851041"
+#"IDE-tempeject"="on"
+#"IDE-IsEjected"="off"
+
+#"IDE-0-1"="/data/adrian/vbox/disks/disk.vmdk"
+#"IDE-ImageUUID-0-1"="ee8dcfb0-fc7e-4651-a99e-1cc5f6798f28"
+
+#"IDE-1-0"="none"
+#"IDE-1-1"="none"
+
+#"NVMe-0-0"="/data/vbox/images/ROCKSFE/testdisk.vdi"
+#"NVMe-ImageUUID-0-0"="969b2c57-095d-4b37-b156-ce24eac59870"
+
+#"SAS-0-0"="emptydrive"
+#"SAS-IsEjected"="off"
+#"SAS-1-0"="none"
+#"SAS-2-0"="none"
+#"SAS-3-0"="none"
+
+#"SATA-0-0"="emptydrive"
+#"SATA-IsEjected"="off"
+
+#"SATA-1-0"="emptydrive"
+#"SATA-IsEjected"="off"
+
+#"SATA-2-0"="/data/adrian/vbox/disks/winxp.vdi"
+#"SATA-ImageUUID-2-0"="c3accf95-c716-4f6f-97cb-823dc0b4810a"
+
+#"SATA-3-0"="/data/vbox/images/LIVECD/NewVirtualDisk1.vdi"
+#"SATA-ImageUUID-3-0"="45add566-bd21-40fb-8901-5456ec88dd24"
+
+
+#"SATA 2-0-0"="/data/vbox/images/LIVECD/NewVirtualDisk2.vdi"
+#"SATA 2-ImageUUID-0-0"="a8c0482a-e8cf-4ba7-b38e-481b19fe9928"
+
+#"SATA 2-1-0"="emptydrive"
+#"SATA 2-IsEjected"="off"
+
+#"SATA 2-2-0"="/data/vbox/images/LIVECD/NewVirtualDisk4.vdi"
+#"SATA 2-ImageUUID-2-0"="77d8d6a4-2492-4ad5-a32a-cd091b16075d"

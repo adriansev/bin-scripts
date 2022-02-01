@@ -1,0 +1,52 @@
+{"Time":"2021-05-18T06:59:39Z","Title":"","Type":"INFO","Message":"Using destination: monitor.spacescience.ro, ip: 46.243.114.227, port: 43334"}
+{"Time":"2021-05-18T06:59:40Z","Title":"","Type":"INFO","Message":"[  5] local 46.243.114.230 port 44141 connected to 46.243.114.227 port 43334"}
+{"Time":"2021-05-18T06:59:41Z","Title":"","Type":"INFO","Message":"- - - - - - - - - - - - - - - - - - - - - - -"}
+{"Time":"2021-05-18T06:59:41Z","Title":"","Type":"INFO","Message":"[  ID ]   Protocol    Interval      Bits/s"}
+{"Time":"2021-05-18T06:59:41Z","Title":"","Type":"INFO","Message":"[    5]     TCP      000-001 sec   914.94M"}
+{"Time":"2021-05-18T06:59:41Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"914.94M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:42Z","Title":"","Type":"INFO","Message":"[    5]     TCP      001-002 sec   884.61M"}
+{"Time":"2021-05-18T06:59:42Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"884.61M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:43Z","Title":"","Type":"INFO","Message":"[    5]     TCP      002-003 sec   862.72M"}
+{"Time":"2021-05-18T06:59:43Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"862.72M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:44Z","Title":"","Type":"INFO","Message":"[    5]     TCP      003-004 sec   919.55M"}
+{"Time":"2021-05-18T06:59:44Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"919.55M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:45Z","Title":"","Type":"INFO","Message":"[    5]     TCP      004-005 sec   896.51M"}
+{"Time":"2021-05-18T06:59:45Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"896.51M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:46Z","Title":"","Type":"INFO","Message":"[    5]     TCP      005-006 sec   929.02M"}
+{"Time":"2021-05-18T06:59:46Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"929.02M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:47Z","Title":"","Type":"INFO","Message":"[    5]     TCP      006-007 sec   929.02M"}
+{"Time":"2021-05-18T06:59:47Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"929.02M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:48Z","Title":"","Type":"INFO","Message":"[    5]     TCP      007-008 sec   905.47M"}
+{"Time":"2021-05-18T06:59:48Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"905.47M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:49Z","Title":"","Type":"INFO","Message":"[    5]     TCP      008-009 sec   630.14M"}
+{"Time":"2021-05-18T06:59:49Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"630.14M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:50Z","Title":"","Type":"INFO","Message":"[    5]     TCP      009-010 sec   928.51M"}
+{"Time":"2021-05-18T06:59:50Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"928.51M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:51Z","Title":"","Type":"INFO","Message":"[    5]     TCP      010-011 sec   780.03M"}
+{"Time":"2021-05-18T06:59:51Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"780.03M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:52Z","Title":"","Type":"INFO","Message":"[    5]     TCP      011-012 sec   803.46M"}
+{"Time":"2021-05-18T06:59:52Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"803.46M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:53Z","Title":"","Type":"INFO","Message":"[    5]     TCP      012-013 sec   939.90M"}
+{"Time":"2021-05-18T06:59:53Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"939.90M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:54Z","Title":"","Type":"INFO","Message":"[    5]     TCP      013-014 sec   940.42M"}
+{"Time":"2021-05-18T06:59:54Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"940.42M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T06:59:55Z","Title":"","Type":"INFO","Message":"[    5]     TCP      014-015 sec   940.03M"}
+{"Time":"2021-05-18T06:59:55Z","Title":"","Type":"TestResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","BitsPerSecond":"940.03M","ConnectionsPerSecond":"","PacketsPerSecond":"0","AverageLatency":""}
+{"Time":"2021-05-18T07:00:30Z","Title":"","Type":"INFO","Message":"Using destination: monitor.spacescience.ro, ip: 46.243.114.227, port: 43334"}
+{"Time":"2021-05-18T07:00:31Z","Title":"","Type":"INFO","Message":"Running latency test: 1000, 1"}
+{"Time":"2021-05-18T07:00:31Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"127.014us","Min":"87.606us","P50":"1.940ms","P90":"124.105us","P95":"131.008us","P99":"141.989us","P999":"220.468us","P9999":"616.828us","Max":"616.828us"}
+{"Time":"2021-05-18T07:00:32Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"136.747us","Min":"90.091us","P50":"1.938ms","P90":"127.171us","P95":"131.479us","P99":"139.695us","P999":"347.017us","P9999":"1.735ms","Max":"1.735ms"}
+{"Time":"2021-05-18T07:00:33Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"125.082us","Min":"90.221us","P50":"579.869us","P90":"126.820us","P95":"132.291us","P99":"136.579us","P999":"156.617us","P9999":"346.446us","Max":"346.446us"}
+{"Time":"2021-05-18T07:00:34Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"129.693us","Min":"90.822us","P50":"2.067ms","P90":"126.821us","P95":"133.483us","P99":"140.716us","P999":"222.442us","P9999":"794.776us","Max":"794.776us"}
+{"Time":"2021-05-18T07:00:35Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"142.368us","Min":"90.301us","P50":"1.736ms","P90":"126.540us","P95":"134.214us","P99":"139.524us","P999":"1.037ms","P9999":"1.725ms","Max":"1.725ms"}
+{"Time":"2021-05-18T07:00:36Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"125.239us","Min":"92.746us","P50":"1.639ms","P90":"126.159us","P95":"129.135us","P99":"131.879us","P999":"146.918us","P9999":"379.970us","Max":"379.970us"}
+{"Time":"2021-05-18T07:00:37Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"123.927us","Min":"90.401us","P50":"635.494us","P90":"126.129us","P95":"129.124us","P99":"133.032us","P999":"150.675us","P9999":"280.822us","Max":"280.822us"}
+{"Time":"2021-05-18T07:00:38Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"125.312us","Min":"90.361us","P50":"751.884us","P90":"126.349us","P95":"129.947us","P99":"133.092us","P999":"160.744us","P9999":"599.566us","Max":"599.566us"}
+{"Time":"2021-05-18T07:00:39Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"146.420us","Min":"93.678us","P50":"1.986ms","P90":"129.495us","P95":"161.556us","P99":"190.110us","P999":"507.050us","P9999":"998.742us","Max":"998.742us"}
+{"Time":"2021-05-18T07:00:40Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"132.450us","Min":"89.429us","P50":"543.669us","P90":"126.780us","P95":"135.577us","P99":"187.635us","P999":"312.953us","P9999":"480.560us","Max":"480.560us"}
+{"Time":"2021-05-18T07:00:41Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"264.763us","Min":"89.980us","P50":"1.365ms","P90":"231.829us","P95":"461.975us","P99":"506.840us","P999":"591.029us","P9999":"691.229us","Max":"691.229us"}
+{"Time":"2021-05-18T07:00:42Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"177.586us","Min":"89.640us","P50":"871.420us","P90":"128.053us","P95":"325.968us","P99":"429.343us","P999":"606.298us","P9999":"797.771us","Max":"797.771us"}
+{"Time":"2021-05-18T07:00:43Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"158.705us","Min":"89.239us","P50":"725.173us","P90":"128.804us","P95":"274.760us","P99":"345.014us","P999":"531.707us","P9999":"611.127us","Max":"611.127us"}
+{"Time":"2021-05-18T07:00:44Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"175.828us","Min":"90.091us","P50":"1.310ms","P90":"127.862us","P95":"349.011us","P99":"476.252us","P999":"580.710us","P9999":"713.612us","Max":"713.612us"}
+{"Time":"2021-05-18T07:00:45Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"232.632us","Min":"87.406us","P50":"1.100ms","P90":"159.292us","P95":"462.336us","P99":"530.645us","P999":"676.932us","P9999":"953.987us","Max":"953.987us"}
+{"Time":"2021-05-18T07:00:46Z","Title":"","Type":"LatencyResult","RemoteAddr":"46.243.114.227","Protocol":"TCP","Avg":"165.892us","Min":"89.159us","P50":"751.162us","P90":"128.283us","P95":"306.942us","P99":"442.247us","P999":"630.604us","P9999":"734.831us","Max":"734.831us"}

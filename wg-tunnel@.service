@@ -1,0 +1,17 @@
+[Unit]
+Description=Start of Wireguard interface
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/tmp
+
+ExecStart=/home/adrian/bin/wg_service  /etc/wireguard/%i.conf start
+ExecStop=/home/adrian/bin/wg_service   /etc/wireguard/%i.conf stop
+ExecReload=/home/adrian/bin/wg_service /etc/wireguard/%i.conf reload
+
+##Restart=on-failure # or always, on-abort, etc
+
+[Install]
+WantedBy=multi-user.target

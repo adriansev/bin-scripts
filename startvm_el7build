@@ -1,0 +1,2 @@
+#!/bin/bash
+vboxmanage startvm a869a909-ded1-46df-9499-d848ec643d86 --type headless

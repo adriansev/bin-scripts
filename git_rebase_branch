@@ -1,0 +1,11 @@
+#!/bin/bash
+
+current_branch=`git status -b --porcelain | awk '{print $2}'`
+
+[[ "$current_branch" == "master" ]] && echo "curent branch is master" && exit 1
+
+
+echo ${current_branch}
+
+
+

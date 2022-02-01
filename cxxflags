@@ -1,0 +1,39 @@
+
+TUNE
+
+-march=native
+-mtune=native
+
+
+
+
+
+       -msse3
+       -mssse3
+
+       -msse4
+       -msse4a
+       -msse4.1
+       -msse4.2
+
+       -mavx
+       -mavx2
+
+
+       -mfma
+       -mfma4
+
+       -m3dnow
+
+
+
+
+##-mprefer-avx128
+
+
+
+export CFLAGS="${CFLAGS} ${TUNE}"
+export CXXFLAGS="${CXXFLAGS} ${TUNE}"
+
+
+

@@ -1,0 +1,1 @@
+sensors -j k10temp-pci-00c3 | python3 -c 'import sys,os,json;INPUT=sys.stdin.read();i=json.loads(INPUT);j=i["k10temp-pci-00c3"]; core_w = float(j["Vcore"]["in0_input"])*float(j["Icore"]["curr1_input"]);soc_w = float(j["Vsoc"]["in1_input"])*float(j["Isoc"]["curr2_input"]); total=core_w+soc_w;print(f"Core: {core_w:.2f} W\nSoc: {soc_w:.2f} W\nTotal: {total:.2f} W")'

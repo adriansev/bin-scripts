@@ -1,0 +1,7 @@
+#!/bin/bash
+
+for gitdir in $(find $HOME/GIT-REPOS -name '.git' -type d -printf '%h\n'); do
+  cd ${gitdir}
+  git gc --aggressive
+done
+

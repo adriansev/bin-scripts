@@ -1,0 +1,5 @@
+#!/bin/bash
+
+ssh issaf-0-0_root "systemctl restart distccd; systemctl status distccd"
+ssh issaf-0-1_root "systemctl restart distccd; systemctl status distccd"
+

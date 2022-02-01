@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+exec >/tmp/cvmfs2-debug-${1}.out 2>&1
+exec /usr/bin/cvmfs2 -o debug "${@}"
+

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+host_list="$(redis-cli --scan | sort | grep -v ansible_cache_keys)"
+
+host_interfaces () {
+echo "$(redis-cli get ${1} | jq -c '.ansible_interfaces | . - ["lo"] | .[]' | xargs )"
+}
+
+host_devs () {
+echo "$(redis-cli get ${1} | jq -c ' .ansible_devices | keys | .[]' | xargs )"
+}
+
+
+

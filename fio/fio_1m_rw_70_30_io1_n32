@@ -1,0 +1,13 @@
+#!/bin/bash
+
+[[ -z "${1}" ]] && echo "no argumet; it should be the mounted partition" && exit
+
+DIR="/${1}/fio"
+mkdir -p ${DIR}
+OUTPUT="${0}.txt"
+
+
+fio --directory=${DIR} --rw=rw --rwmixread=70 --refill_buffers --fallocate=none --norandommap --randrepeat=0 --ioengine=libaio \
+--direct=1 --bs=1m --size=1g --iodepth=1 --numjobs=32 --runtime=300 \
+--group_reporting --name="test" --output=${OUTPUT} --output-format=normal
+
