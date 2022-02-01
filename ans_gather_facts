@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
-~/bin/ans_play "${@}" --flush-cache get_facts.yml
+~/bin/ans_play "${@}" --flush-cache get_facts.yml &> /dev/null && echo "$(date +%Y%m%d_%H%M%S) SUCCESS" || echo "$(date +%Y%m%d_%H%M%S) FAIL"
