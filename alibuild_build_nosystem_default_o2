@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+INITDIR="${1}"
+shift
+PACKAGE="${1}"
+shift
+
+exec alibuild_build_nosystem_default "${INITDIR}" "${PACKAGE}" o2 "${@}"
