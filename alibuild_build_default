@@ -19,7 +19,7 @@ NAME_VALID=$(echo "${tags}" | grep "${INITDIR}")
 [[ -z "${NAME_VALID}" ]] && { echo -e "Name not found in init dirs list:\n$(echo ${tags} | xargs -n 6 | column -t)" ; exit 1; }
 [[ ! -d "${ALIBUILD_WORK_DIR}/../${INITDIR}" ]] && { echo -e "${INITDIR} is not a directory"; exit 1; }
 
-pushd ${ALIBUILD_WORK_DIR}/../${INITDIR} || { echo "Could not cd to: ${ALIBUILD_WORK_DIR}/../${INITDIR}"; exit 1; }
+pushd ${ALIBUILD_WORK_DIR}/../${INITDIR} &>/dev/null || { echo "Could not cd to: ${ALIBUILD_WORK_DIR}/../${INITDIR}"; exit 1; }
 mkdir -p "${ALIBUILD_WORK_DIR}/../${INITDIR}/tmp"
 export TMPDIR="${ALIBUILD_WORK_DIR}/../${INITDIR}/tmp"
 export TMP="${TMPDIR}"
@@ -47,5 +47,6 @@ ARCH_ARG=""
 local_arch="$(aliBuild architecture)"
 [[ "${local_arch}" != "slc8_x86-64" || "${local_arch}" != "slc7_x86-64" ]] && ARCH_ARG="--force-unknown-architecture"
 
-aliBuild -d ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" "${@}" build ${PACKAGE} --defaults ${DEFAULT} -z "${INITDIR}"
-popd
+aliBuild build -d ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" --defaults ${DEFAULT} -z "${INITDIR}" "${@}" ${PACKAGE}
+popd &>/dev/null
+
