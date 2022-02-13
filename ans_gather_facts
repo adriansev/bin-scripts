@@ -4,9 +4,10 @@ NOW="$(date +%Y%m%d_%H%M%S)"
 LOCK="/tmp/ans_gather_facts.lock"
 
 exec 100>${LOCK} || exit 1
-flock 100 || exit 1
+/usr/bin/flock 100 || exit 1
 trap 'rm -f ${LOCK}' EXIT
 
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
-~/bin/ans_play "${@}" --flush-cache get_facts.yml &> /dev/null && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
+/home/adrian/bin/ans_play "${@}" --flush-cache get_facts.yml &> /dev/null && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
+/usr/bin/redis-cli -n 0 BGSAVE
 
