@@ -41,6 +41,7 @@
 [core]
     editor = mcedit
     autocrlf = input
+    symlinks = true
 
 [merge]
     tool = kdiff3
