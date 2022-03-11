@@ -2,11 +2,12 @@
 
 ssh_list=$(pgrep -a ".*ssh$")
 
-while IFS= read -r line; do
-    pid=$(awk  '{print $1}' <<< "${line}"  )
-    echo -e "${line}"
-    ss -OH -ntlp | awk -v PID=${pid} '$0 ~ pid=PID {print $4;}' | sed -e 's/^[[:space:]]*//'
-    echo
-done <<< $(pgrep -a ".*ssh$")
-
+if [[ -n "${ssh_list}" ]]; then
+    while IFS= read -r line; do
+        pid=$(awk  '{print $1}' <<< "${line}"  )
+        echo -e "${line}"
+        ss -OH -ntlp | awk -v PID=${pid} '$0 ~ pid=PID {print $4;}' | sed -e 's/^[[:space:]]*//'
+        echo
+    done <<< "${ssh_list}"
+fi
 
