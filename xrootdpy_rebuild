@@ -1,8 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+CWD="$(pwd -P)"
+BNAME="$(basename ${CWD})"
 
 rm -rf ~/.local/lib/python*/site-packages/{XRootD,pyxrootd,xrootd*}
+rm -rf MANIFEST.in install.sh publish.sh setup.py TestCXX14.txt bindings/python/setup.py has_c++14.sh
+find dist -type f -name "xrootd-*" -exec rm -rf {} \;
 
-rm -rf MANIFEST.in install.sh publish.sh setup.py
-cp packaging/wheel/* .
+python3 -m pip --quiet install --upgrade build
+command cp -f -r packaging/wheel/* .
+./publish.sh
+python -m build --sdist .
 
-python3 ./setup.py install --user
+cd ..
+python3 -m pip install --upgrade ${BNAME}/dist/xrootd-*.tar.gz
+
+cd ${CWD}
+rm -rf MANIFEST.in install.sh publish.sh setup.py TestCXX14.txt bindings/python/setup.py has_c++14.sh src/XrdVersion.hh
+
