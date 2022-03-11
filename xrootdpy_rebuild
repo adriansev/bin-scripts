@@ -5,12 +5,11 @@ BNAME="$(basename ${CWD})"
 
 rm -rf ~/.local/lib/python*/site-packages/{XRootD,pyxrootd,xrootd*}
 rm -rf MANIFEST.in install.sh publish.sh setup.py TestCXX14.txt bindings/python/setup.py has_c++14.sh
-find dist -type f -name "xrootd-*" -exec rm -rf {} \;
 
 python3 -m pip --quiet install --upgrade build
 command cp -f -r packaging/wheel/* .
+find dist -type f -name "xrootd-*" -exec rm -rf {} \;
 ./publish.sh
-python -m build --sdist .
 
 cd ..
 python3 -m pip install --user --upgrade ${BNAME}/dist/xrootd-*.tar.gz
