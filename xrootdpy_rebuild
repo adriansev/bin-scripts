@@ -3,8 +3,12 @@
 CWD="$(pwd -P)"
 BNAME="$(basename ${CWD})"
 
+cleanup () {
+rm -rf MANIFEST.in install.sh publish.sh setup.py TestCXX14.txt bindings/python/setup.py has_c++14.sh bindings/python/VERSION dist xrootd.egg-info packaging/wheel/xrootd.egg-info;
+}
+
 rm -rf ~/.local/lib/python*/site-packages/{XRootD,pyxrootd,xrootd*}
-rm -rf MANIFEST.in install.sh publish.sh setup.py TestCXX14.txt bindings/python/setup.py has_c++14.sh
+cleanup
 
 python3 -m pip --quiet install --upgrade build
 command cp -f -r packaging/wheel/* .
@@ -14,6 +18,6 @@ find dist -type f -name "xrootd-*" -exec rm -rf {} \;
 cd ..
 python3 -m pip install --user --upgrade ${BNAME}/dist/xrootd-*.tar.gz
 
-cd ${CWD}
-rm -rf MANIFEST.in install.sh publish.sh setup.py TestCXX14.txt bindings/python/setup.py has_c++14.sh src/XrdVersion.hh
+cd "${CWD}"
+cleanup
 
