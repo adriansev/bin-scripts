@@ -28,7 +28,7 @@ export TMP="${TMPDIR}"
 alidist_dir="${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist"
 [[ ! -d "${alidist_dir}" ]] && { echo -e "no alidist directory in ${INITDIR} !!!"; exit 1; }
 
-packages_file_list="$(ls -1 -f ${ALIBUILD_WORK_DIR}/../o2/alidist/*.sh | grep -v 'defaults-.*.sh')"
+packages_file_list="$(ls -1 -f ${ALIBUILD_WORK_DIR}/../${INITDIR}/alidist/*.sh | grep -v 'defaults-.*.sh')"
 package_list=$(for f in ${packages_file_list}; do grep "package: " $f | sed 's/package: //g'; done)
 [[ -z "${PACKAGE}" ]] && { help; echo -e "Packages list (mind the caps):\n$(echo ${package_list} | sort |xargs -n 4 | column -t)" ; exit 1; }
 
