@@ -1,0 +1,4 @@
+remote="alibuildmac02"
+dir_remote="/Users/alibuild"
+dir_local="/home/adrian/alibuildmac02"
+
