@@ -1,0 +1,1 @@
+echo "${_LM_ENV}" | while IFS== read -d ';' -r line; do echo "${line}"; done
