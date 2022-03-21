@@ -1,0 +1,1 @@
+env -0 | while IFS== read -d '' -r line; do echo "${line}"; done
