@@ -1,12 +1,18 @@
 #!/bin/bash
 
-cd /home/adrian/software/rsar
+RSAR_DIR="${HOME}/GIT-REPOS/rsar"
+pushd ${RSAR_DIR}
 git checkout master && git pull
-sudo -- /usr/bin/bash -c 'cp /home/adrian/software/rsar/rsar /usr/local/bin/ ; cp /home/adrian/software/rsar/rsar-bash-completion.bash /etc/bash_completion.d/'
-cp /home/adrian/software/rsar/rsar ~/bin/ ; cp /home/adrian/software/rsar/rsar-bash-completion.bash ~/bin/env/
+sudo cp -f ${RSAR_DIR}/rsar /usr/local/bin/ 
+sudo cp -f ${RSAR_DIR}/rsar-bash-completion.bash /etc/bash_completion.d/
+cp -f ${RSAR_DIR}/rsar ~/bin/ ; cp -f ${RSAR_DIR}/rsar-bash-completion.bash ~/bin/env/
+popd
 
-cd /home/adrian/software/xsos
+XSOS_DIR="${HOME}/GIT-REPOS/xsos"
+pushd ${XSOS_DIR}
 git checkout master && git pull
-sudo -- /usr/bin/bash -c 'cp /home/adrian/software/xsos/xsos /usr/local/bin/ ; cp /home/adrian/software/xsos/xsos-bash-completion.bash /etc/bash_completion.d/'
-cp /home/adrian/software/xsos/xsos ~/bin/ ; cp /home/adrian/software/xsos/xsos-bash-completion.bash ~/bin/env/
+sudo cp -f ${XSOS_DIR}/xsos /usr/local/bin/
+sudo cp -f ${XSOS_DIR}/xsos-bash-completion.bash /etc/bash_completion.d/
+cp -f ${XSOS_DIR}/xsos ~/bin/ ; cp -f ${XSOS_DIR}/xsos-bash-completion.bash ~/bin/env/
+popd
 
