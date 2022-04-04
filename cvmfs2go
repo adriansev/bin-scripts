@@ -1,1 +1,220 @@
-/home/adrian/work-GRID/cvmfs2go/cvmfs2go
+#!/usr/bin/env bash
+shopt -s extglob
+
+export CVMFS2GO_BASE_DIR="${CVMFS2GO_BASE_DIR:-${HOME}/.cvmfs2go}"
+export CVMFS2GO_CACHE="${CVMFS2GO_CACHE:-${CVMFS2GO_BASE_DIR}/cache}"
+
+export CVMFS2GO_MOUNT_DIR="${CVMFS2GO_MOUNT_DIR:-${CVMFS2GO_BASE_DIR}/mount}"
+export CVMFS2GO_IMAGE_DIR="${CVMFS2GO_IMAGE_DIR:-${CVMFS2GO_BASE_DIR}/images}"
+
+export CVMFS2GO_IMG="${CVMFS2GO_IMG:-oras://registry.cern.ch/asevcenc/el7cvmfs:latest}" # Specify the location of Singularity image
+
+export SINGULARITYENV_PS1='\[\033[1;31m\]${SINGULARITY_NAME}#\[\033[1;32m\][\D{%A %d.%m.%y %H:%M}] \u@\h : \[\033[1;34m\]\w \[\033[00m\]\n'
+export SINGULARITYENV_HOSTPWD="${PWD}"
+export SINGULARITYENV_HOSTOLDPWD="${OLDPWD}"
+
+hash cvmfs2 2>/dev/null && DO_CONTAINER_CVMFS="" || DO_CONTAINER_CVMFS="1"  # if host does not have cvmfs package, mount repos _inside_ the container
+[[ -e /etc/cvmfs/default.conf ]] && DO_CONTAINER_CVMFS="" || DO_CONTAINER_CVMFS="1"  # if host does not have cvmfs default configuration, mount repos _inside_ the container
+[[ -n "${CVMFS2GO_CONTAINER_MOUNT}" ]] && DO_CONTAINER_CVMFS="1"  # is instructed by env do container mount
+
+help () {
+echo "Run CVMFS based software in Centos7 HEP oriented container (it includes HEP_OSlibs dependency list)
+This script will automatically mount the host configured CVMFS repositories and those specified by CVMFS_REPOSITORIES
+_OR_ will mount ONLY those specified by CVMFS_REPOSITORIES_EXCLUSIVE
+If the host lacks either cvmfs package or cvmfs default configs, repositories will be mounted inside the container
+
+Steering variables (can be set in the environment):
+CVMFS2GO_BASE_DIR        : defaults to HOME/.cvmfs2go
+CVMFS2GO_CACHE           : defaults to CVMFS2GO_BASE_DIR/cache ; this is the location of private/container external cache
+CVMFS2GO_MOUNT_DIR       : defaults to CVMFS2GO_BASE_DIR/mount ; location of private mounts
+CVMFS2GO_IMAGE_DIR       : defaults to CVMFS2GO_BASE_DIR/images ; location for downloaded images
+CVMFS2GO_CONTAINER_MOUNT : force the cvmfs mounting within the container
+CVMFS2GO_IMG :           : singularity image to use ; defaults to oras://registry.cern.ch/asevcenc/el7cvmfs:latest
+
+Singularity steering variables
+SINGULARITY_CVMFS2GO :: singularity steering, the contents will be passed as arguments to singularity command:
+see https://sylabs.io/guides/3.7/user-guide/appendix.html
+
+Command format: ${0} argument
+If no command is used the default %runscript of image will be used (default singularity action is \"run\")
+N.B.!!! a cache directory will be created (if cvmfs mounting is private to user) on host for keeping the cvmfs cache! -> ${CACHE}
+IT WILL _NOT_ BE CLEAN UP AUTOMATICALLY!!! run : ${0} cleanup
+CVMFS alien cache documentation specify that cache can be deleted even when in use
+https://cvmfs.readthedocs.io/en/stable/cpt-configure.html#alien-cache
+
+Argument list:
+-h|-help|help                     : print this help message
+-clean|-cleanup|cleanup           : delete contents of cvmfs private cache -> ${CVMFS2GO_CACHE}
+-cleanimg|-cleanupimg|cleanupimg  : delete contents of containers local cache -> ${CVMFS2GO_IMAGE_DIR}
+-cache|cache                      : request cacheing of the remote image to a local sif image
+-shell                            : instead of \"run\" use \"shell\" for singularity command
+-exec                             : instead of \"run\" use \"exec\" for singularity command
+
+Singularity steering options:
+-e|--cleanenv
+-c|--contain
+-C|--containall
+--env strings
+--env-file file
+
+more options can set to SINGULARITY_CVMFS2GO :: the contents will be passed as arguments to singularity command
+see https://sylabs.io/guides/3.7/user-guide/appendix.html
+
+any other arguments are passed to the container"
+}
+
+create_user_dirs () { mkdir -p ${CVMFS2GO_CACHE} ${CVMFS2GO_IMAGE_DIR} ${CVMFS2GO_MOUNT_DIR}; }
+
+cvmfs_mount_list () { awk '$1 ~ /cvmfs2/ {print $2}' /proc/mounts /etc/mtab | sort -u; }
+fd_list_map () { find /proc/$$/fd -type l -printf '%P  %l\n'; }
+fd_list () { ls --hide=[0-2] --hide=255 -x /proc/$$/fd; }
+
+autofs_mount_pin () {
+local REPO FD_AVAIL FD_LIST
+REPO="${1}"
+[[ ! "${REPO:0:1}" == "/" ]] && REPO="/cvmfs/${REPO}"
+
+FD_AVAIL=""
+for FD in $(seq 250 -1 10); do
+    readarray FD_LIST <<< $(fd_list)
+    [[ ! " ${FD_LIST[@]} " =~ " ${FD} " ]] && { FD_AVAIL="${FD}"; break; }
+done
+eval exec "${FD_AVAIL}""< ${REPO}"
+}
+
+autofs_mount_pin_all () {
+[[ -z "${1}" ]] && return;
+for repo in $(echo -n "${1}" | sed 's/,/ /g') ; do autofs_mount_pin "${repo}"; done
+}
+
+autofs_mount_unpin () {
+local REPO FD
+REPO="${1}"
+[[ ! "${REPO:0:1}" == "/" ]] && REPO="/cvmfs/${REPO}"
+FD="$(fd_list_map | awk -v REPO="${REPO}" '$2 ~ REPO {print $1}')"
+eval exec "${FD}""<&-"
+}
+
+autofs_mount_unpin_all () { for repo in cvmfs_mount_list; do autofs_mount_unpin "${repo}"; done; }
+
+mk_envfile () {
+local outfile
+[[ ! -f "${1}" ]] && return 1;
+outfile="$(md5sum ${1} | cut -d' ' -f1)"
+cat "${1}" | sed 's/;/\n/g;' | sed '/^export /d' > "${outfile}"
+echo "${outfile}"
+}
+
+# Process additional singularity command line settings that can be setup by environment
+declare -a SINGULARITY_CVMFS2GO_ARGS
+[[ -n "${SINGULARITY_CVMFS2GO}" ]] && read -ra SINGULARITY_CVMFS2GO_ARGS <<< "${SINGULARITY_CVMFS2GO}"
+
+ARG_LIST=()
+SING_ACTION="run"
+while [[ $# -gt 0 ]]; do
+    key="${1}"
+    case ${key} in
+        -h|-help|--h|--help|help)
+        help;
+        exit;
+        ;;
+        -clean|-cleanup|--clean|--cleanup|cleanup)
+        [[ -d ${CVMFS2GO_CACHE} ]] && rm -rf ${CVMFS2GO_CACHE}/*;
+        exit;
+        ;;
+        -cleanimg|-cleanupimg|--cleanimg|--cleanupimg|cleanupimg)
+        [[ -d ${CVMFS2GO_IMAGE_DIR} ]] && rm -rf ${CVMFS2GO_IMAGE_DIR}/*;
+        exit;
+        ;;
+        -cache|--cache|cache)
+        DO_CACHE="1"
+        shift
+        ;;
+        -shell|--shell)
+        [[ -z "${SET_ACTION}" ]] && { SING_ACTION="shell" ; SET_ACTION="1"; }
+        shift
+        ;;
+        -exec|--exec)
+        [[ -z "${SET_ACTION}" ]] && { SING_ACTION="exec" ; SET_ACTION="1"; }
+        shift
+        ;;
+        -e|--cleanenv)
+        SINGULARITY_CVMFS2GO_ARGS+=(-e)
+        shift
+        ;;
+        -c|--contain)
+        SINGULARITY_CVMFS2GO_ARGS+=(-c)
+        shift
+        ;;
+        -C|--containall)
+        SINGULARITY_CVMFS2GO_ARGS+=(-C)
+        shift
+        ;;
+        --env)
+        SINGULARITY_CVMFS2GO_ARGS+=(--env)
+        SINGULARITY_CVMFS2GO_ARGS+=("${2}")
+        shift
+        shift
+        ;;
+        --env-file)
+        SINGULARITY_CVMFS2GO_ARGS+=(--env-file)
+        outfile="$(mk_envfile ${2})"
+        SINGULARITY_CVMFS2GO_ARGS+=("${outfile}")
+        shift
+        shift
+        ;;
+        *)    # unknown option
+        ARG_LIST+=("${1}") # save it in an array for later
+        shift # past argument
+        ;;
+    esac
+done
+set -- "${ARG_LIST[@]}" # restore positional parameters
+
+if [[ -n ${DO_CONTAINER_CVMFS} ]]; then  # if we mount INSIDE the container
+    # check and use external defined SINGULARITY_BINDPATH and SINGULARITY_SCRATCHDIR
+    export SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH}${SINGULARITY_BINDPATH:+,}${CACHE}:/var/lib/cvmfs"
+    export SINGULARITY_SCRATCHDIR="${SINGULARITY_SCRATCHDIR:-/var/run/cvmfs}"
+    create_user_dirs
+fi
+
+if [[ -n "${CVMFS_REPOSITORIES_EXCLUSIVE}" ]]; then  # use these env defined repositories exclusively
+    DEFINED_REPOSITORIES="${CVMFS_REPOSITORIES_EXCLUSIVE}"
+else
+    DEFINED_REPOSITORIES="${CVMFS_REPOSITORIES}"  # if defined in environment
+    if [[ -e /etc/cvmfs/default.local ]];then  # read the system definition is there's one
+        source "/etc/cvmfs/default.local"
+        DEFINED_REPOSITORIES="${DEFINED_REPOSITORIES}${DEFINED_REPOSITORIES:+,}${CVMFS_REPOSITORIES}"
+        unset CVMFS_REPOSITORIES
+    fi
+fi
+[[ -z "${DEFINED_REPOSITORIES}" ]] && { echo "CVMFS_REPOSITORIES was not set by environment nor in any configuration file"; help; exit 1; }
+
+# mounting of cvmfs repositories
+if [[ -n ${DO_CONTAINER_CVMFS} ]]; then  # if we mount INSIDE the container
+    for i in "${DEFINED_REPOSITORIES[@]}" ; do FUSEMOUNT_ARGS+=(--fusemount "\"container:cvmfs2 ${i} /cvmfs/${i}\""); done
+else  # we are mounting cvmfs on the host then set singularity bind paths
+    autofs_mount_pin_all "${DEFINED_REPOSITORIES}" # let's mount all defined repositories; requesting a descriptor will also (autofs)mount
+    # define Singularity bind paths
+    for mount in $(cvmfs_mount_list) ; do SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH}${SINGULARITY_BINDPATH:+,}${mount}" ; done
+fi
+
+# if pwd(cwd) is not part of home let's just bind-mount it
+CWD="$(realpath ${PWD})"
+USERHOME="$(realpath ${HOME})"
+if [[ "${CWD}" == "${CWD##${USERHOME}}" ]]; then  # user home is not part of cwd
+    CWD_MNT="$(df --output=target ${CWD} | tail -n +2)"  # let's bind mount the actual mount point of CWD
+    SINGULARITY_BINDPATH="${SINGULARITY_BINDPATH}${SINGULARITY_BINDPATH:+,}${CWD_MNT}"
+fi
+export SINGULARITY_BINDPATH
+
+# if explicit local cache is requested
+if [[ -n "${DO_CACHE}" ]]; then
+    LOCAL_NAME="${IMAGE_DIR}/$(basename ${CVMFS2GO_IMG} | sed 's/:/_/g').sif"
+    if [[ ! -e "${LOCAL_NAME}" ]]; then
+        singularity pull -F --name ${LOCAL_NAME} ${CVMFS2GO_IMG} &> /dev/null && export CVMFS2GO_IMG="${LOCAL_NAME}" || { echo "Error caching ${CVMFS2GO_IMG}"; exit 1; }
+    fi
+fi
+
+exec singularity -s ${SING_ACTION} "${FUSEMOUNT_ARGS[@]}" "${SINGULARITY_CVMFS2GO_ARGS[@]}" "${CVMFS2GO_IMG}" "${@}"
+
