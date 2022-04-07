@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+
+######
+# To Install
+#     sudo wget https://raw.github.com/gist/2579234/git-commiturl -O /usr/local/bin/git-commiturl
+#     sudo chmod +x /usr/local/bin/git-commiturl
+#
+# To use
+#     git commiturl # gets the HEAD commit hash and copies a github url for it
+#     git commiturl -c 3dfcb4e7143d0c200e980ee2f65759157e066651 -o #copies a url for a specific commit hash AND opens it in your local browser
+######
+
+options = {:open => false, :commit => `git rev-parse HEAD`.strip}
+
+require 'optparse'
+OptionParser.new do |opts|
+  opts.banner = "Usage: git-commiturl [options]"
+
+  opts.on("-c HASH", "--commit=HASH", "Commit Hash, optional, default: \`git rev-parse HEAD\`") do |v|
+    options[:commit] = v
+  end
+  opts.on("-o", "--[no-]open", "Open the url in a browser") do |v|
+    options[:open] = v
+  end
+  opts.on_tail("-h",nil,"Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+#take the git@hostname.com:account/repo.git format and turn it into https://hostname.com/account/repo/commit/.....
+base_url = `git config --get remote.origin.url`.strip.gsub(/\.git\Z/,'').gsub(":",'/').gsub(/\Agit\@/,"https://")
+url = "#{base_url}/commit/#{options[:commit]}"
+
+#copy it to the clipboard
+IO.popen('pbcopy', 'r+') { |clipboard| clipboard.puts url }
+puts "Commit URL copied to keyboard: #{url}"
+
+#open in the browser if requested
+`open "#{url}"` if options[:open]
