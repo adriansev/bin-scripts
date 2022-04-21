@@ -134,7 +134,6 @@ alias uncrustify='uncrustify -c ~/bin/env/uncrustify.cfg'
 ## SYSTEM ALIASES
 alias devtoolset='source scl_source enable devtoolset-3'
 
-alias mc='. /usr/libexec/mc/mc-wrapper.sh'
 alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
 
 # reboot / halt / poweroff
