@@ -4,6 +4,6 @@ IP=$1
 NAME=$(sed 's#/#_#g' <<< "${IP}")
 
 sudo -- sh -c "
-nmap -n     -T4 -p1-65535 ${IP} -oN ${NAME}_tcp.txt -oG ${NAME}_tcp.nmap
+nmap -n    -Pn -T4 -p1-65535 ${IP} -oN ${NAME}_tcp.txt -oG ${NAME}_tcp.nmap
 chown -R adrian:adrian ${NAME}_tcp.txt ${NAME}_tcp.nmap
 "
