@@ -1,1 +1,1 @@
-ldapsearch -x -LLL -H ldap://alice-ldap.cern.ch:8389 -s children -b ou=ISS,ou=Sites,o=alice,dc=cern,dc=ch
+ldapsearch -o ldif-wrap=no -x -LLL -H ldap://alice-ldap.cern.ch:8389 -s children -b ou=ISS,ou=Sites,o=alice,dc=cern,dc=ch
