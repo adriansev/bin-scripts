@@ -1,6 +1,6 @@
 #!/bin/bash
 
-xrd_servers="storage02 storage03 storage04 storage05 storage06 storage07 storage09 storage10"
+xrd_servers="storage02 storage03 storage04 storage05 storage07 storage09 storage10"
 eos_servers="eos_fst01 eos_fst02 eos_fst03"
 
 storage_sum () {
