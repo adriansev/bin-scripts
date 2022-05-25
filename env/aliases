@@ -334,9 +334,6 @@ alias ldlib_fix='export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/l
 
 alias clang-format='clang-format -assume-filename=~/.clang-format'
 
-alias alibuild='aliBuild'
-alias ali_unload='alienv unload $(loaded_aliphys)'
-
 alias debug_alienpy='source ${HOME}/bin/alienpy_debug'
 alias debug_xrootd='source ${HOME}/bin/xrd_debug'
 

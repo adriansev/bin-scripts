@@ -1,4 +1,3 @@
-alibuild_load () { alienv load -q ${1} 2>/dev/null; }
 
 alibuild_load_aliphys () {
 alienv load -q AliPhysics/${1} 2>/dev/null
@@ -16,7 +15,7 @@ if [[ "${2}" == "INCLUDES"  ]]; then
     CPLUS_INCLUDE_PATH="${C_INCLUDE_PATH}"
     [[ -n ${CPLUS_INCLUDE_PATH} ]] && export CPLUS_INCLUDE_PATH C_INCLUDE_PATH
 fi
-
 }
 
 ali_latest () { alibuild_load_aliphys latest ${1}; }
+
