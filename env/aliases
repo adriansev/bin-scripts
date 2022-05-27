@@ -324,10 +324,9 @@ alias scoala='ssh iwsgc15@glite-tutor.ct.infn.it'
 alias load_nvidia='LD_LIBRARY_PATH=/usr/lib64/nvidia '
 
 # Python
-alias pip_install_user='pip install --upgrade --user'
-alias pip2_install_user='pip2 install --upgrade --user'
-alias pip3_install_user='pip3 install --upgrade --user'
-alias pip3_install_user_eager='pip3 install --upgrade-strategy eager --upgrade --user'
+alias pip_install_user='python3 -m pip install --upgrade --user'
+alias pip3_install_user='python3 -m pip install --upgrade --user'
+alias pip3_install_user_eager='python3 -m pip install --upgrade-strategy eager --upgrade --user'
 
 # Fix recreate ld lib path when is overwritten
 alias ldlib_fix='export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib'
