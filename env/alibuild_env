@@ -5,6 +5,8 @@ if [[ -n ${ALIBUILD_WORK_DIR}  ]]; then
 
     type -p alienv 2>&1 > /dev/null && eval "$(alienv shell-helper)"
 
+    export ALIBUILD_ARCHITECTURE=$(aliBuild architecture)
+
     alibuild_load () { alienv load -q ${1} 2>/dev/null; }
 
     alias alibuild='aliBuild'
