@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ldap_umd_glue1 grid04.spacescience.ro RO-13-ISS objectClass=GlueSE
+ldap_umd_glue1 grid04.spacescience.ro:2170 RO-13-ISS objectClass=GlueSE
 echo
-ldap_umd_glue2 grid04.spacescience.ro RO-13-ISS '(&(objectClass=GLUE2Manager)(GLUE2ManagerProductName=DPM))'
+ldap_umd_glue2 grid04.spacescience.ro:2170 RO-13-ISS '(&(objectClass=GLUE2Manager)(GLUE2ManagerProductName=DPM))'
 
