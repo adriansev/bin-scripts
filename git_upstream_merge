@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 FULLCMD="${0}"
 CMD="$(basename ${FULLCMD})"
@@ -6,7 +6,7 @@ CMD="$(basename ${FULLCMD})"
 METHOD="merge"
 [[ "${CMD}" =~ pull ]] && METHOD="pull"
 
-REPO_NAME=$(basename $(git remote get-url origin) .git)
+REPO_NAME=$(basename $(git config --get remote.origin.url) .git)
 I_AM_ON=$(git rev-parse --abbrev-ref HEAD)
 HEAD_NAME_ORIGIN=$(git remote show origin | awk -F": " '/HEAD branch/ {print $2}')
 HEAD_NAME_UPSTREAM=$(git remote show upstream | awk -F": " '/HEAD branch/ {print $2}')
@@ -27,3 +27,4 @@ echo "done"
 
 I_AM_ON_END=$(git rev-parse --abbrev-ref HEAD)
 [[ "${I_AM_ON}" != "${I_AM_ON_END}" ]] && echo "The initial branch was: ${I_AM_ON}"
+
