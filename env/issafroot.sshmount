@@ -1,0 +1,3 @@
+remote="issaf"
+dir_remote="/"
+dir_local="/sshfs/issafroot/"
