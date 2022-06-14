@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+TIME="${1}"
+[[ -n "${TIME}" ]] && SLEEP="sleep 2; " || SLEEP=""
+XSET="xset dpms force off;"
+
+CMD="${SLEEP}${XSET}"
+
+nohup /usr/bin/env bash -c "${CMD}" &>/dev/null &
+
