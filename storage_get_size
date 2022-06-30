@@ -1,11 +1,22 @@
-storage_hosts="storage02 storage03 storage04 storage05 storage06 storage07"
+#!/usr/bin/env bash
 
-MYCMD=$(echo 'df --total -l --block-size=1G /storage* | tail -1 | awk -v HOST=$(hostname) '\''{ print HOST"\t"$2,"\t"$3,"\t"$4}'\''' | base64 -w0)
+xrd_hosts="storage03 storage04 storage05 storage07 storage09 storage10"
+eos_hosts="eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06"
 
-echo "Size in GiB"
-echo -e "Host \t\t\t\tTotal \tUsed \tAvailable"
+MYCMD=$(echo 'df --total -l --block-size=1T /storage* | tail -1 | awk -v HOST=$(hostname -s) '\''{ print HOST"\t"$2,"\t"$3,"\t"$4}'\''' | base64 -w0)
 
-for host in $storage_hosts ; do
-  ssh $host "echo $MYCMD | base64 -d | bash"
+echo "Size in TiB"
+
+(
+echo -e "Host\t\tTotal\tUsed\tAvailable"
+
+for h in ${xrd_hosts} ; do
+  ssh ${h} "echo ${MYCMD} | base64 -d | bash"
 done
 
+echo
+
+for h in ${eos_hosts} ; do
+  ssh ${h} "echo ${MYCMD} | base64 -d | bash"
+done
+) | column -t

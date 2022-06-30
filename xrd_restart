@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-srv_list="rd storage02 storage03 storage04 storage05 storage06 storage07 storage09 storage10"
+srv_list="rd storage03 storage04 storage05 storage07 storage09 storage10"
 
 for srv in ${srv_list}; do
     ssh ${srv} '~/alicexrd/xrdctl -f'
