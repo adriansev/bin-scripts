@@ -70,7 +70,12 @@ for r in ${ROUTES}; do
     line=$(eval echo \$${r})
     prefix=$(echo ${line} | awk '{print $1}')
     is_present=$(/sbin/ip route list ${prefix})
-    [[ -z "${is_present}" ]] && /sbin/ip route add ${line} dev ${Dev}
+    if [[ -z "${is_present}" ]]; then
+        /sbin/ip route add ${line} dev ${Dev}
+    else
+        /sbin/ip route replace ${line} dev ${Dev}
+    fi
+
     unset -v line prefix
 done
 
