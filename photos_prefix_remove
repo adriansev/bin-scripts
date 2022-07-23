@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+shopt -s nullglob
+
+for f in IMG-*.jp* ; do mv -- "${f}" "${f#IMG-}"; done;
+for f in IMG_*.jp* ; do mv -- "${f}" "${f#IMG_}"; done;
+for f in P_*.jp* ; do mv -- "${f}" "${f#P_}"; done;
+
+for f in V_*.mp4 ; do mv -- "${f}" "${f#V_}"; done;
+for f in VID-*.mp4 ; do mv -- "${f}" "${f#VID-}"; done;
+for f in VID_*.mp4 ; do mv -- "${f}" "${f#VID_}"; done;
+
