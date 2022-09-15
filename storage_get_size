@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 xrd_hosts="storage03 storage04 storage05 storage07 storage09 storage10"
-eos_hosts="eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06"
+eos_hosts="eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07"
 
 MYCMD=$(echo 'df --total -l --block-size=1T /storage* | tail -1 | awk -v HOST=$(hostname -s) '\''{ print HOST"\t"$2,"\t"$3,"\t"$4}'\''' | base64 -w0)
 

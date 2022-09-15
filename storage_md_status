@@ -1,6 +1,6 @@
 #!/bin/bash
 
-srv_list="storage03_root storage04_root storage05_root storage07_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06"
+srv_list="storage03_root storage04_root storage05_root storage07_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07"
 
 for srv in ${srv_list}; do
     ssh ${srv} 'echo -e "\n#########\n   $(hostname)\n#########";df -lh -x tmpfs -x devtmpfs --output=source,target,ipcent,size,pcent;sed "/unused devices.*/d; /Personalities.*/d ;/bitmap.*/d;" /proc/mdstat'
