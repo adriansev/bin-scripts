@@ -1,3 +1,8 @@
+## CVMFS ALICE functions
+
+__cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
+__cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
+
 cvmfs_load_alice () {
 local list output_str list_arr
 list="$( echo ${1} | sed 's/VO_ALICE@//g' )"
@@ -11,7 +16,6 @@ eval $(/cvmfs/alice.cern.ch/bin/alienv printenv "${output_str}");
 }
 
 cvmfs_load_aliphys () { cvmfs_load_alice "AliPhysics::${1}"; }
-
 
 cvmfs_load_aliphys_latest () {
 local latest

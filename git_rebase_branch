@@ -1,11 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-current_branch=`git status -b --porcelain | awk '{print $2}'`
+DEF_BRANCH=$(git_default_branch)
+current_branch=$(git status -b --porcelain | awk '{print $2}')
 
-[[ "$current_branch" == "master" ]] && echo "curent branch is master" && exit 1
-
+[[ "${current_branch}" == "{DEF_BRANCH}" ]] && echo "curent branch is ${DEF_BRANCH}" && exit 1
 
 echo ${current_branch}
-
 
 

@@ -33,55 +33,14 @@ __PYPATH_ADD () { ITEM_IN_PATH "${PYTHONPATH}" ${1} && return 0; [[ -z ${PYTHONP
 __MANPATH_INS () { ITEM_IN_PATH "${MANPATH}" ${1} && return 0; [[ -z ${MANPATH} ]] && export MANPATH=${1} || export MANPATH="${1}:${MANPATH}"; }
 __MANPATH_ADD () { ITEM_IN_PATH "${MANPATH}" ${1} && return 0; [[ -z ${MANPATH} ]] && export MANPATH=${1} || export MANPATH="${MANPATH}:${1}"; }
 
-## CVMFS ALICE functions
-source ${HOME}/bin/cvmfs_load_f
-
-__cvmfs_enabled () { [[ "${ALICE_ENV}" == "1" ]] && echo "#CVMFS"; }
-__cvmfs_get_aliphys () { /cvmfs/alice.cern.ch/bin/alienv -t list 2>&1 | awk -F"/" '/AliPhysics/ {print ":"$2"#"}'; }
-
 ## aliBuild functions
-source ${HOME}/bin/alibuild_load_f
+source func_alibuild
 
-###########################################################
-##   GIT
-git_push2master_current () {
-local branch_name=$(git symbolic-ref --short -q HEAD)
-git push origin ${branch_name}:master
-}
+## cvmfs functions
+source func_cvmfs
 
-git_push2master_byname () {
-[[ -z $1 ]] && echo "An argument is needed : the branch name" && return
-
-local branch_list=$(git branch -l)
-[[ !( "$branch_list" =~ "$1" ) ]] && echo "The argument need to be a valid branch name" && return
-
-git push origin ${1}:master
-}
-
-git_branch_name () { git symbolic-ref --short -q HEAD; }
-
-git_l () { git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset' ; }
-git_list () { git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short ; }
-git_whatis () { git show -s --pretty='tformat:%h (%s, %ad)' --date=short ; }
-git_pwhatis () { git show -s --pretty='tformat:%h, %s, %ad' --date=short ; }
-
-git_rebase_local () {
-local branch_name=$(git symbolic-ref --short -q HEAD)
-git checkout master
-git fetch -t --all
-git pull --rebase
-git checkout ${branch_name}
-git pull --rebase . master
-}
-
-git_delete_branch () {
-git checkout master
-git fetch -p origin
-git push origin --delete $1
-git branch -D $1
-git remote prune origin
-git fetch -p origin
-}
+## git functions
+source func_git
 
 ###########################################################
 

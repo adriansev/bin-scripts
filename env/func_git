@@ -1,0 +1,45 @@
+###########################################################
+##   GIT
+
+git_push2master_current () {
+local DEF_BRANCH=$(git_default_branch)
+local branch_name=$(git symbolic-ref --short -q HEAD)
+git push origin ${branch_name}:${DEF_BRANCH}
+}
+
+git_push2master_byname () {
+[[ -z $1 ]] && echo "An argument is needed : the branch name" && return
+
+local branch_list=$(git branch -l)
+local DEF_BRANCH=$(git_default_branch)
+[[ !( "$branch_list" =~ "$1" ) ]] && echo "The argument need to be a valid branch name" && return
+
+git push origin ${1}:${DEF_BRANCH}
+}
+
+git_branch_name () { git symbolic-ref --short -q HEAD; }
+
+git_l () { git log --graph --pretty=format:'%C(yellow)%h%C(cyan)%d%Creset %s %C(white)- %an, %ar%Creset' ; }
+git_list () { git log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short ; }
+git_whatis () { git show -s --pretty='tformat:%h (%s, %ad)' --date=short ; }
+git_pwhatis () { git show -s --pretty='tformat:%h, %s, %ad' --date=short ; }
+
+git_rebase_local () {
+local DEF_BRANCH=$(git_default_branch)
+local branch_name=$(git symbolic-ref --short -q HEAD)
+git checkout ${DEF_BRANCH}
+git fetch -t --all
+git pull --rebase
+git checkout ${branch_name}
+git pull --rebase . ${DEF_BRANCH}
+}
+
+git_delete_branch () {
+local DEF_BRANCH=$(git_default_branch)
+git checkout ${DEF_BRANCH}
+git fetch -p origin
+git push origin --delete ${1}
+git branch -D ${1}
+git remote prune origin
+git fetch -p origin
+}
