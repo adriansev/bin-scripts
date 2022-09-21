@@ -2,6 +2,8 @@
 ###   FUNCTIONS   ###
 #####################
 
+functions_script_dir=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+
 functions_list ()      { declare -f; }
 functions_list_name () { declare -F; }
 functions_show_def ()  { declare -f $1; }
@@ -34,13 +36,13 @@ __MANPATH_INS () { ITEM_IN_PATH "${MANPATH}" ${1} && return 0; [[ -z ${MANPATH} 
 __MANPATH_ADD () { ITEM_IN_PATH "${MANPATH}" ${1} && return 0; [[ -z ${MANPATH} ]] && export MANPATH=${1} || export MANPATH="${MANPATH}:${1}"; }
 
 ## aliBuild functions
-source func_alibuild
+source ${functions_script_dir}/func_alibuild
 
 ## cvmfs functions
-source func_cvmfs
+source ${functions_script_dir}/func_cvmfs
 
 ## git functions
-source func_git
+source ${functions_script_dir}/func_git
 
 ###########################################################
 
