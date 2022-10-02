@@ -49,7 +49,6 @@
 #include <TRatioPlot.h>
 #include <TString.h>
 #include <TObjString.h>
-#include <AliEmcalList.h>
 
 #endif
 
@@ -63,6 +62,20 @@ const Int_t markers[]    = {kFullCircle, kOpenCircle, kFullSquare, kOpenSquare, 
 //void ROOT_FUNCTIONS(){ }
 
 #define COUNT_OF(x) ((sizeof(x)/sizeof(0[x])) / ((size_t)(!(sizeof(x) % sizeof(0[x])))))
+
+void compilation_flags () { gSystem->AddIncludePath("-Wno-deprecated -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder"); }
+
+void alice_set_paths () {
+gSystem->AddIncludePath("-I. -I$ALICE_PHYSICS/include -I$ALICE_ROOT/include -I$FASTJET/include -I/usr/include");
+gSystem->AddDynamicPath(".:$ALICE_PHYSICS/lib:$ALICE_ROOT/lib:$ROOTSYS/lib:$FASTJET/lib");
+}
+
+void alicephys_load_jetlibs () {
+gSystem->Load("libPWGPP");
+gSystem->Load("libPWGJEEMCALJetTasks");
+}
+
+void list_libs() { gSystem->ListLibraries(); }
 
 std::pair <TString, TString> HistoNameTitle (const TString& base, const TString& radius, const TString& type, const TString& range, const TString& title_suffix) {
   TString name = base + radius + type + range;
@@ -204,7 +217,7 @@ void PadToLogScale() {
 TPad* PadToLogScale(TPad* pad) {
   if ( gROOT->GetListOfCanvases()->GetEntries() == 0 ) return NULL;
   if ( pad->GetLogy() ) {return NULL;}
-  
+
   // Now loop through histos and find the extrema
   for(const auto&& obj: *(pad->GetListOfPrimitives())) {
     if ( obj->InheritsFrom("TH1") ) {
@@ -703,48 +716,6 @@ TH1D* GetH1_normev (THashList* list, const char* hname, Int_t cent = 0) {
   return h;
 }
 
-//______________________________________________________________
-AliEmcalList* taskDirectory ( TFile* f, const char* tracks, const char* clusters, const char* cells, const char* jettype) {
-  TString sTracks (tracks), sClusters (clusters), sCells (cells), sJettype (jettype);
-
-  TString taskDirectory = "JetCDF_" + sTracks;
-  if (!sClusters.IsNull()) {taskDirectory += "_" + sClusters;}
-  if (!sCells.IsNull()) {taskDirectory += "_" + sCells;}
-  taskDirectory += "_CDF" + sJettype;
-  if (sTracks.EqualTo("mcparticles")) {taskDirectory += "MC";}
-  taskDirectory += "_histos";
-
-  //   std::cout << "taskDirectory = " << taskDirectory.Data() << std::endl;
-  AliEmcalList* task_list = dynamic_cast<AliEmcalList*>(f->Get(taskDirectory.Data()));
-  if (!task_list) { std::cout << "invalid AliEmcalList" << endl; return NULL;}
-  return task_list;
-}
-
-//______________________________________________________________
-THashList* getCDFlist ( AliEmcalList* task_list, const char* tracks, const char* clusters, const char* jettype, Double_t radius, Int_t ptmin, Int_t ptmax) {
-  TString sTracks (tracks), sClusters (clusters), sJettype (jettype);
-  if (!task_list) { std::cout << "invalid AliEmcalList" << endl; return NULL;}
-
-  TString jetstrmin = TString::Itoa((Int_t)ptmin,10);
-  TString jetstrmax = TString::Itoa((Int_t)ptmax,10);
-  TString radiusString = TString::Format("R%03.0f", radius*100.0);
-
-  TString histoDirectory = "Jet_AKT";
-  if (sJettype.EqualTo("full"))
-    {histoDirectory += "Full";}
-  else
-    {histoDirectory += "Charged";}
-
-  histoDirectory += radiusString;
-  histoDirectory += "_" + sTracks + "_pT0150";
-  if (!sClusters.IsNull()) {histoDirectory += "_" + sClusters + "_E0300_pt_scheme";}
-  histoDirectory += "_pt_scheme_ptbin" ;
-  histoDirectory += "_" + jetstrmin + "_" + jetstrmax;
-
-  //   std::cout << "histoDirectory = " << histoDirectory.Data() << std::endl;
-  return dynamic_cast<THashList*>( task_list->FindObject(histoDirectory.Data()) );
-  }
-
 //##########################################################################
 
 void myOptions(Int_t lStat=0) {
@@ -915,7 +886,7 @@ for (Int_t i=0;i<Nx;i++) {
       vmaru = 0.0;
       }
     C->cd(0);
-    
+
     TString name = "pad_" + TString::Itoa(i,10) + "_" + TString::Itoa(j,10);
     TPad* pad = (TPad*) gROOT->FindObject(name.Data());
     if (pad) delete pad;
@@ -925,11 +896,11 @@ for (Int_t i=0;i<Nx;i++) {
     pad->SetRightMargin(hmarr);
     pad->SetBottomMargin(vmard);
     pad->SetTopMargin(vmaru);
-    
+
     pad->SetFrameBorderMode(0);
     pad->SetBorderMode(0);
     pad->SetBorderSize(0);
-    
+
     pad->Draw();
     } // parse Ny
   } // parse Nx

@@ -1,11 +1,7 @@
-{
-gROOT->ProcessLine("#include </home/adrian/bin/env/ROOT_FUNCTIONS.C>");
-gSystem->AddIncludePath("-Wno-deprecated -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-reorder");
-gSystem->AddIncludePath("-I. -I$ALICE_PHYSICS/include -I$ALICE_ROOT/include -I$FASTJET/include -I/usr/include");
-gSystem->AddDynamicPath(".:$ALICE_PHYSICS/lib:$ALICE_ROOT/lib:$ROOTSYS/lib:$FASTJET/lib");
+// void load_my_setup () { gROOT->ProcessLine("#include </home/adrian/bin/env/ROOT_FUNCTIONS.C>"); }
+// void load_my_setup_aliphys () { gROOT->ProcessLine("#include </home/adrian/bin/env/ALIPHYS_FUNCTIONS.C>"); }
 
-gSystem->Load("libPWGPP");
-gSystem->Load("libPWGJEEMCALJetTasks");
-//gSystem->ListLibraries();
+{
+
 }
 
