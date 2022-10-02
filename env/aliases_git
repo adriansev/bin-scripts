@@ -1,0 +1,16 @@
+
+## GIT
+alias g='git'
+alias git_cm='commit'
+alias git_co='checkout'
+alias git_st='status'
+alias git_sync_master='git checkout master && git fetch -t --all && git pull'
+alias git_ll='git log --stat --abbrev-commit'
+alias git_lognice='git log --graph --decorate --pretty=oneline --abbrev-commit --all'
+
+alias git_sync_branch='git pull --rebase . master'
+alias git_uncommit='git reset --soft HEAD^'
+
+alias git_changes='git diff --name-status'
+alias git_diffstat='git diff --stat'
+

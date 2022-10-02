@@ -1,139 +1,7 @@
-#!/bin/bash
-###################
-###   ALIASES   ###
-###################
-
-## TORQUE
-alias qsub='qsub -V'
-alias qstat_me='qstat -u $(id -un)'
-alias job_rel_pbs='qrls'
-alias job_hold_pbs='qhold'
-alias jobs_view='qstat -1na'
-
-## SLURM
-alias qsub_slr='sbatch --export=ALL'
-
-alias qstat_slr_me='squeue -u $(id -un)'
-alias qstat_slr_me_running='squeue -u $(id -un) -t RUNNING'
-alias qstat_slr_me_pending='squeue -u $(id -un) -t PENDING'
-
-alias job_rel_slr='scontrol release'
-alias job_hold_slr='scontrol hold'
-alias jobs_view_slr='sinfo'
-
-alias qdel_slr='scancel'
-alias qdel_slr_all='scancel -u $(id -un)'
-alias qdel_slr_pending='scancel -t PENDING -u $(id -un)'
-
-## GLITE
-alias emi_enable='[[ -e /usr/libexec/grid-env.sh ]] && source /usr/libexec/grid-env.sh'
-
-alias job.cancel='glite-ce-job-cancel'
-alias job.list='glite-ce-job-list'
-alias job.purge='glite-ce-job-purge'
-alias job.status='glite-ce-job-status'
-alias job.suspend='glite-ce-job-suspend'
-alias job.lease='glite-ce-job-lease'
-alias job.output='glite-ce-job-output'
-alias job.resume='glite-ce-job-resume'
-alias job.submit='glite-ce-job-submit'
-
-alias proxy.delegate='glite-ce-delegate-proxy'
-alias proxy.renew='glite-ce-proxy-renew'
-alias service-info='glite-ce-service-info'
-alias event-query='glite-ce-event-query'
-
-alias delegate.destroy='glite-delegation-destroy'
-alias delegate.info='glite-delegation-info'
-alias delegate.init='glite-delegation-init'
-
-alias wms.cancel='glite-wms-job-cancel'
-alias wms.info='glite-wms-job-info'
-alias wms.loginfo='glite-wms-job-logging-info'
-alias wms.perusal='glite-wms-job-perusal'
-alias wms.submit='glite-wms-job-submit'
-alias wms.delegate='glite-wms-job-delegate-proxy'
-alias wms.list-match='glite-wms-job-list-match'
-alias wms.output='glite-wms-job-output'
-alias wms.status='glite-wms-job-status'
-
-alias job.output_c='glite-ce-job-output -s 8 -l job_output.log -i jobid'
-alias job.status_c='glite-ce-job-status -l job_status.log -i jobid'
-alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
-
-# DIRAC
-alias dirac_enable='source $HOME/bin/env/bashrc_dirac_auger'
-alias dirac_myproxy='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_user -M && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
-alias dirac_myproxy_prod='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_prod -M && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
-alias dirac_myproxy_prod_upload='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_prod -M -r -U -P && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
-
-alias lfc-cli='dirac-dms-filecatalog-cli -f AugerLcgFileCatalog'
-alias dfc-cli='dirac-dms-filecatalog-cli -f AugerFileCatalog'
-
-alias dfc-mydir="dcd /auger/user/a/asevcenc/ ; dpwd"
-
-alias dms-add-file='dirac-dms-add-file'
-alias dms-add-files='dirac-dms-add-files'
-alias dms-catalog-metadata='dirac-dms-catalog-metadata'
-alias dms-change-replica-status='dirac-dms-change-replica-status'
-alias dms-clean-directory='dirac-dms-clean-directory'
-alias dms-create-removal-request='dirac-dms-create-removal-request'
-alias dms-create-replication-request='dirac-dms-create-replication-request'
-alias dms-data-size='dirac-dms-data-size'
-alias dms-directory-sync='dirac-dms-directory-sync'
-alias dms-filecatalog-cli='dirac-dms-filecatalog-cli'
-alias dms-find-lfns='dirac-dms-find-lfns'
-alias dms-ftsdb-summary='dirac-dms-ftsdb-summary'
-alias dms-fts-monitor='dirac-dms-fts-monitor'
-alias dms-fts-submit='dirac-dms-fts-submit'
-alias dms-get-file='dirac-dms-get-file'
-alias dms-lfn-accessURL='dirac-dms-lfn-accessURL'
-alias dms-lfn-logging-info='dirac-dms-lfn-logging-info'
-alias dms-lfn-metadata='dirac-dms-lfn-metadata'
-alias dms-lfn-replicas='dirac-dms-lfn-replicas'
-alias dms-move-replica-request='dirac-dms-move-replica-request'
-alias dms-pfn-accessURL='dirac-dms-pfn-accessURL'
-alias dms-pfn-metadata='dirac-dms-pfn-metadata'
-alias dms-put-and-register-request='dirac-dms-put-and-register-request'
-alias dms-remove-catalog-files='dirac-dms-remove-catalog-files'
-alias dms-remove-catalog-replicas='dirac-dms-remove-catalog-replicas'
-alias dms-remove-files='dirac-dms-remove-files'
-alias dms-remove-replicas='dirac-dms-remove-replicas'
-alias dms-replica-metadata='dirac-dms-replica-metadata'
-alias dms-replicate-and-register-request='dirac-dms-replicate-and-register-request'
-alias dms-replicate-lfn='dirac-dms-replicate-lfn'
-alias dms-resolve-guid='dirac-dms-resolve-guid'
-alias dms-set-replica-status='dirac-dms-set-replica-status'
-alias dms-show-ftsjobs='dirac-dms-show-ftsjobs'
-alias dms-show-se-status='dirac-dms-show-se-status'
-alias dms-user-lfns='dirac-dms-user-lfns'
-alias dms-user-quota='dirac-dms-user-quota'
-
-#
-alias auger_lfc_enable='export LFC_HOST=$(lcg-infosites --vo auger lfc)'
-alias auger_se_lcg_enable='source ~/bin/se_auger_vars'
-
-## GIT
-alias g='git'
-alias git_cm='commit'
-alias git_co='checkout'
-alias git_st='status'
-alias git_sync_master='git checkout master && git fetch -t --all && git pull'
-alias git_ll='git log --stat --abbrev-commit'
-alias git_lognice='git log --graph --decorate --pretty=oneline --abbrev-commit --all'
-
-alias git_sync_branch='git pull --rebase . master'
-alias git_uncommit='git reset --soft HEAD^'
-
-alias git_changes='git diff --name-status'
-alias git_diffstat='git diff --stat'
-
 
 alias uncrustify='uncrustify -c ~/bin/env/uncrustify.cfg'
 
 ## SYSTEM ALIASES
-alias devtoolset='source scl_source enable devtoolset-3'
-
 alias which='alias | /usr/bin/which --tty-only --read-alias --show-dot --show-tilde'
 
 # reboot / halt / poweroff
@@ -147,7 +15,7 @@ alias mkdir='mkdir -pv'
 
 alias diff='colordiff'
 
-alias mount_list='mount |column -t'
+alias mount_list='mount | column -t'
 
 alias path='echo -e ${PATH//:/\\n}'
 alias now='date +"%T"'
@@ -156,6 +24,7 @@ alias nowdate='date +"%d.%m.%Y"'
 
 # Stop after sending count ECHO_REQUEST packets #
 alias ping10='ping -c 10'
+
 # Do not wait interval 1 second, go fast #
 alias pingfast='ping -c 100 -s.2'
 
@@ -295,19 +164,6 @@ alias ytb_mp3="ytb -x --audio-format mp3"
 alias rsync="rsync -ahuHAXW -e ssh"
 alias rsync_gsi="rsync -ahuHAXW -e gsissh"
 
-## ROOT ALIASES
-alias root.exe="root.exe -l"
-alias rootn.exe="rootn.exe -l"
-alias root="root.exe -l"
-alias rootn="rootn.exe -l"
-
-alias rq="root.exe -l -b -q -x"
-
-alias aliroot="aliroot -l"
-alias alirq="aliroot -l -b -q -x"
-
-alias tutorials='cd $ROOTSYS/tutorials'
-
 alias makej8='nohup time -p make -j8 >$(basename ${PWD}).out 2>$(basename ${PWD}).err &'
 
 alias watch_file="watch -n 1 tail -n 30"
@@ -322,11 +178,6 @@ alias g4work='export G4WORKDIR=`pwd`'
 alias scoala='ssh iwsgc15@glite-tutor.ct.infn.it'
 
 alias load_nvidia='LD_LIBRARY_PATH=/usr/lib64/nvidia '
-
-# Python
-alias pip_install_user='python3 -m pip install --upgrade --user'
-alias pip3_install_user='python3 -m pip install --upgrade --user'
-alias pip3_install_user_eager='python3 -m pip install --upgrade-strategy eager --upgrade --user'
 
 # Fix recreate ld lib path when is overwritten
 alias ldlib_fix='export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib64:/usr/lib64:/usr/local/lib:/usr/lib'

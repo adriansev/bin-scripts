@@ -1,0 +1,7 @@
+
+# Python
+alias pip_install_user='python3 -m pip install --upgrade --user'
+alias pip3_install_user='python3 -m pip install --upgrade --user'
+alias pip_install_user_eager='python3 -m pip install --upgrade-strategy eager --upgrade --user'
+alias pip3_install_user_eager='python3 -m pip install --upgrade-strategy eager --upgrade --user'
+

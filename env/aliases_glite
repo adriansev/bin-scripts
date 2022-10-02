@@ -1,0 +1,37 @@
+
+## GLITE
+alias emi_enable='[[ -e /usr/libexec/grid-env.sh ]] && source /usr/libexec/grid-env.sh'
+
+alias job.cancel='glite-ce-job-cancel'
+alias job.list='glite-ce-job-list'
+alias job.purge='glite-ce-job-purge'
+alias job.status='glite-ce-job-status'
+alias job.suspend='glite-ce-job-suspend'
+alias job.lease='glite-ce-job-lease'
+alias job.output='glite-ce-job-output'
+alias job.resume='glite-ce-job-resume'
+alias job.submit='glite-ce-job-submit'
+
+alias proxy.delegate='glite-ce-delegate-proxy'
+alias proxy.renew='glite-ce-proxy-renew'
+alias service-info='glite-ce-service-info'
+alias event-query='glite-ce-event-query'
+
+alias delegate.destroy='glite-delegation-destroy'
+alias delegate.info='glite-delegation-info'
+alias delegate.init='glite-delegation-init'
+
+alias wms.cancel='glite-wms-job-cancel'
+alias wms.info='glite-wms-job-info'
+alias wms.loginfo='glite-wms-job-logging-info'
+alias wms.perusal='glite-wms-job-perusal'
+alias wms.submit='glite-wms-job-submit'
+alias wms.delegate='glite-wms-job-delegate-proxy'
+alias wms.list-match='glite-wms-job-list-match'
+alias wms.output='glite-wms-job-output'
+alias wms.status='glite-wms-job-status'
+
+alias job.output_c='glite-ce-job-output -s 8 -l job_output.log -i jobid'
+alias job.status_c='glite-ce-job-status -l job_status.log -i jobid'
+alias job.submit_c='glite-ce-job-submit -l cmd.log -o jobid -a -r'
+

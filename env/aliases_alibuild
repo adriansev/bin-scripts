@@ -1,0 +1,3 @@
+
+alias alibuild_cd='[[ -n ${ALIBUILD_WORK_DIR} ]] && cd ${ALIBUILD_WORK_DIR}/.. || echo "ALIBUILD_WORK_DIR not defined" '
+
