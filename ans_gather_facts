@@ -3,8 +3,8 @@
 NOW="$(date +%Y%m%d_%H%M%S)"
 LOCK="/tmp/ans_gather_facts.lock"
 
-exec 100>${LOCK} || exit 1
-/usr/bin/flock 100 || exit 1
+exec {FD}>${LOCK} || exit 1
+/usr/bin/flock -n ${FD} || exit 1
 trap 'rm -f ${LOCK}' EXIT
 
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
