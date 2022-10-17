@@ -1,9 +1,13 @@
+%_query_all_fmt %%{name}-%%{version}-%%{release}.%%{arch}
 
-%_topdir %(echo $HOME)/rpmbuild
-
+%_topdir    %(echo $HOME)/rpmbuild
 %_rpmdir    %{_topdir}/RPMS/%(str=%{dist};echo ${str:1};)
 %_srcrpmdir %{_topdir}/SRPMS/%(str=%{dist};echo ${str:1};)
 
+%__arch_install_post \
+    [ "%{buildarch}" = "noarch" ] || QA_CHECK_RPATHS=1 ; \
+    case "${QA_CHECK_RPATHS:-}" in [1yY]*) /usr/lib/rpm/check-rpaths ;; esac \
+    /usr/lib/rpm/check-buildroot
 
 %_smp_mflags %( \
     [ -z "$RPM_BUILD_NCPUS" ] \\\
@@ -17,8 +21,4 @@
         echo "-j3"; \\\
     fi )
 
-%__arch_install_post \
-    [ "%{buildarch}" = "noarch" ] || QA_CHECK_RPATHS=1 ; \
-    case "${QA_CHECK_RPATHS:-}" in [1yY]*) /usr/lib/rpm/check-rpaths ;; esac \
-    /usr/lib/rpm/check-buildroot
 
