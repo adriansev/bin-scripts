@@ -1,15 +1,25 @@
 ############
 ## PROMPT ##
 ############
-export PS1="${SINGULARITY_NAME:+\[\033[1;95m\]|>${SINGULARITY_NAME}<|\[\033[1;32m\]}\[$BGreen\][\D{%A %d.%m.%y %H:%M}] \u@\h : \[$BBlue\]\w \[$White\]\$(__git_ps1) \[$BGreen\]\$ \[$Color_Off\]\n"
+##export PS1="${SINGULARITY_NAME:+$BIPurple|>${SINGULARITY_NAME}<|$BGreen}
+
+export PS1="${BGreen}[\D{%A %d.%m.%y %H:%M} \u@\h] ${BBlue}\w${White}\$(__git_ps1)${BGreen} \$${Color_Off}\n"
+
+# Continuation interactive prompt
 export PS2="continue-> "
 
-case $TERM in
-xterm*|rxvt*|eterm)
-    PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%,*}:${PWD/$HOME/~}\007" '
-    ;;
-screen)
-    PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%,*}:${PWD/$HOME/~}\033\\" '
-    ;;
-esac
+# Prompt used by .select. loop inside a shell script
+# PS3
+
+# Prompt used when a shell script is executed in debug mode (.set -x. will turn this on) default ="++"
+# PS4
+
+#case $TERM in
+#xterm*|rxvt*|eterm)
+#    PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME%%,*}:${PWD/$HOME/~}\007" '
+#    ;;
+#screen)
+#    PROMPT_COMMAND='echo -ne "\033_${USER}@${HOSTNAME%%,*}:${PWD/$HOME/~}\033\\" '
+#    ;;
+#esac
 
