@@ -32,6 +32,6 @@ for task in "${task_list[@]}"; do
   ARGS=( "${ARGS[@]/${task}/}" )
 done
 
-ansible-playbook "${ARGS[@]}" ${PBOOK_TMP}
+ansible-playbook ${ARGS[@]} ${PBOOK_TMP}
 [[ -e "${PBOOK_TMP}" ]] && rm -f "${PBOOK_TMP}"
 
