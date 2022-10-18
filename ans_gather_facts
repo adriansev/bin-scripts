@@ -9,8 +9,12 @@ trap 'rm -f ${LOCK}' EXIT
 
 pushd "${HOME}/ansible/playbooks" &> /dev/null
 
+ansible_inventory=$(ansible-inventory --list | jq -r '.["_meta"]["hostvars"] | keys[]')
+
 ARG1="${1}"
-[[ "${ARG1}" == -* ]] || IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
+if [[ -n ${ARG1} ]]; then
+ [[ "${ARG1}" == -* ]] || IS_HOST="$(echo ${ansible_inventory} | grep ${ARG1})"
+fi
 
 if [[ -n "${IS_HOST}" ]]; then
   TGT_SPEC="-e target=${ARG1}"
@@ -18,7 +22,7 @@ if [[ -n "${IS_HOST}" ]]; then
 fi
 
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
-ansible-playbook ${TGT_SPEC} "${@}" --flush-cache get_facts.yml &> /dev/null && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
+ansible-playbook ${TGT_SPEC} ${@} --flush-cache get_facts.yml &> /dev/null && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
 /usr/bin/redis-cli -n 0 BGSAVE
 
 popd &> /dev/null
