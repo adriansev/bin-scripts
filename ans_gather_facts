@@ -7,7 +7,19 @@ exec {FD}>${LOCK} || exit 1
 /usr/bin/flock -n ${FD} || exit 1
 trap 'rm -f ${LOCK}' EXIT
 
+pushd "${HOME}/ansible/playbooks" &> /dev/null
+
+ARG1="${1}"
+[[ "${ARG1}" == -* ]] || IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
+
+if [[ -n "${IS_HOST}" ]]; then
+  TGT_SPEC="-e target=${ARG1}"
+  shift
+fi
+
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
-ans_play "${@}" --flush-cache get_facts.yml &> /dev/null && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
+ansible-playbook ${TGT_SPEC} "${@}" --flush-cache get_facts.yml &> /dev/null && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
 /usr/bin/redis-cli -n 0 BGSAVE
+
+popd &> /dev/null
 
