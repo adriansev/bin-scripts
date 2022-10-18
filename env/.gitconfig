@@ -55,6 +55,7 @@
 
 [push]
     default = simple
+	autoSetupRemote = true
 
 [sendemail]
     smtpencryption = tls
@@ -71,12 +72,15 @@
     signoff = true
 
 [help]
-	autocorrect = 1
+    autocorrect = 1
 
 [filter "lfs"]
-	process = git-lfs filter-process
-	required = true
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
+    process = git-lfs filter-process
+    required = true
+    clean = git-lfs clean -- %f
+    smudge = git-lfs smudge -- %f
+
 [checkout]
-	defaultRemote = origin
+    defaultRemote = origin
+
+
