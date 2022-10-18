@@ -5,6 +5,6 @@ host_list=$(redis-cli --scan -n 0 --raw | grep -v ansible_cache_keys )
 [[ -z ${host_list} ]] && { echo "Empty REDIS db!!"; exit 1; }
 
 for h in ${host_list}; do
-    redis-cli get ${h} | jq "${@}"
+    redis-cli get ${h} | jq 
 done
 

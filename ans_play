@@ -4,7 +4,11 @@ pushd "${HOME}/ansible/playbooks" &> /dev/null
 
 ARG1="${1}"
 
-[[ "${ARG1}" == -* ]] || IS_HOST="$(ansible-inventory --list | grep ${ARG1})"
+ansible_inventory=$(ansible-inventory --list | jq -r '.["_meta"]["hostvars"] | keys[]')
+
+if [[ -n "${ARG1}" ]]; then
+    [[ "${ARG1}" == -* ]] || IS_HOST="$(echo ${ansible_inventory} | grep ${ARG1})"
+fi
 
 if [[ -n "${IS_HOST}" ]]; then
   TGT_SPEC="-e target=${ARG1}"
