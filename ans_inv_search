@@ -22,5 +22,5 @@ for i in ${host_list[@]}; do
 done
 [[ -z "${FULL_NAME}" ]] && { echo "No host defined by >${HOST}< was found in inventory"; exit 1; }
 
-redis-cli get "${FULL_NAME}" | jq "${@}"
+redis-cli get "${FULL_NAME}"
 
