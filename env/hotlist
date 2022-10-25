@@ -97,6 +97,8 @@ GROUP "EOS"
   ENTRY "/sh://eos_fst05/" URL "/sh://eos_fst05/"
   ENTRY "/sh://eos_fst06/" URL "/sh://eos_fst06/"
   ENTRY "/sh://eos_fst07/" URL "/sh://eos_fst07/"
+  ENTRY "/sh://eos_fst08/" URL "/sh://eos_fst08/"
+  ENTRY "/sh://eos_fst09/" URL "/sh://eos_fst09/"
 ENDGROUP
 GROUP "PAO-AUGER"
   ENTRY "/sh://auger01_root/" URL "/sh://auger01_root/"
