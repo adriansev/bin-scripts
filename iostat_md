@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+LOCK="/tmp/iostat_md.lock"
+
+exec {FD}>${LOCK} || exit 1
+/usr/bin/flock -n ${FD} || exit 1
+trap 'rm -f ${LOCK}' EXIT
+
+md_list="$(lsblk -nl -o NAME,TYPE | awk '/raid/ {arr[$1]++}END{for (d in arr){print d}}')" #'
+
+# mdadm -DY /dev/md1 | awk -F= 'BEGIN{PROCINFO["sorted_in"] = "@ind_num_asc"} {if ($0 ~ /MD_DEVICE_dev_.*_DEV/) {arr[$2]++} } END { for (d in arr) {print d} }'
+
+for md in ${md_list}; do
+    md_dev_list=$(mdadm -DY /dev/${md} | awk -F= 'BEGIN{PROCINFO["sorted_in"] = "@ind_num_asc"} {if ($0 ~ /MD_DEVICE_dev_.*_DEV/) {arr[$2]++} } END { for (d in arr) {print d} }') #'
+
+    DEV_LIST=""
+    for dev in ${md_dev_list}; do
+        DEV_LIST="${DEV_LIST} ${dev}"
+    done
+
+    echo "MD: ${md}"
+    iostat -dmxy ${DEV_LIST} 5 1
+    echo
+done
+
