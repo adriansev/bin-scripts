@@ -47,7 +47,7 @@ ARCH_ARG=""
 local_arch="$(aliBuild architecture)"
 [[ "${local_arch}" != "slc8_x86-64" || "${local_arch}" != "slc7_x86-64" ]] && ARCH_ARG="--force-unknown-architecture"
 
-echo aliBuild -d build ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" --defaults ${DEFAULT} -z "${INITDIR}" "${@}" ${PACKAGE}
-aliBuild -d build ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" --defaults ${DEFAULT} -z "${INITDIR}" "${@}" ${PACKAGE}
+echo aliBuild -d build ${ALIBUILD_NOSYSTEM:+--no-system} ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" --defaults ${DEFAULT} -z "${INITDIR}" "${@}" ${PACKAGE}
+aliBuild -d build ${ALIBUILD_NOSYSTEM:+--no-system} ${ARCH_ARG} --work-dir "${ALIBUILD_WORK_DIR}" --defaults ${DEFAULT} -z "${INITDIR}" "${@}" ${PACKAGE}
 popd &>/dev/null
 
