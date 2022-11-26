@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Default check for user{cert,key}.pem ;
 if [ ! -f "$HOME/.globus/userkey.pem" -o ! -f "$HOME/.globus/usercert.pem" ]; then
@@ -6,13 +6,22 @@ if [ ! -f "$HOME/.globus/userkey.pem" -o ! -f "$HOME/.globus/usercert.pem" ]; th
     exit 1
 fi
 
-# if not defined use default .j/config
-JALIEN_CONF_DIR=${JALIEN_CONF_DIR:-${HOME}/.j/config}
-if [[ ! -d "${JALIEN_CONF_DIR}" ]]; then # ups, setup was not run
-    echo "could not find ${JALIEN_CONF_DIR}; you should run:"
-    echo "${0} setup"
-    exit 1
-fi
+# if not defined use default .alien/config
+JALIEN_CONF_DIR=${JALIEN_CONF_DIR:-${HOME}/.alien/config}
+[[ ! -d "${JALIEN_CONF_DIR}" ]] && mkdir -p "${JALIEN_CONF_DIR}"
+JUSRDIR="$(dirname ${JALIEN_CONF_DIR})"
+
+export TMPDIR="${TMPDIR:-/tmp}"
+
+# export JALIEN_GC=" -XX:+UseG1GC -XX:+DisableExplicitGC -XX:MaxTrivialSize=1K"
+JDK_JAVA_OPTIONS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED"
+JALIEN_OPTS_DEFAULT="${JDK_JAVA_OPTIONS} -client -Xms16M -Xmx64M -Dcom.sun.jndi.ldap.connect.pool=false -Duserid=$(id -u) -Djava.io.tmpdir=${TMPDIR} -DAliEnConfig=${JALIEN_CONF_DIR}"
+
+# prepend any JALIEN_OPTS additional options to java command to be run
+RUNSH_OPTS="${JALIEN_OPTS} ${RUNSH_OPTS}"
+
+ARG1="${1}"
+shift
 
 # check if command arguments have jar files and build a list of them as classpath definition
 ARGLIST="${@}"
@@ -23,7 +32,7 @@ for jar in ${ARGLIST}; do
         JARDIR="$(dirname ${JARFILE})"
         [[ ! ${JARLIST} =~ :${JARDIR} ]] && JARLIST="${JARLIST}:${JARDIR}" # use ":" when checking if path already added otherwise will match all paths of files
 
-        ARGLIST=${ARGLIST//${JARFILE}/} # remove the found jar files from the argument list that will be than passed to java cmd
+        ARGLIST=${ARGLIST//${JARFILE}/} # remove the found jar files from the argument list that will be then passed to java cmd
     fi
 done
 export CLASSPATH="${JARLIST}"
@@ -53,61 +62,66 @@ if [[ -z "${JARLIST}" ]]; then
   export CLASSPATH="${JAR_LIST_MAIN}:${JAR_LIST_LIB}"
 fi
 
-#JALIEN_OPTS_DEFAULT="-server -Xms64m -Xmx256m -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+UseCompressedOops -XX:+OptimizeStringConcat -XX:MaxTrivialSize=1K \
-#-XX:CompileThreshold=20000 -Duserid=$(id -u) -Dcom.sun.jndi.ldap.connect.pool=false"
-
-JALIEN_OPTS_DEFAULT="-client -Xms16M -Xmx64M -Duserid=$(id -u)"
-
-#JAVA_VERSION=$(java -version 2>&1 | sed -e 's/.*version "\([[:digit:]]*\)\(.*\)/\1/; 1q') #'
-##JAVA_OPTS="--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --add-opens=java.rmi/sun.rmi.transport=ALL-UNNAMED"
-
-[[ -z "${FOUND_TMP}" ]] && FOUND_TMP="${TMPDIR}"
-[[ -z "${FOUND_TMP}" ]] && FOUND_TMP="${TMP}"
-[[ -z "${FOUND_TMP}" ]] && FOUND_TMP="${TEMP}"
-[[ -z "${FOUND_TMP}" ]] && FOUND_TMP="/tmp"
-
-JALIEN_OPTS_DEFAULT="${JALIEN_OPTS_DEFAULT} -Djava.io.tmpdir=${FOUND_TMP}"
-
-jbox_stop () {
 # clean up the remaining JBox process
-JBOX_PID="$(ps -u $(id -u) -f | awk '/[a]lien.JBox/ {print $2}')"
-[[ -n "${JBOX_PID}" ]] && kill -15 ${JBOX_PID}
-}
+jbox_stop () {
+    pkill -u $(id -u) -e -f [a]lien.JBox
+    sleep 1
+    pgrep -u $(id -u) -a -f [a]lien.JBox > /dev/null || pkill -9 -u $(id -u) -e -f [a]lien.JBox
+    }
 
 jbox_start () {
-jbox_stop
-RUNSH_OPTS="-DAliEnConfig=${JALIEN_CONF_DIR} alien.JBox"
-[[ -n "${JALIEN_OPTS}" ]] && RUNSH_OPTS="${JALIEN_OPTS} ${RUNSH_OPTS}"
-PIPE="${TMPDIR:-/tmp}/jbox_input.pipe"
-[[ -e "${PIPE}" ]] &&  rm -rf "${PIPE}"
-mkfifo ${PIPE}
-nohup java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS} <${PIPE} >${HOME}/jbox.out 2>&1 &
-read -s -p "Password:" PASS
-echo "${PASS}" > ${PIPE}
-}
+    pgrep -u $(id -u) -a -f [a]lien.JBox > /dev/null && return 0;
+    PIPE="${TMPDIR}/jbox_input_$(id -u).pipe"
+    [[ -e "${PIPE}" ]] && rm -rf "${PIPE}"
+    mkfifo ${PIPE}
+    read -t 30 -s -p "SSL key password: " PASS
+    [[ -z "${PASS}" ]] && { echo "SSL key password was not provided!"; return 1; }
+    nohup java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS} alien.JBox &>${HOME}/jbox.out <${PIPE} &
+    sleep 0.5
+    echo -e "${PASS}\n" > ${PIPE}
+    echo -ne "\nJBOX starting"
+    times=7; i=0; while((i++ < times)); do echo -n "."; sleep 1; done;
+    echo " done"
+    cat ${HOME}/jbox.out
+    }
 
-ARG1="${1}"
+jbox_restart () {
+    jbox_stop
+    jbox_start
+    }
+
+jbox_status () {
+    PINFO="$(pgrep -u $(id -u) -a -f [a]lien.JBox)"
+    [[ -z "${PINFO}" ]] && return 1;
+    PID="${PINFO%% *}"
+    LSOF="$(lsof -nPE -p ${PID})"
+    echo "${LSOF}" | head -1
+    CONNECTIONS=$(echo "${LSOF}" | grep -e 'ESTABLISHED)$\|LISTEN)$' ) #'
+    [[ -n "${CONNECTIONS}" ]] && echo "${CONNECTIONS}" || echo "No connections so far for pid ${PID}.. wait a little bit more"
+
+    JCLIENT_TOKEN="${TMPDIR}/jclient_token_$(id -u)"
+    [[ -f "${JCLIENT_TOKEN}" ]] && echo -e "\njclient_token_ info\n$(< ${JCLIENT_TOKEN})" || echo "Connection not estblished yet and not reported in ${JCLIENT_TOKEN}.. wait a little bit more"
+    }
+
 if [ "${ARG1}" == "setup" ]; then
     #Copy the default logging and config files to user controllable versions - if present, keep the existing and copy the new ones with date postfix
-    JCONFDIR="${JALIEN_HOME}/config/"
-    USERCONFDIR="${HOME}/.j/config/"
 
-    mkdir -p "${USERCONFDIR}"
-
-    cat << EOF > ${USERCONFDIR}/config.properties
+    cat << EOF > ${JALIEN_CONF_DIR}/config.properties
 ldap_server = alice-ldap.cern.ch:8389
 ldap_root = o=alice,dc=cern,dc=ch
+verify_ldap = true
 alien.users.basehomedir = /alice/cern.ch/user/
 alice_close_site = CERN
-#xrootd.location=/home/mmmartin/alien/api/
 apiService = alice-jcentral.cern.ch:8098
-#siteProxyService = pcep.cern.ch:5284
+jalien.config.hasDBBackend = false
+alien.shell.commands.access_log=access_log
+lfn_crawler_dry_run = true
 #service.jks.location =
 #user.jks.location =
-jalien.config.hasDBBackend=false
+
 EOF
 
-    cat << EOF > ${USERCONFDIR}/logging.properties
+    cat << EOF > ${JALIEN_CONF_DIR}/logging.properties
 handlers = alien.log.SevereFileHandler alien.log.WarningFileHandler alien.log.ConfigFileHandler alien.log.InfoFileHandler alien.log.FineFileHandler alien.log.FinerFileHandler alien.log.FinestFileHandler
 #alien.site.CustomHandler
 
@@ -117,53 +131,56 @@ alien.log.SevereFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.SevereFileHandler.limit = 1000000
 alien.log.SevereFileHandler.count = 4
 alien.log.SevereFileHandler.append = true
-alien.log.SevereFileHandler.pattern = ${HOME}/alien-severe%g.log
+alien.log.SevereFileHandler.pattern = ${JUSRDIR}/alien-severe%g.log
 
 alien.log.WarningFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.WarningFileHandler.limit = 1000000
 alien.log.WarningFileHandler.count = 4
 alien.log.WarningFileHandler.append = true
-alien.log.WarningFileHandler.pattern = ${HOME}/alien-warning%g.log
+alien.log.WarningFileHandler.pattern = ${JUSRDIR}/alien-warning%g.log
 
 alien.log.ConfigFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.ConfigFileHandler.limit = 1000000
 alien.log.ConfigFileHandler.count = 4
 alien.log.ConfigFileHandler.append = true
-alien.log.ConfigFileHandler.pattern = ${HOME}/alien-config%g.log
+alien.log.ConfigFileHandler.pattern = ${JUSRDIR}/alien-config%g.log
 
 alien.log.InfoFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.InfoFileHandler.limit = 1000000
 alien.log.InfoFileHandler.count = 4
 alien.log.InfoFileHandler.append = true
-alien.log.InfoFileHandler.pattern = ${HOME}/alien-info%g.log
+alien.log.InfoFileHandler.pattern = ${JUSRDIR}/alien-info%g.log
 
 alien.log.FineFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.FineFileHandler.limit = 1000000
 alien.log.FineFileHandler.count = 4
 alien.log.FineFileHandler.append = true
-alien.log.FineFileHandler.pattern = ${HOME}/alien-fine%g.log
+alien.log.FineFileHandler.pattern = ${JUSRDIR}/alien-fine%g.log
 
 alien.log.FinerFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.FinerFileHandler.limit = 1000000
 alien.log.FinerFileHandler.count = 4
 alien.log.FinerFileHandler.append = true
-alien.log.FinerFileHandler.pattern = ${HOME}/alien-finer%g.log
+alien.log.FinerFileHandler.pattern = ${JUSRDIR}/alien-finer%g.log
 
 alien.log.FinestFileHandler.formatter = java.util.logging.SimpleFormatter
 alien.log.FinestFileHandler.limit = 1000000
 alien.log.FinestFileHandler.count = 4
 alien.log.FinestFileHandler.append = true
-alien.log.FinestFileHandler.pattern = ${HOME}/alien-finest%g.log
+alien.log.FinestFileHandler.pattern = ${JUSRDIR}/alien-finest%g.log
 
 .level = WARNING
 lia.level = WARNING
 lazyj.level = WARNING
 apmon.level = WARNING
+apmon.MonitoredJob.level=OFF
 alien.level = FINEST
 alien.monitoring.Monitor.level = WARNING
+alien.site.JobAgent.level = FINE
 
 # tell LazyJ to use the same logging facilities
 use_java_logger=true
+
 EOF
 
     #mkdir -p ${HOME}/.j/trusts
@@ -173,21 +190,31 @@ EOF
     exit 0 # we done our job, let's exit
 elif [ "${ARG1}" == "cleanup" ]; then
     jbox_stop
-    exit 0 # we done our job, let's exit
-elif [ "${ARG1}" == "jbox" ]; then
+    exit $? # we done our job, let's exit
+elif [ "${ARG1}" == "login" ]; then
     jbox_start
-    exit 0
+    exit $?
+elif [ "${ARG1}" == "login_restart" ]; then
+    jbox_restart
+    exit $?
+elif [ "${ARG1}" == "jbox_status" ]; then
+    jbox_status
+    exit $?
 else
-    RUNSH_OPTS="-DAliEnConfig=${JALIEN_CONF_DIR} alien.JSh"
+    RUNSH_OPTS="${RUNSH_OPTS} alien.JSh"
 fi
 
-# prepend any JALIEN_OPTS additional options to java command to be run
-[[ -n "${JALIEN_OPTS}" ]] && RUNSH_OPTS="${JALIEN_OPTS} ${RUNSH_OPTS}"
+if [[ ! -f "${JALIEN_CONF_DIR}/config.properties" ]]; then # ups, setup was not run
+    echo "could not find ${JALIEN_CONF_DIR}; you should run:"
+    echo "${0} setup"
+    exit 1
+fi
 
 if [[ -n ${ARGLIST} ]]; then
-    JBOX_PID="$(ps -u $(id -u) -f | awk '/[a]lien.JBox/ {print $2}')"
+    JBOX_PID="$(pgrep -u $(id -u) -a -f [a]lien.JBox)"
     [[ -z "${JBOX_PID}" ]] && jbox_start
     java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS} <<< ${ARGLIST} | head -n -2 | tail -n +7
 else
     java ${JALIEN_OPTS_DEFAULT} ${RUNSH_OPTS}
 fi
+
