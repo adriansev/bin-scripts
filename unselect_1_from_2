@@ -1,0 +1,9 @@
+#!/bin/bash
+
+SELECT_LIST=${1}
+RUN_LIST=${2}
+
+while read -r item ; do
+  grep -v -i "${item}" "${RUN_LIST}"
+done < "${SELECT_LIST}"
+
