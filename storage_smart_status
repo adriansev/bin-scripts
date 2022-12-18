@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-srv_list="storage03_root storage04_root storage05_root storage07_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07"
+srv_list="storage03_root storage04_root storage05_root storage07_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07 eos_fst08 eos_fst09"
 
 for srv in ${srv_list}; do
     ${HOME}/bin/ssh_run_script ${srv} ${HOME}/bin/smart_health
