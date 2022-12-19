@@ -11,6 +11,7 @@ if [[ -n "${ARG1}" ]]; then
 fi
 
 if [[ -n "${IS_HOST}" ]]; then
+  [[ "${ARG1}" != *.spacescience.ro ]] && ARG1="${ARG1}.spacescience.ro"
   TGT_SPEC="-e target=${ARG1}"
   shift
 fi
