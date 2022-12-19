@@ -1,7 +1,0 @@
-#!/bin/bash
-
-wget -O $HOME/bin/dirac-install2 --no-check-certificate -np https://raw.github.com/DIRACGrid/DIRAC/master/Core/scripts/dirac-install.py
-mv $HOME/bin/dirac-install2 $HOME/bin/dirac-install
-
-chmod +x $HOME/bin/dirac-install
-

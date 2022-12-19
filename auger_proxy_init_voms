@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+dirac-proxy-init --cfg="${HOME}/bin/env/dirac_auger.cfg" -M -S -g auger_user -v 96:00
+
