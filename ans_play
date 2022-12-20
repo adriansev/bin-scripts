@@ -1,22 +1,29 @@
 #!/usr/bin/env bash
 
 pushd "${HOME}/ansible/playbooks" &> /dev/null
+yml_list="$(ls -1 *.yml)"
 
 ARG1="${1}"
+[[ -z "${ARG1}" ]] && { echo "At least the name of playbook should be supplied (should be last term)"; exit 1; }
 
 ansible_inventory=$(ansible-inventory --list | jq -r '.["_meta"]["hostvars"] | keys[]')
 
-if [[ -n "${ARG1}" ]]; then
-    [[ "${ARG1}" == -* ]] || IS_HOST="$(echo ${ansible_inventory} | grep ${ARG1})"
-fi
+[[ "${ARG1}" != -* ]] && { IS_HOST=$(echo "${ansible_inventory}" | grep ${ARG1}); }
 
 if [[ -n "${IS_HOST}" ]]; then
-  [[ "${ARG1}" != *.spacescience.ro ]] && ARG1="${ARG1}.spacescience.ro"
+  [[ "${ARG1}" != *.spacescience.ro && "${IS_HOST}" == *.spacescience.ro ]] && ARG1="${ARG1}.spacescience.ro"
   TGT_SPEC="-e target=${ARG1}"
   shift
 fi
 
-ansible-playbook ${TGT_SPEC} "${@}"
+ARG_LIST=( "${@}" )
+PLAY="${ARG_LIST[-1]}"
+unset ARG_LIST[-1]
+
+IS_PLAY=$(echo "${yml_list}" | grep ${PLAY})
+[[ "${PLAY}" != *.yml && "${IS_PLAY}" == *.yml ]] && PLAY="${PLAY}.yml"
+
+ansible-playbook ${TGT_SPEC} "${ARG_LIST[@]}" "${PLAY}"
 
 popd &> /dev/null
 
