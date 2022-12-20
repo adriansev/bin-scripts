@@ -7,10 +7,16 @@ exec {FD}>${LOCK} || exit 1
 /usr/bin/flock -n ${FD} || exit 1
 trap 'rm -f ${LOCK}' EXIT
 
+ANSIBLE_CONF=$(ansible-config dump | awk -F'= ' '/CONFIG_FILE/{print $2}')
+ANSIBLE_HOME=$(dirname ${ANSIBLE_CONF})
+
+pushd ${ANSIBLE_HOME}/playbooks &> /dev/null
 # [[ "${1}" == "files" ]] && { shift; DO_LOCALFILES="--tree ${HOME}/ansible/facts"; }
-truncate --size 0 ${HOME}/ansible/host_logs/*
+truncate --size 0 ${ANSIBLE_HOME}/host_logs/*
 ans_play --flush-cache ${@} get_facts.yml && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
 /usr/bin/redis-cli -n 0 BGSAVE
+
+ansible-inventory --list > ${ANSIBLE_HOME}/inventory.json
 
 popd &> /dev/null
 
