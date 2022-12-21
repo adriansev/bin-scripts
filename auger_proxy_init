@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 
-dirac-proxy-init --cfg="${HOME}/bin/env/dirac_auger.cfg" -S -g auger_user -v 96:00
+ARG="${1}"
+[[ "${ARG}" == "mycfg" ]] && AUGER_CFG='--cfg="${HOME}/bin/env/dirac_auger.cfg"'
+
+dirac-proxy-init ${AUGER_CFG} -S -g auger_user -v 96:00
 
