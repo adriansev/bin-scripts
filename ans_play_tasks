@@ -2,7 +2,7 @@
 
 [[ -z "${1}" ]] && { echo "${0} host_name task1_file task2_file .."; exit; }
 
-HOST="${1}"
+TGT="${1}"
 shift
 
 cd "${HOME}/ansible/playbooks" || exit 1
@@ -12,7 +12,7 @@ PBOOK_TMP="${HOST}_play.tmp${NOW}.yml"
 
 cat > "${PBOOK_TMP}" <<EOF
 ---
-- hosts: ${HOST}
+- hosts: "{{ target }}"
   tasks:
 EOF
 
@@ -32,6 +32,6 @@ for task in "${task_list[@]}"; do
   ARGS=( "${ARGS[@]/${task}/}" )
 done
 
-ansible-playbook ${ARGS[@]} ${PBOOK_TMP}
+ans_play ${TGT} ${ARGS[@]} ${PBOOK_TMP}
 [[ -e "${PBOOK_TMP}" ]] && rm -f "${PBOOK_TMP}"
 
