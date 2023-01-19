@@ -70,6 +70,7 @@ GROUP "VM Servers"
 ENDGROUP
 GROUP "EMI-Servers"
   ENTRY "/sh://seau_root/root" URL "/sh://seau_root/root"
+  ENTRY "/sh://seau2_root/root" URL "/sh://seau2_root/root"
   ENTRY "/sh://grid02_root/root" URL "/sh://grid02_root/root"
   ENTRY "/sh://grid04_root/root" URL "/sh://grid04_root/root"
   ENTRY "/sh://grid04/home/asevcenc" URL "/sh://grid04/home/asevcenc"
