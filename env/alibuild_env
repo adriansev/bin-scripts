@@ -1,13 +1,9 @@
 
 if [[ -n ${ALIBUILD_WORK_DIR}  ]]; then
-
-    export ALIBUILD_SYS_PKG_F35="--disable GCC-Toolchain,ninja,autotools,curl,lz4,FFTW3,fmt,cgal,GMP,MPFR,RapidJSON,Clang,make,flatbuffers,double-conversion,ZeroMQ,capstone,json-c,UUID,libtirpc,boost,re2"
-
     type -p alienv 2>&1 > /dev/null && eval "$(alienv shell-helper)"
-
     export ALIBUILD_ARCHITECTURE=$(aliBuild architecture)
 
-    alibuild_load () { alienv load -q ${1} 2>/dev/null; }
+    export ALIBUILD_SYS_PKG_F="--disable GCC-Toolchain,ninja,autotools,curl,lz4,FFTW3,fmt,cgal,GMP,MPFR,RapidJSON,Clang,make,flatbuffers,double-conversion,ZeroMQ,capstone,json-c,UUID,libtirpc,boost,re2"
 
     alias alibuild='aliBuild'
     alias ali_unload='alienv unload $(loaded_aliphys)'

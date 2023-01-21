@@ -1,7 +1,12 @@
 
 alibuild_load_aliphys () {
 alienv load -q AliPhysics/${1} 2>/dev/null
-if [[ "${2}" == "INCLUDES"  ]]; then
+
+##eval "$(alienv load -q AliPhysics/${ALIBUILD_VER} 2>/dev/null)"
+alienv load -q AliPhysics/${ALIBUILD_VER} 2>/dev/null
+RESULT=$?
+
+if [[ "${2}" == "INCLUDES" && "${RESULT}" == "0" ]]; then
     [[ -n "${VC_ROOT}" ]]                 && { [[ -n "${C_INCLUDE_PATH}" ]] && C_INCLUDE_PATH="${C_INCLUDE_PATH}:${VC_ROOT}/include"                || C_INCLUDE_PATH="${VC_ROOT}/include" ; }
     [[ -n "${GSL_ROOT}" ]]                && { [[ -n "${C_INCLUDE_PATH}" ]] && C_INCLUDE_PATH="${C_INCLUDE_PATH}:${GSL_ROOT}/include"               || C_INCLUDE_PATH="${GSL_ROOT}/include" ; }
     [[ -n "${CGAL_ROOT}" ]]               && { [[ -n "${C_INCLUDE_PATH}" ]] && C_INCLUDE_PATH="${C_INCLUDE_PATH}:${CGAL_ROOT}/include"              || C_INCLUDE_PATH="${CGAL_ROOT}/include" ; }
@@ -18,4 +23,6 @@ fi
 }
 
 ali_latest () { alibuild_load_aliphys latest ${1}; }
+
+alibuild_load () { alienv load -q ${1} 2>/dev/null; }
 
