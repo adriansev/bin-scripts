@@ -1,0 +1,10 @@
+
+# make sure to use only cores. if something is heavy parralelizable probably is also heavy on cpu
+export OMP_PLACES=cores
+export OMP_PROC_BIND=true
+
+NRCORES=$(lscpu -J -e | python3 -c 'import sys,json; j=json.loads(sys.stdin.read()); core_list = [ i["core"] for i in j["cpus"] ]; cset = set(core_list); print(len(cset));' 2>/dev/null)
+[[ -z ${NRCORES} ]] && NRCORES="8"
+
+export OMP_NUM_THREADS=${NRCORES}
+
