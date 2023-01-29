@@ -16,24 +16,25 @@ local LIST_STR ITEM path_arr n
 [[ -z "${2}" ]] && return 1;
 LIST_STR="${1}"
 ITEM="${2}"
-read -d : -a path_arr <<< "${LIST_STR}"
-for (( n=0; n < ${#path_arr[*]}; n++)); do
-    [[ "${path_arr[n]}" == "${ITEM}" ]] && return 0;
-done
+IFS=':' read -ra path_arr <<< "${LIST_STR}"
+for (( n=0; n < ${#path_arr[*]}; n++)); do [[ "$(realpath ${ITEM})" == "$(realpath ${path_arr[n]})" ]] && return 0; done
 return 1;
 }
 
-__PATH_INS () { ITEM_IN_PATH "${PATH}" ${1} && return 0; [[ -z ${PATH} ]] && export PATH=${1} || export PATH="${1}:${PATH}"; }
-__PATH_ADD () { ITEM_IN_PATH "${PATH}" ${1} && return 0; [[ -z ${PATH} ]] && export PATH=${1} || export PATH="${PATH}:${1}"; }
+__PATH_INS () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${PATH}" ${1} && return 0; export PATH="${1}${PATH:+:}${PATH}"; }
+__PATH_ADD () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${PATH}" ${1} && return 0; export PATH="${PATH}${PATH:+:}${1}"; }
 
-__LDLIB_INS () { ITEM_IN_PATH "${LD_LIBRARY_PATH}" ${1} && return 0; [[ -z ${LD_LIBRARY_PATH} ]] && export LD_LIBRARY_PATH=${1} || export LD_LIBRARY_PATH="${1}:${LD_LIBRARY_PATH}"; }
-__LDLIB_ADD () { ITEM_IN_PATH "${LD_LIBRARY_PATH}" ${1} && return 0; [[ -z ${LD_LIBRARY_PATH} ]] && export LD_LIBRARY_PATH=${1} || export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${1}"; }
+__LDLIB_INS () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${LD_LIBRARY_PATH}" ${1} && return 0; export LD_LIBRARY_PATH="${1}${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}"; }
+__LDLIB_ADD () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${LD_LIBRARY_PATH}" ${1} && return 0; export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}${LD_LIBRARY_PATH:+:}${1}"; }
 
-__PYPATH_INS () { ITEM_IN_PATH "${PYTHONPATH}" ${1} && return 0; [[ -z ${PYTHONPATH} ]] && export PYTHONPATH=${1} || export PYTHONPATH="${1}:${PYTHONPATH}"; }
-__PYPATH_ADD () { ITEM_IN_PATH "${PYTHONPATH}" ${1} && return 0; [[ -z ${PYTHONPATH} ]] && export PYTHONPATH=${1} || export PYTHONPATH="${PYTHONPATH}:${1}"; }
+__PYPATH_INS () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${PYTHONPATH}" ${1} && return 0; export PYTHONPATH="${1}${PYTHONPATH:+:}${PYTHONPATH}"; }
+__PYPATH_ADD () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${PYTHONPATH}" ${1} && return 0; export PYTHONPATH="${PYTHONPATH}${PYTHONPATH:+:}${1}"; }
 
-__MANPATH_INS () { ITEM_IN_PATH "${MANPATH}" ${1} && return 0; [[ -z ${MANPATH} ]] && export MANPATH=${1} || export MANPATH="${1}:${MANPATH}"; }
-__MANPATH_ADD () { ITEM_IN_PATH "${MANPATH}" ${1} && return 0; [[ -z ${MANPATH} ]] && export MANPATH=${1} || export MANPATH="${MANPATH}:${1}"; }
+__MANPATH_INS () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${MANPATH}" ${1} && return 0; export MANPATH="${1}${MANPATH:+:}${MANPATH}"; }
+__MANPATH_ADD () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${MANPATH}" ${1} && return 0; export MANPATH="${MANPATH}${MANPATH:+:}${1}"; }
+
+__CLASSPATH_INS () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${CLASSPATH}" ${1} && return 0; export CLASSPATH="${1}${CLASSPATH:+:}${CLASSPATH}"; }
+__CLASSPATH_ADD () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${CLASSPATH}" ${1} && return 0; export CLASSPATH="${CLASSPATH}${CLASSPATH:+:}${1}"; }
 
 ## aliBuild functions
 source ${functions_script_dir}/func_alibuild
