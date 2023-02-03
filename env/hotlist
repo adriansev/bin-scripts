@@ -50,6 +50,7 @@ GROUP "AUGER"
   ENTRY "/sh://auger1/home/asevcenc" URL "/sh://auger1/home/asevcenc"
   ENTRY "/sh://auger01_root/root" URL "/sh://auger01_root/root"
   ENTRY "/sh://auger1/home/asevcenc" URL "/#sh:auger1/home/asevcenc"
+  ENTRY "/sh://paowall_root/root" URL "/sh://paowall_root/root"
 ENDGROUP
 GROUP "VM Hosts"
   ENTRY "/sh://rdvbox_root/" URL "/sh://rdvbox_root/"
