@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 
-ans_play ${1:-all} ping.yml
+ansible ${1:-all} -m ping
+
