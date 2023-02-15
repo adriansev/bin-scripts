@@ -2,7 +2,7 @@
 
 %_topdir    %(echo $HOME)/rpmbuild
 %_rpmdir    %{_topdir}/RPMS/%(str=%{dist};echo ${str:1};)
-%_srcrpmdir %{_topdir}/SRPMS/%(str=%{dist};echo ${str:1};)
+##%_srcrpmdir %{_topdir}/SRPMS/%(str=%{dist};echo ${str:1};)
 
 %__arch_install_post \
     [ "%{buildarch}" = "noarch" ] || QA_CHECK_RPATHS=1 ; \
