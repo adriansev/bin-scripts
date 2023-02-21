@@ -6,7 +6,7 @@ python
 
 # License ----------------------------------------------------------------------
 
-# Copyright (c) 2015-2022 Andrea Cardaci <cyrus.and@gmail.com>
+# Copyright (c) 2015-2023 Andrea Cardaci <cyrus.and@gmail.com>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -697,7 +697,7 @@ class Dashboard(gdb.Command):
         # ANSI: move the cursor to top-left corner and clear the screen
         # (optionally also clear the scrollback buffer if supported by the
         # terminal)
-        return '\x1b[H\x1b[J' + '\x1b[3J' if R.discard_scrollback else ''
+        return '\x1b[H\x1b[2J' + ('\x1b[3J' if R.discard_scrollback else '')
 
     @staticmethod
     def setup_terminal():
@@ -1985,6 +1985,10 @@ class Registers(Dashboard.Module):
             changed = self.table and (self.table.get(name, '') != string_value)
             self.table[name] = string_value
             registers.append((name, string_value, changed))
+        # handle the empty register list
+        if not registers:
+            msg = 'No registers to show (check the "dashboard registers -style list" attribute)'
+            return [ansi(msg, R.style_error)]
         # compute lengths considering an extra space between and around the
         # entries (hence the +2 and term_width - 1)
         max_name = max(len(name) for name, _, _ in registers)
@@ -2036,7 +2040,8 @@ class Registers(Dashboard.Module):
             'list': {
                 'doc': '''String of space-separated register names to display.
 
-The empty list (default) causes to show all the available registers.''',
+The empty list (default) causes to show all the available registers. For
+architectures different from x86 setting this attribute might be mandatory.''',
                 'default': '',
                 'name': 'register_list',
             }
