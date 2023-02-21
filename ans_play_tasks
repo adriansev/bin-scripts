@@ -7,8 +7,10 @@ shift
 
 cd "${HOME}/ansible/playbooks" || exit 1
 
+echo "Running tasks on target: ${TGT}"
+
 NOW="$(date +%Y%m%d_%H%M%S)"
-PBOOK_TMP="${HOST}_play.tmp${NOW}.yml"
+PBOOK_TMP="${TGT}_play_tmp_${NOW}.yml"
 
 cat > "${PBOOK_TMP}" <<EOF
 ---
@@ -25,6 +27,9 @@ for i in "${ARGS[@]}"; do
   if [[ -f "${i}" ]]; then
     task_list+=("${i}")
     echo "  - include_tasks: ${i}" >> "${PBOOK_TMP}"
+  elif [[ -f "tasks/${i}" ]]; then
+    task_list+=("${i}")
+    echo "  - include_tasks: tasks/${i}" >> "${PBOOK_TMP}"
   fi
 done
 
