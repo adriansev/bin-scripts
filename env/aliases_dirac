@@ -1,13 +1,21 @@
 # DIRAC
 alias diracos_enable='source ${HOME}/DIRACOS/diracosrc'
-alias dirac_myproxy='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_user -M && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
-alias dirac_myproxy_prod='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_prod -M && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
-alias dirac_myproxy_prod_upload='[[ -n "$DIRACPLAT" ]] && { dirac-proxy-init -v 96:00 -g auger_prod -M -r -U -P && dinit -p 2&>1 >/dev/null || echo "Proxy initialisation NOT succesfull"; } || { echo "The DIRAC bashrc configuration should be sourced to enable DIRACgrid software";}'
+
+alias dirac_enable_local='export DIRACSYSCONFIG="${HOME}/bin/env/dirac-auger-nodiracos.cfg"'
+
+dirac_enable_local_custom () {
+local CFG
+CFG="${1}"
+[[ -e "${CFG}" ]] && export DIRACSYSCONFIG="${CFG}"
+}
+
+alias auger_myproxy='dirac-proxy-init -v 96:00 -g auger_user -M && dinit -p'
+alias auger_myproxy_prod='dirac-proxy-init -v 96:00 -g auger_prod -M && dinit -p'
 
 alias lfc-cli='dirac-dms-filecatalog-cli -f AugerLcgFileCatalog'
 alias dfc-cli='dirac-dms-filecatalog-cli -f AugerFileCatalog'
 
-alias dfc-mydir="dcd /auger/user/a/asevcenc/ ; dpwd"
+alias dfc-mydir="dcd /auger/user/a/asevcenc/; dpwd;"
 
 alias dms-add-file='dirac-dms-add-file'
 alias dms-catalog-metadata='dirac-dms-catalog-metadata'

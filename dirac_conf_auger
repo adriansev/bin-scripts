@@ -1,1 +1,5 @@
-dirac-configure -ddd --ForceUpdate --Setup Dirac-Production --VO auger --ConfigurationServer dips://dirac-conf.in2p3.fr:9135/Configuration/Server --IncludeAllServers
+dirac-configure -ddd --ForceUpdate \
+--Setup Dirac-Production \
+--VO auger \
+--ConfigurationServer dips://dirac-conf.in2p3.fr:9135/Configuration/Server \
+--IncludeAllServers

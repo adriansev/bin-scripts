@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-dirac-configure -DM -F -V auger -C dips://dirac-conf.in2p3.fr:9135/Configuration/Server -I -O "${HOME}/bin/env/dirac_auger.cfg"
-
