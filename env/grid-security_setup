@@ -1,0 +1,4 @@
+export X509_CERT_DIR="${X509_CERT_DIR:=/etc/grid-security/certificates}"
+export X509_VOMS_DIR="${X509_VOMS_DIR:=${HOME}/bin/vomsdir}"
+export X509_VOMSES="${X509_VOMSES:=${HOME}/bin/vomses}"
+
