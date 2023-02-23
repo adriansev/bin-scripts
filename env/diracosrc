@@ -1,0 +1,54 @@
+export DIRACOS=/home/adrian/DIRACOS
+export MAMBA_ROOT_PREFIX=$DIRACOS
+
+# Some sites set variables which are actively harmful
+unset GFAL_CONFIG_DIR GFAL_PLUGIN_DIR GLEXEC_LOCATION GLITE_LOCATION_VAR
+unset GLITE_LOCATION GLOBUS_LOCATION JAVA_HOME LCG_LOCATION
+unset LD_LIBRARY_PATH LESSOPEN MANPATH PERL5LIB PYTHONPATH SRM_PATH
+
+# Initialise the conda environment in a way which ignores other conda installations
+unset CONDA_SHLVL
+eval "$(${DIRACOS}/bin/micromamba shell hook activate -s bash)"
+micromamba activate "$DIRACOS"
+
+# Silence python warnings
+export PYTHONWARNINGS=ignore
+
+# Davix options (will be default in the future)
+export DAVIX_USE_LIBCURL=1
+# Disable caching redirection to avoid asking storage nodes instead of head nodes
+# in setups like EOS
+export DAVIX_DISABLE_REDIRECT_CACHING=1
+
+# Set up the X509 variables
+
+# Function check if folder exist and contains files
+function checkDir () {
+  resolvedDir=$(realpath "${1}")
+  if [ -z "${resolvedDir}" ]; then
+    return 1
+  fi
+  if [ -n "$(ls -A "${resolvedDir}" 2>/dev/null)" ]; then
+    return 0
+  fi
+  return 1
+}
+
+# Add sanity check for X509_CERT_DIR variable
+if ! checkDir "${X509_CERT_DIR:-}" ; then
+  export X509_CERT_DIR="/etc/grid-security/certificates"
+  if ! checkDir "$X509_CERT_DIR" ; then
+    export X509_CERT_DIR='/home/adrian/DIRACOS/etc/grid-security/certificates'
+  fi
+fi
+
+# Add sanity check for X509_VOMS_DIR variable
+if ! checkDir "${X509_VOMS_DIR:-}" ; then
+  export X509_VOMS_DIR='/home/adrian/DIRACOS/etc/grid-security/vomsdir'
+fi
+
+# Add sanity check for X509_VOMSES variable
+if ! checkDir "${X509_VOMSES:-}" ; then
+  export X509_VOMSES='/home/adrian/DIRACOS/etc/grid-security/vomses'
+fi
+
