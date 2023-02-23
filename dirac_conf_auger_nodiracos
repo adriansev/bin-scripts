@@ -1,0 +1,9 @@
+dirac-configure -ddd --ForceUpdate \
+--Setup Dirac-Production \
+--VO auger \
+--ConfigurationServer dips://dirac-conf.in2p3.fr:9135/Configuration/Server \
+--IncludeAllServers \
+--SkipCADownload \
+--SkipVOMSDownload \
+--output ${HOME}/bin/env/dirac-auger-nodiracos.cfg
+
