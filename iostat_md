@@ -6,20 +6,30 @@ exec {FD}>${LOCK} || exit 1
 /usr/bin/flock -n ${FD} || exit 1
 trap 'rm -f ${LOCK}' EXIT
 
-md_list="$(lsblk -nl -o NAME,TYPE | awk '/raid/ {arr[$1]++}END{for (d in arr){print d}}')" #'
+ARG="${1}"
+shift
 
-# mdadm -DY /dev/md1 | awk -F= 'BEGIN{PROCINFO["sorted_in"] = "@ind_num_asc"} {if ($0 ~ /MD_DEVICE_dev_.*_DEV/) {arr[$2]++} } END { for (d in arr) {print d} }'
+md_list="$(ls /sys/devices/virtual/block)"
+[[ -z "${md_list}" ]] && { echo "No virtual block devices found"; exit; }
 
-for md in ${md_list}; do
-    md_dev_list=$(mdadm -DY /dev/${md} | awk -F= 'BEGIN{PROCINFO["sorted_in"] = "@ind_num_asc"} {if ($0 ~ /MD_DEVICE_dev_.*_DEV/) {arr[$2]++} } END { for (d in arr) {print d} }') #'
+do_md_iostat () {
+    md_dev_list=$(ls "/sys/block/${1}/slaves")
+    [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
 
     DEV_LIST=""
     for dev in ${md_dev_list}; do
-        DEV_LIST="${DEV_LIST} ${dev}"
+        DEV_LIST="${DEV_LIST} /dev/${dev}"
     done
 
     echo "MD: ${md}"
-    iostat -dmxy ${DEV_LIST} 5 1
+    iostat -dmxy ${DEV_LIST} 2 1
     echo
-done
+}
 
+if [[ -n "${ARG}" ]]; then
+    [[ "${md_list}" == *"${ARG}"* ]] && do_md_iostat "${ARG}"
+else
+    for md in ${md_list}; do
+        do_md_iostat "/dev/${md}"
+    done
+fi
