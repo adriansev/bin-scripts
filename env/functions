@@ -17,7 +17,9 @@ local LIST_STR ITEM path_arr n
 LIST_STR="${1}"
 ITEM="${2}"
 IFS=':' read -ra path_arr <<< "${LIST_STR}"
-for (( n=0; n < ${#path_arr[*]}; n++)); do [[ "$(realpath ${ITEM})" == "$(realpath ${path_arr[n]})" ]] && return 0; done
+for (( n=0; n < ${#path_arr[*]}; n++)); do
+    [[ "$(realpath -q ${ITEM})" == "$(realpath -q ${path_arr[n]})" ]] && return 0;
+done
 return 1;
 }
 
