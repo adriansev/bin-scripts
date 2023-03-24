@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+set +x
+
+help () {
+echo "${0} MD_NAME check | repair| idle | status
+${0} list"
+}
+
+ARG1="${1}"
+shift
+
+ARG2="${1}"
+shift
+
+if [[ "${ARG1}" == "list" ]]; then
+    ACTION="list"
+else
+    MD="${ARG1}"
+    [[ -z "${MD}" ]] && { help; exit 1; }
+    ACTION="${ARG2}"
+fi
+
+md_devs="$(/usr/bin/find /sys/devices/virtual/block -iwholename "*/md" -exec /usr/bin/dirname '{}' \;)"
+readarray -t md_list <<< $(for d in ${md_devs}; do /usr/bin/basename "${d}"; done)
+[[ ! "${md_list[@]}" =~ ${MD} ]] && { echo "md dev >${MD}< not found in the list of local md devices: ${md_list[@]}"; exit 1; }
+
+md_status () {
+  echo "${1} state: $(< /sys/devices/virtual/block/${1}/md/array_state) ; Progress : $(< /sys/devices/virtual/block/${1}/md/sync_completed)"
+  echo "${1} Error count (nr of sectors (in pages)): $(< /sys/devices/virtual/block/${1}/md/mismatch_cnt)"
+}
+
+md_list () {
+echo "MD list: ${md_list[*]}"
+}
+
+case "${ACTION}" in
+  resync)
+  echo resync > "/sys/block/${MD}/md/sync_action"
+  ;;
+  recover)
+  echo recover > "/sys/block/${MD}/md/sync_action"
+  ;;
+  check)
+  echo check > "/sys/block/${MD}/md/sync_action"
+  ;;
+  repair)
+  echo repair > "/sys/block/${MD}/md/sync_action"
+  ;;
+  idle)
+  echo idle > "/sys/block/${MD}/md/sync_action"
+  ;;
+  status)
+  md_status "${MD}"
+  ;;
+  list)
+  md_list
+  ;;
+  *) # unsupported flags, just catch any mistakes
+  help
+  ;;
+esac
+

@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+DEV="${1}"
+
+DEV_LIST="$(lsblk -nir -o NAME,TYPE)"
+MD_LIST=$(echo "${DEV_LIST}" | grep raid | sort -u | awk '{print $1}') #'
+DISK_LIST=$(echo "${DEV_LIST}" | grep disk | sort -u | awk '{print $1}') #'
+PART_LIST=$(echo "${DEV_LIST}" | grep part | sort -u | awk '{print $1}') #'
+
+MD_OF_DEV=""
+IS_DEV_KWOWN=""
+
+for md in ${MD_LIST}; do
+    md_info="$(timeout -k 3 5 mdadm -QYD /dev/${md})"
+    [[ -z "${md_info}" ]] && continue
+    IS_DEV_KWOWN=$(echo "${md_info}" | grep "${DEV}")
+    if [[ -n "${IS_DEV_KWOWN}" ]]; then
+        MD_OF_DEV="${md}";
+        declare -x ${IS_DEV_KWOWN};
+        break;
+    fi
+done
+
+#ROLE_DEF=$(env | grep 'MD_DEVICE_.*_ROLE')
+#echo ${ROLE_DEF}
+#echo ${MD_OF_DEV}
+
+[[ ! -e "/dev/${MD_OF_DEV}" ]] && { echo "No such md device: /dev/${MD_OF_DEV}" ; exit 1; }
+[[ ! -e "/dev/${DEV}" ]] && { echo "No such device: /dev/${DEV}" ; exit 1; }
+
+mdadm -vv --fail   /dev/${MD_OF_DEV} /dev/${DEV}
+mdadm -vv --remove /dev/${MD_OF_DEV} /dev/${DEV}
+mdadm -vv --add /dev/${MD_OF_DEV} /dev/${DEV}
+
+sleep 1
+cat /proc/mdstat
+
