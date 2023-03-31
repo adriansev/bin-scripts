@@ -9,6 +9,8 @@ trap 'rm -f ${LOCK}' EXIT
 ARG="${1}"
 shift
 
+export S_COLORS="never"
+
 md_list="$(ls /sys/devices/virtual/block)"
 [[ -z "${md_list}" ]] && { echo "No virtual block devices found"; exit; }
 
@@ -30,6 +32,6 @@ if [[ -n "${ARG}" ]]; then
     [[ "${md_list}" == *"${ARG}"* ]] && do_md_iostat "${ARG}"
 else
     for md in ${md_list}; do
-        do_md_iostat "/dev/${md}"
+        do_md_iostat ${md}
     done
 fi
