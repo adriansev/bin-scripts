@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+help () {
+echo "${0} [ MD_NAME ]"
+}
+
+LOCK="/tmp/md_health.lock"
+
+exec {FD}>${LOCK} || exit 1
+/usr/bin/flock -n ${FD} || exit 1
+trap 'rm -f ${LOCK}' EXIT
+
+ARG="${1}"
+shift
+
+MD_DIR="/sys/devices/virtual/block"
+md_list="$(ls ${MD_DIR})"
+[[ -z "${md_list}" ]] && { echo "No virtual block devices found"; exit; }
+
+do_md_health () {
+    md_dev_list="$(/usr/bin/find /sys/devices/virtual/block/${1}/md -name "rd*" -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
+    [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
+
+    echo -e "Device: ${1}; Components status:"
+    for rd in ${md_dev_list}; do
+        RD_PATH="/sys/devices/virtual/block/${1}/md/${rd}"
+        MSG="Slot: $(< ${RD_PATH}/slot); State: $(< ${RD_PATH}/state); Errors:$(< ${RD_PATH}/errors)"
+        BAD_BLOCKS="$(< ${RD_PATH}/bad_blocks)"
+        [[ -n ${BAD_BLOCKS} ]] && MSG="${MSG}\nBad blocks map:\n${BAD_BLOCKS}"
+        echo -e "${MSG}"
+    done
+    echo
+}
+
+if [[ -n "${ARG}" ]]; then
+    [[ "${md_list}" == *"${ARG}"* ]] && do_md_health "${ARG}"
+else
+    for md in ${md_list}; do
+        do_md_health ${md}
+    done
+fi
+

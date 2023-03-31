@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set +x
-
 help () {
 echo "${0} MD_NAME check | repair| idle | status
 ${0} list"

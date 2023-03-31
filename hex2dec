@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+printf '0x%X\n' "${1}"
