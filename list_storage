@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+from typing import NamedTuple
+from typing import Union
+from rich.pretty import pprint
+
+
+class DEV_INFO(NamedTuple):
+    dev: str = ''
+    sg: str = ''
+    ata: str = ''
+    scsi: str = ''
+    wwn: str = ''
+    nvme: str = ''
+    enc: str = ''
+    slot: str = ''
+    dev: str = ''
+    sg: str = ''
+
+
+class SLOT_INFO(NamedTuple):
+    enc: str = ''
+    slot: str = ''
+    dev: str = ''
+    sg: str = ''
+
+
+def list_fullpath(dir_path):
+    try:
+        return [ os.path.join(dir_path, f) for f in os.listdir(dir_path) ]
+    except:
+        return []
+
+
+def match_item_in_list(list_search, item):
+    for i in list_search:
+        if item in i:
+            return True
+    return False
+
+
+def list_remove_item(target_list: list, item_list):
+    target_list[:] = [el for el in target_list if el != item_list]
+
+
+def get_arg(target: list, item) -> bool:
+    """Remove inplace all instances of item from list and return True if found"""
+    len_begin = len(target)
+    list_remove_item(target, item)
+    len_end = len(target)
+    return len_begin != len_end
+
+
+def get_arg_value(target: list, item):
+    """Remove inplace all instances of item and item+1 from list and return item+1"""
+    val = None
+    for x in target:
+        if x == item:
+            val = target.pop(target.index(x) + 1)
+            target.pop(target.index(x))
+    return val
+
+
+def get_arg_2values(target: list, item):
+    """Remove inplace all instances of item, item+1 and item+2 from list and return item+1, item+2"""
+    val1 = val2 = None
+    for x in target:
+        if x == item:
+            val2 = target.pop(target.index(x) + 2)
+            val1 = target.pop(target.index(x) + 1)
+            target.pop(target.index(x))
+    return val1, val2
+
+
+def is_help(args: Union[str, list]) -> bool:
+    if not args: return False
+    if isinstance(args, str): args = args.split()
+    help_opts = ('-h', '--h', '-help', '--help', 'help')
+    return any(opt in args for opt in help_opts)
+
+
+def read_sys_file(input_file: str) -> str:
+    if not input_file or not os.path.isfile(input_file): return ''
+    content = ''
+    with open(input_file, encoding="ascii", errors="replace") as filecontent:
+        content = filecontent.read().strip()
+    return content
+
+
+def write_sys_file(output_file: str, content: str):
+    if not output_file or not os.path.isfile(output_file) or not content: return
+    with open(output_file, 'w', encoding="ascii", errors="replace") as f:
+        f.write(content)
+
+DEV_BY_ID_DIR = '/dev/disk/by-id'
+SYS_ENC_DIR = '/sys/class/enclosure'
+
+sys.argv.pop(0)
+if is_help(sys.argv):
+    print('''list_storage [ enc Enclosure| slot Slot | dev name | sg name | wwn wwn | serial [ SAS address | ATA name] ] [ uid | fault | status ]
+
+Slot path is relative to /sys/class/enclosure/
+Dev/sg names are relative to /dev/
+Device IDs are relative to /dev/disk/by-id/
+uid argument will toggle the location led
+fault argument will toggle the fault led
+''')
+    sys.exit()
+
+select_enc = get_arg_value(sys.argv, 'enc')
+if select_enc is None: select_enc = ''
+
+select_slot = get_arg_value(sys.argv, 'slot')
+if select_slot is None: select_slot = ''
+
+select_dev = get_arg_value(sys.argv, 'dev')
+if select_dev is None: select_dev = ''
+
+select_sg = get_arg_value(sys.argv, 'sg')
+if select_sg is None: select_sg = ''
+
+select_wwn = get_arg_value(sys.argv, 'wwn')
+if select_wwn is None: select_wwn = ''
+
+select_serial = get_arg_value(sys.argv, 'serial')
+if select_serial is None: select_serial = ''
+
+enable_uid = get_arg(sys.argv, 'uid')
+enable_fault = get_arg(sys.argv, 'fault')
+enable_status = get_arg(sys.argv, 'status')
+
+##   SAS enclosures listing
+# get a list of enclosures
+list_enclosures = list_fullpath(SYS_ENC_DIR)
+if not list_enclosures:
+    print('No enclosures found')
+    sys.exit(1)
+list_enclosures.sort()
+
+# get a list of Slots in enclosures
+list_slots = []
+for enc in list_enclosures:
+    l = [ i for i in list_fullpath(enc) if os.path.isdir(i) and 'Slot' in i ]
+    l.sort()
+    list_slots.extend(l)
+if not list_slots:
+    print('No slots found in enclosures')
+    sys.exit(1)
+
+scsi_slot_dev_mapping = []
+for slot in list_slots:
+    mapped_dev = list_fullpath(f'{slot}/device/block/')
+    scsi_generic = list_fullpath(f'{slot}/device/scsi_generic/')
+    enc_slot = slot.replace(f'{SYS_ENC_DIR}/', '')
+    enc, _, slot_nr = enc_slot.partition('/')
+    dev_name = os.path.basename(mapped_dev[0]) if mapped_dev else 'EMPTY'
+    sg_name = os.path.basename(scsi_generic[0]) if mapped_dev else 'EMPTY'
+    scsi_slot_dev_mapping.append(SLOT_INFO(enc, slot_nr, dev_name, sg_name))
+
+
+# clean up devides list
+def is_physical_dev(name):
+    s = name.replace('/dev/disk/by-id/', '', 1)  # make sure to not change the input
+    if s.startswith('md-') or s.startswith('dm-') or s.startswith('lvm-'): return False
+    if 'part' in s.split('-')[-1]: return False
+    return True
+
+# make devices list
+list_devs = list_fullpath(DEV_BY_ID_DIR)
+list_devs_phys = list(filter(is_physical_dev, list_devs))
+dev_path_mapping = [ (os.path.realpath(d).replace('/dev/',''), d.replace('/dev/disk/by-id/', '')) for d in list_devs_phys ]
+devices_set = set( d[0] for d in dev_path_mapping )
+
+devices_info_list = []
+for dev_name in devices_set:
+    dev_paths = [ d[1] for d in dev_path_mapping if d[0] == dev_name ]
+    ata = scsi = wwn = nvme = ''
+    for p in dev_paths:
+        if p.startswith('wwn-'):
+            wwn = p
+            continue
+        if p.startswith('scsi-'):
+            scsi = p
+            continue
+        if p.startswith('ata-'):
+            ata = p
+            continue
+        if p.startswith('nvme-'):
+            nvme = p
+    devices_info_list.append(DEV_INFO(dev = dev_name, ata = ata, scsi = scsi, wwn = wwn, nvme = nvme))
+
+
+def list_sas_slots():
+    slot_list = []
+    for slot_info in scsi_slot_dev_mapping:
+        matched_dev_list = [ i for i in devices_info_list if i.dev == slot_info.dev ]
+        dev_info = matched_dev_list[0] if matched_dev_list else None
+        slot_list.append(DEV_INFO(enc = slot_info.enc, slot = slot_info.slot, sg = slot_info.sg, dev = dev_info.dev,
+                                  ata = dev_info.ata, scsi = dev_info.scsi, wwn = dev_info.wwn, nvme = dev_info.nvme))
+    return slot_list
+
+slot_info_list = list_sas_slots()
+
+enclosure_change = ''
+for dev in list_sas_slots():
+    if select_enc and select_enc not in dev.enc: continue
+    if select_slot and select_slot not in dev.slot: continue
+    if select_dev and select_dev not in dev.dev: continue
+    if select_sg and select_sg not in dev.sg: continue
+    if select_wwn and select_wwn not in dev.wwn: continue
+    if select_serial and select_serial not in dev.serial: continue
+
+    LED_LOCATE = f'{SYS_ENC_DIR}/{dev.enc}/{dev.slot}/locate'
+    LED_FAULT = f'{SYS_ENC_DIR}/{dev.enc}/{dev.slot}/fault'
+    STATUS_LOCATE = read_sys_file(LED_LOCATE)
+    STATUS_FAULT = read_sys_file(LED_FAULT)
+
+    if enable_uid:
+        LED_VALUE = '1' if STATUS_LOCATE == '0' else '0'
+        write_sys_file(LED_LOCATE, LED_VALUE)
+        STATUS_LOCATE = read_sys_file(LED_LOCATE)
+    if enable_fault:
+        LED_VALUE = '1' if STATUS_FAULT == '0' else '0'
+        write_sys_file(LED_FAULT, LED_VALUE)
+        STATUS_FAULT = read_sys_file(LED_FAULT)
+
+    if enable_uid or enable_fault: enable_status = True
+
+    if enclosure_change and enclosure_change != dev.enc: print()
+    enclosure_change = dev.enc
+    #pprint(dev)
+    msg = f'{dev.enc}/{dev.slot}'
+    msg = f'{msg}  {dev.dev}  {dev.sg}  {dev.wwn}  {dev.scsi if dev.scsi else dev.ata}' if dev.dev else f'{msg} ----->>> EMPTY'
+    if enable_status:
+        msg = f'{msg} ; LED LOCATE/FAULT: {STATUS_LOCATE} / {STATUS_FAULT}'
+    print(msg)
+
