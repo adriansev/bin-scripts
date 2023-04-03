@@ -21,7 +21,8 @@ do_md_health () {
     md_dev_list="$(/usr/bin/find /sys/devices/virtual/block/${1}/md -name "rd*" -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
     [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
 
-    echo -e "Device: ${1}; Components status:"
+    MISMATCH_CNT="$(< /sys/devices/virtual/block/${1}/mismatch_cnt)"
+    echo -e "Device: ${1}; MISMATCH_CNT: ${MISMATCH_CNT} ; Components status:"
     for rd in ${md_dev_list}; do
         RD_PATH="/sys/devices/virtual/block/${1}/md/${rd}"
         MSG="Slot: $(< ${RD_PATH}/slot); State: $(< ${RD_PATH}/state); Errors:$(< ${RD_PATH}/errors)"
