@@ -9,6 +9,8 @@ from rich.pretty import pprint
 
 class DEV_INFO(NamedTuple):
     dev: str = ''
+    dev_id: str = ''
+    dev_path: str = ''
     sg: str = ''
     ata: str = ''
     scsi: str = ''
@@ -104,6 +106,7 @@ if is_help(sys.argv):
 Slot path is relative to /sys/class/enclosure/
 Dev/sg names are relative to /dev/
 Device IDs are relative to /dev/disk/by-id/
+Device path is relative to /sys/devices/
 uid argument will toggle the location led
 fault argument will toggle the fault led
 ''')
@@ -118,6 +121,9 @@ if select_slot is None: select_slot = ''
 select_dev = get_arg_value(sys.argv, 'dev')
 if select_dev is None: select_dev = ''
 
+select_devid = get_arg_value(sys.argv, 'devid')
+if select_devid is None: select_devid = ''
+
 select_sg = get_arg_value(sys.argv, 'sg')
 if select_sg is None: select_sg = ''
 
@@ -130,6 +136,7 @@ if select_serial is None: select_serial = ''
 enable_uid = get_arg(sys.argv, 'uid')
 enable_fault = get_arg(sys.argv, 'fault')
 enable_status = get_arg(sys.argv, 'status')
+select_devpath = get_arg(sys.argv, 'devpath')
 
 ##   SAS enclosures listing
 # get a list of enclosures
@@ -157,7 +164,7 @@ for slot in list_slots:
     enc, _, slot_nr = enc_slot.partition('/')
     dev_name = os.path.basename(mapped_dev[0]) if mapped_dev else 'EMPTY'
     sg_name = os.path.basename(scsi_generic[0]) if mapped_dev else 'EMPTY'
-    scsi_slot_dev_mapping.append(SLOT_INFO(enc, slot_nr, dev_name, sg_name))
+    scsi_slot_dev_mapping.append(SLOT_INFO(enc = enc, slot = slot_nr, dev = dev_name, sg = sg_name))
 
 
 # clean up devides list
@@ -197,7 +204,11 @@ def list_sas_slots():
     for slot_info in scsi_slot_dev_mapping:
         matched_dev_list = [ i for i in devices_info_list if i.dev == slot_info.dev ]
         dev_info = matched_dev_list[0] if matched_dev_list else None
-        slot_list.append(DEV_INFO(enc = slot_info.enc, slot = slot_info.slot, sg = slot_info.sg, dev = dev_info.dev,
+        DEV_PATH_ARR = os.path.realpath(f'/sys/class/block/{dev_info.dev}').split('/')
+        # /sys/devices location
+        for i in [0, 0, 0, -1, -1]: DEV_PATH_ARR.pop(i)
+        slot_list.append(DEV_INFO(enc = slot_info.enc, slot = slot_info.slot, sg = slot_info.sg,
+                                  dev = dev_info.dev, dev_id = DEV_PATH_ARR[-1], dev_path = '/'.join(DEV_PATH_ARR),
                                   ata = dev_info.ata, scsi = dev_info.scsi, wwn = dev_info.wwn, nvme = dev_info.nvme))
     return slot_list
 
@@ -208,6 +219,7 @@ for dev in list_sas_slots():
     if select_enc and select_enc not in dev.enc: continue
     if select_slot and select_slot not in dev.slot: continue
     if select_dev and select_dev not in dev.dev: continue
+    if select_devid and select_devid not in dev.dev_id: continue
     if select_sg and select_sg not in dev.sg: continue
     if select_wwn and select_wwn not in dev.wwn: continue
     if select_serial and select_serial not in dev.serial: continue
@@ -232,8 +244,9 @@ for dev in list_sas_slots():
     enclosure_change = dev.enc
     #pprint(dev)
     msg = f'{dev.enc}/{dev.slot}'
-    msg = f'{msg}  {dev.dev}  {dev.sg}  {dev.wwn}  {dev.scsi if dev.scsi else dev.ata}' if dev.dev else f'{msg} ----->>> EMPTY'
+    msg = f'{msg}   {dev.dev_id}   {dev.dev}  {dev.sg}  {dev.wwn}  {dev.scsi if dev.scsi else dev.ata}' if dev.dev else f'{msg} ----->>> EMPTY'
     if enable_status:
-        msg = f'{msg} ; LED LOCATE/FAULT: {STATUS_LOCATE} / {STATUS_FAULT}'
+        msg = f'{msg} ; LED LOCATE/FAULT: {STATUS_LOCATE}/{STATUS_FAULT}'
+    if select_devpath: msg = f'{msg}  ; {dev.dev_path}'
     print(msg)
 
