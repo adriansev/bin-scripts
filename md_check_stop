@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+ARG="${1}"
+shift
+
+MD_DIR="/sys/devices/virtual/block/${ARG}"
+[[ ! -d "${MD_DIR}" ]] && { echo "${MD_DIR} not found!"; exit 1; }
+
+echo idle > "${MD_DIR}/md/sync_action"
+
