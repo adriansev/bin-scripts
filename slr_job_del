@@ -4,10 +4,18 @@ JOB_STATE="RUNNING"  #"PENDING", "SUSPENDED"
 
 ARG="${1}"
 
+if [[ "${ARG,,}" == "all" ]]; then
+    scancel -f -t PENDING "${@}"
+    sleep 1
+    scancel -f -t SUSPENDED "${@}"
+    sleep 1
+    scancel -f -t RUNNING "${@}"
+    exit
+fi
+
 [[ "${ARG,,}" == "pending"   ]] && { JOB_STATE="PENDING"; shift; }
 [[ "${ARG,,}" == "suspended" ]] && { JOB_STATE="SUSPENDED"; shift; }
-
 [[ -z "${ARG}" ]] && ALL="-t ${JOB_STATE}" # if no argument jobid then select all
 
-CMD="scancel -f ${ALL} ${@}"
+scancel -f ${ALL} "${@}"
 
