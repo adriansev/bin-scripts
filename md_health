@@ -10,31 +10,66 @@ exec {FD}>${LOCK} || exit 1
 /usr/bin/flock -n ${FD} || exit 1
 trap 'rm -f ${LOCK}' EXIT
 
-ARG="${1}"
+ARG1="${1}"
+shift
+
+ARG2="${1}"
 shift
 
 MD_DIR="/sys/devices/virtual/block"
 md_list="$(ls ${MD_DIR})"
 [[ -z "${md_list}" ]] && { echo "No virtual block devices found"; exit; }
 
+DO_REPORT=""
+[[ "${ARG1}" == "report" || "${ARG2}" == "report" ]] && DO_REPORT="1"
+
+md_list="$(/usr/bin/find /sys/devices/virtual/block -mindepth 1 -maxdepth 1 -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
+readarray -t md_list_arr <<< $(for d in ${md_list}; do /usr/bin/basename "${d}"; done)
+# [[ ! "${md_list[@]}" =~ ${MD} ]] && { echo "md dev >${MD}< not found in the list of local md devices: ${md_list[@]}"; exit 1; }
+
 do_md_health () {
     md_dev_list="$(/usr/bin/find /sys/devices/virtual/block/${1}/md -name "rd*" -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
     [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
 
     MISMATCH_CNT="$(< /sys/devices/virtual/block/${1}/md/mismatch_cnt)"
-    echo -e "Device: ${1}; MISMATCH_CNT: ${MISMATCH_CNT} ; Components status:"
+    STATE="$(< /sys/devices/virtual/block/${1}/md/array_state)"
+    DEGRADED="$(< /sys/devices/virtual/block/${1}/md/degraded)"
+    LAST_SYNC="$(< /sys/devices/virtual/block/${1}/md/last_sync_action)"
+    SYNC="$(< /sys/devices/virtual/block/${1}/md/sync_action)"
+    SYNC_COMP="$(< /sys/devices/virtual/block/${1}/md/sync_completed)"
+    [[ "${SYNC_COMP}" != "none" ]] && PERC_DONE=$(echo "scale=2; 100*${SYNC_COMP}" | bc -l )
+
+    STATUS="OpState: ${SYNC}"
+    [[ "${SYNC}" != "idle" ]] && STATUS="${STATUS} -> ${PERC_DONE}"
+
+    echo -e "Device: ${1} -> ${STATE}; ${STATUS} ; MISMATCH_CNT: ${MISMATCH_CNT}"
     for rd in ${md_dev_list}; do
         RD_PATH="/sys/devices/virtual/block/${1}/md/${rd}"
-        MSG="Slot: $(< ${RD_PATH}/slot); State: $(< ${RD_PATH}/state); Errors:$(< ${RD_PATH}/errors)"
+        RD_SLOT="$(< ${RD_PATH}/slot)"
+        RD_STATE="$(< ${RD_PATH}/state)"
+        RD_ERRORS="$(< ${RD_PATH}/errors)"
         BAD_BLOCKS="$(< ${RD_PATH}/bad_blocks)"
-        [[ -n ${BAD_BLOCKS} ]] && MSG="${MSG}\nBad blocks map:\n${BAD_BLOCKS}"
-        echo -e "${MSG}"
+
+        MSG=""
+        if [[ -n ${DO_REPORT} ]]; then
+            [[ -n "${BAD_BLOCKS}" ]] && NR_BADBLOCKS=$(echo ${BAD_BLOCKS} | wc -l)
+            if [[ "${RD_STATE}" != "in_sync" || "${RD_ERRORS}" != "0" ]]; then
+                MSG="Slot:  ${RD_SLOT}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
+                [[ -n "${NR_BADBLOCKS}" && "${NR_BADBLOCKS}" != "0" ]] && MSG="${MSG} ; BadBlocks_NR: ${NR_BADBLOCKS}"
+            fi
+        else
+            MSG="Slot: ${RD_SLOT}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
+            [[ -n ${BAD_BLOCKS} ]] && MSG="${MSG}\nBad blocks map:\n${BAD_BLOCKS}"
+        fi
+        [[ -n "${MSG}" ]] && echo -e "${MSG}"
     done
     echo
 }
 
-if [[ -n "${ARG}" ]]; then
-    [[ "${md_list}" == *"${ARG}"* ]] && do_md_health "${ARG}"
+if [[ -n "${ARG1}" && "${md_list_arr[@]}" =~ ${ARG1} ]]; then
+    do_md_health "${ARG1}"
+elif [[ -n "${ARG2}" && "${md_list_arr[@]}" =~ ${ARG2} ]]; then
+    do_md_health "${ARG2}"
 else
     for md in ${md_list}; do
         do_md_health ${md}
