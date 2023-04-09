@@ -27,6 +27,13 @@ md_list="$(/usr/bin/find /sys/devices/virtual/block -mindepth 1 -maxdepth 1 -exe
 readarray -t md_list_arr <<< $(for d in ${md_list}; do /usr/bin/basename "${d}"; done)
 # [[ ! "${md_list[@]}" =~ ${MD} ]] && { echo "md dev >${MD}< not found in the list of local md devices: ${md_list[@]}"; exit 1; }
 
+map_majmin2dev () {
+    for d in /sys/block/*/dev; do
+        d_maj_min="$(< ${d})"
+        [[ "${d_maj_min}" == "${1}" ]] && { echo "$(basename $(dirname ${d}))"; break; }
+    done
+    }
+
 do_md_health () {
     md_dev_list="$(/usr/bin/find /sys/devices/virtual/block/${1}/md -name "rd*" -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
     [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
@@ -49,16 +56,25 @@ do_md_health () {
         RD_STATE="$(< ${RD_PATH}/state)"
         RD_ERRORS="$(< ${RD_PATH}/errors)"
         BAD_BLOCKS="$(< ${RD_PATH}/bad_blocks)"
+        BLOCK_PATH=$(realpath ${RD_PATH}/block)
+        BLOCK_IS_PARTITION=""
+        [[ -e "${BLOCK_PATH}/partition" ]] && BLOCK_IS_PARTITION="1"
+        if [[ -z ${BLOCK_IS_PARTITION} ]]; then
+            DEV=$(basename ${BLOCK_PATH})
+        else
+            DEV=$(basename $(dirname ${BLOCK_PATH}))
+        fi
+
 
         MSG=""
         if [[ -n ${DO_REPORT} ]]; then
             [[ -n "${BAD_BLOCKS}" ]] && NR_BADBLOCKS=$(echo ${BAD_BLOCKS} | wc -l)
             if [[ "${RD_STATE}" != "in_sync" || "${RD_ERRORS}" != "0" ]]; then
-                MSG="Slot:  ${RD_SLOT}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
+                MSG="Slot:  ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
                 [[ -n "${NR_BADBLOCKS}" && "${NR_BADBLOCKS}" != "0" ]] && MSG="${MSG} ; BadBlocks_NR: ${NR_BADBLOCKS}"
             fi
         else
-            MSG="Slot: ${RD_SLOT}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
+            MSG="Slot: ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
             [[ -n ${BAD_BLOCKS} ]] && MSG="${MSG}\nBad blocks map:\n${BAD_BLOCKS}"
         fi
         [[ -n "${MSG}" ]] && echo -e "${MSG}"

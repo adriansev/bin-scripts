@@ -4,12 +4,12 @@ import sys
 import os
 from typing import NamedTuple
 from typing import Union
-from rich.pretty import pprint
 
 
 class DEV_INFO(NamedTuple):
     dev: str = ''
     dev_id: str = ''
+    dev_maj_min: str = ''
     dev_path: str = ''
     sg: str = ''
     ata: str = ''
@@ -26,6 +26,7 @@ class SLOT_INFO(NamedTuple):
     enc: str = ''
     slot: str = ''
     dev: str = ''
+    dev_maj_min: str = ''
     sg: str = ''
 
 
@@ -164,7 +165,8 @@ for slot in list_slots:
     enc, _, slot_nr = enc_slot.partition('/')
     dev_name = os.path.basename(mapped_dev[0]) if mapped_dev else 'EMPTY'
     sg_name = os.path.basename(scsi_generic[0]) if mapped_dev else 'EMPTY'
-    scsi_slot_dev_mapping.append(SLOT_INFO(enc = enc, slot = slot_nr, dev = dev_name, sg = sg_name))
+    dev_maj_min = read_sys_file(f'{slot}/device/block/{dev_name}/dev') if mapped_dev else 'EMPTY'
+    scsi_slot_dev_mapping.append(SLOT_INFO(enc = enc, slot = slot_nr, dev = dev_name, sg = sg_name, dev_maj_min = dev_maj_min))
 
 
 # clean up devides list
@@ -208,7 +210,7 @@ def list_sas_slots():
         # /sys/devices location
         for i in [0, 0, 0, -1, -1]: DEV_PATH_ARR.pop(i)
         slot_list.append(DEV_INFO(enc = slot_info.enc, slot = slot_info.slot, sg = slot_info.sg,
-                                  dev = dev_info.dev, dev_id = DEV_PATH_ARR[-1], dev_path = '/'.join(DEV_PATH_ARR),
+                                  dev = dev_info.dev, dev_id = DEV_PATH_ARR[-1], dev_path = '/'.join(DEV_PATH_ARR), dev_maj_min = slot_info.dev_maj_min,
                                   ata = dev_info.ata, scsi = dev_info.scsi, wwn = dev_info.wwn, nvme = dev_info.nvme))
     return slot_list
 
@@ -242,9 +244,8 @@ for dev in list_sas_slots():
 
     if enclosure_change and enclosure_change != dev.enc: print()
     enclosure_change = dev.enc
-    #pprint(dev)
     msg = f'{dev.enc}/{dev.slot}'
-    msg = f'{msg}   {dev.dev_id}   {dev.dev}  {dev.sg}  {dev.wwn}  {dev.scsi if dev.scsi else dev.ata}' if dev.dev else f'{msg} ----->>> EMPTY'
+    msg = f'{msg}  {dev.dev_id} \t{dev.dev}   {dev.sg} \t{dev.dev_maj_min} \t{dev.wwn}  {dev.scsi if dev.scsi else dev.ata}' if dev.dev else f'{msg} ----->>> EMPTY'
     if enable_status:
         msg = f'{msg} ; LED LOCATE/FAULT: {STATUS_LOCATE}/{STATUS_FAULT}'
     if select_devpath: msg = f'{msg}  ; {dev.dev_path}'
