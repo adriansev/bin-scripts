@@ -1,2 +1,7 @@
+#!/usr/bin/env bash
+
 cd ~ && wget -O - "https://www.dropbox.com/download?plat=lnx.x86_64" | tar xzf -
-wget https://www.dropbox.com/download?dl=packages/dropbox.py -O ~/bin/dropbox && ln -sf ~/bin/dropbox ~/bin/dropbox.py && chmod +x ~/bin/dropbox
+wget https://www.dropbox.com/download?dl=packages/dropbox.py -O ~/bin/dropbox_tmp && mv ~/bin/dropbox_tmp ~/bin/dropbox
+unlink dropbox.py
+chmod +x ~/bin/dropbox && ln -sf ~/bin/dropbox ~/bin/dropbox.py
+
