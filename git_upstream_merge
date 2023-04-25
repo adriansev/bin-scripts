@@ -9,7 +9,8 @@ METHOD="merge"
 REPO_NAME=$(basename $(git config --get remote.origin.url) .git)
 I_AM_ON=$(git rev-parse --abbrev-ref HEAD)
 HEAD_NAME_ORIGIN=$(git remote show origin | awk -F": " '/HEAD branch/ {print $2}')
-HEAD_NAME_UPSTREAM=$(git remote show upstream | awk -F": " '/HEAD branch/ {print $2}')
+##HEAD_NAME_UPSTREAM=$(git remote show upstream | awk -F": " '/HEAD branch/ {print $2}')
+HEAD_NAME_UPSTREAM="${HEAD_NAME_ORIGIN}"  ## assume as default that our local clone have the same origin name as the upstream
 
 git checkout ${HEAD_NAME_ORIGIN}
 git fetch -t --all
