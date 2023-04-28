@@ -1,1 +1,2 @@
-python3 -m pip install --no-cache-dir --user --upgrade pip setuptools wheel alibuild
+python3 -m pip install --no-cache-dir --user --upgrade pip==23.0.1 setuptools==65.5.1 wheel alibuild
+
