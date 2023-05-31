@@ -206,6 +206,7 @@ def list_sas_slots():
     for slot_info in scsi_slot_dev_mapping:
         matched_dev_list = [ i for i in devices_info_list if i.dev == slot_info.dev ]
         dev_info = matched_dev_list[0] if matched_dev_list else None
+        if not dev_info: continue
         DEV_PATH_ARR = os.path.realpath(f'/sys/class/block/{dev_info.dev}').split('/')
         # /sys/devices location
         for i in [0, 0, 0, -1, -1]: DEV_PATH_ARR.pop(i)
