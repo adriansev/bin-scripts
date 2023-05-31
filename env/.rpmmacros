@@ -22,3 +22,4 @@
     fi )
 
 
+%_srcrpmdir %{_topdir}/SRPMS/%(str=%{dist};echo ${str:1};)
