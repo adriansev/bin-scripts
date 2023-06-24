@@ -85,7 +85,6 @@ GROUP "XROOTD"
   ENTRY "/sh://storage10/home/aliprod" URL "/sh://storage10/home/aliprod"
   ENTRY "/sh://rd_root/" URL "/sh://rd_root/"
   ENTRY "/sh://storage05_root/" URL "/sh://storage05_root/"
-  ENTRY "/sh://storage07_root/" URL "/sh://storage07_root/"
   ENTRY "/sh://storage09_root/" URL "/sh://storage09_root/"
   ENTRY "/sh://storage10_root/" URL "/sh://storage10_root/"
 ENDGROUP
