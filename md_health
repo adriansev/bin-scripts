@@ -23,7 +23,7 @@ md_list="$(ls ${MD_DIR})"
 DO_REPORT=""
 [[ "${ARG1}" == "report" || "${ARG2}" == "report" ]] && DO_REPORT="1"
 
-md_list="$(/usr/bin/find /sys/devices/virtual/block -mindepth 1 -maxdepth 1 -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
+md_list="$(/usr/bin/find /sys/devices/virtual/block -mindepth 1 -maxdepth 1 -not -iname 'loop*' -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
 readarray -t md_list_arr <<< $(for d in ${md_list}; do /usr/bin/basename "${d}"; done)
 # [[ ! "${md_list[@]}" =~ ${MD} ]] && { echo "md dev >${MD}< not found in the list of local md devices: ${md_list[@]}"; exit 1; }
 
@@ -49,7 +49,7 @@ do_md_health () {
     STATUS="OpState: ${SYNC}"
     [[ "${SYNC}" != "idle" ]] && STATUS="${STATUS} -> ${PERC_DONE}"
 
-    echo -e "Device: ${1} -> ${STATE}; ${STATUS} ; MISMATCH_CNT: ${MISMATCH_CNT}"
+    echo -e "Device: ${1} -> ${STATE}/${DEGRADED}; ${STATUS} ; LastSync: ${LAST_SYNC} ; MISMATCH_CNT: ${MISMATCH_CNT}"
     for rd in ${md_dev_list}; do
         RD_PATH="/sys/devices/virtual/block/${1}/md/${rd}"
         RD_SLOT="$(< ${RD_PATH}/slot)"
@@ -64,7 +64,6 @@ do_md_health () {
         else
             DEV=$(basename $(dirname ${BLOCK_PATH}))
         fi
-
 
         MSG=""
         if [[ -n ${DO_REPORT} ]]; then
