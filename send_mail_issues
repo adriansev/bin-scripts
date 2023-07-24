@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-FILE="/tmp/iss_issues.txt"
-[[ -e "${FILE}" ]] && exit 1
+LOCK="/tmp/iss_issues.lock"
+[[ -e "${LOCK}" ]] && exit 1
+touch "${LOCK}"
+[[ -d "/var/www/html/issdc" ]] || { echo "Could not find /var/www/html/issdc dir"; exit 1; }
+FILE="/var/www/html/issdc/iss_issues.txt"
 
 source ${HOME}/.mail_issues_secrets
 
-/home/adrian/bin/alimon_iss_issues > ${FILE}
+/home/adrian/bin/alimon_iss_issues > ${FILE} || { echo "Could not write into /var/www/html/issdc dir"; exit 1; }
 echo >> ${FILE}
 /usr/bin/ssh eos_mgm eos -b fs ls -b | tail -n +4 | column -t >> ${FILE}
 echo >> ${FILE}
@@ -25,5 +28,7 @@ $HOME/bin/storage_smart_status &>> ${FILE}
 --user "${USER}:${PASS}" \
 --login-options AUTH=PLAIN
 
-/usr/bin/rm -f ${FILE}
+sed -i '1,2d' ${FILE}
+
+rm -rf "${LOCK}"
 
