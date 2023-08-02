@@ -1,6 +1,6 @@
 #!/bin/bash
 
-srv_list="storage05_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07 eos_fst08 eos_fst09 eos_fst10"
+srv_list="storage05_root storage09_root storage10_root eos_mgm eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07 eos_fst08 eos_fst09 eos_fst10 eos_fst12"  # eos_fst11
 
 for srv in ${srv_list}; do
     ssh ${srv} 'echo -e "\n#########\n   $(hostname)\n#########";df -lh -x tmpfs -x devtmpfs --output=source,target,ipcent,size,pcent ; echo -e "\nMD STATUS" ;/root/bin/md_health report;'
