@@ -35,12 +35,10 @@ map_majmin2dev () {
     }
 
 do_md_health () {
-    md_dev_list="$(/usr/bin/find /sys/devices/virtual/block/${1}/md -name "rd*" -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
-    [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
-
     MISMATCH_CNT="$(< /sys/devices/virtual/block/${1}/md/mismatch_cnt)"
     STATE="$(< /sys/devices/virtual/block/${1}/md/array_state)"
     DEGRADED="$(< /sys/devices/virtual/block/${1}/md/degraded)"
+    [[ "${DEGRADED}" == "1" ]] && DEGRADED_MSG=" !!! DEGRADED !!!" || DEGRADED_MSG=""
     LAST_SYNC="$(< /sys/devices/virtual/block/${1}/md/last_sync_action)"
     SYNC="$(< /sys/devices/virtual/block/${1}/md/sync_action)"
     SYNC_COMP="$(< /sys/devices/virtual/block/${1}/md/sync_completed)"
@@ -49,9 +47,18 @@ do_md_health () {
     STATUS="OpState: ${SYNC}"
     [[ "${SYNC}" != "idle" ]] && STATUS="${STATUS} -> ${PERC_DONE}"
 
-    echo -e "Device: ${1} -> ${STATE}/${DEGRADED}; ${STATUS} ; LastSync: ${LAST_SYNC} ; MISMATCH_CNT: ${MISMATCH_CNT}"
-    for rd in ${md_dev_list}; do
-        RD_PATH="/sys/devices/virtual/block/${1}/md/${rd}"
+    md_dev_list="$(/usr/bin/find /sys/devices/virtual/block/${1}/md -name "rd*" -exec /usr/bin/basename '{}' \; | sort -k1.3n)"
+    [[ -z "${md_dev_list}" ]] && { echo "no devices found for RAID block dev: ${1}"; return 1; }
+
+    NR_DEVS_EXISTS=$(echo "${md_dev_list}" | wc -l)
+    NR_DEVS="$(< /sys/devices/virtual/block/${1}/md/raid_disks)"
+    [[ "${DEGRADED}" == "1" ]] && DEGRADED_MSG="${DEGRADED_MSG} Disks ${NR_DEVS_EXISTS}/${NR_DEVS}"
+
+    echo -e "Device: ${1} -> ${STATE}${DEGRADED_MSG}; ${STATUS} ; LastSync: ${LAST_SYNC} ; MISMATCH_CNT: ${MISMATCH_CNT}"
+
+    for i in $(seq 0 $(( NR_DEVS - 1 )) ); do
+        RD_PATH="/sys/devices/virtual/block/${1}/md/rd${i}"
+        [[ ! -e "${RD_PATH}" ]] && { echo -e "Slot: ${i}  --> !!! MISSING !!!" ; continue; }
         RD_SLOT="$(< ${RD_PATH}/slot)"
         RD_STATE="$(< ${RD_PATH}/state)"
         RD_ERRORS="$(< ${RD_PATH}/errors)"
