@@ -59,6 +59,8 @@ do_md_health () {
     for i in $(seq 0 $(( NR_DEVS - 1 )) ); do
         RD_PATH="/sys/devices/virtual/block/${1}/md/rd${i}"
         [[ ! -e "${RD_PATH}" ]] && { echo -e "Slot: ${i}  --> !!! MISSING !!!" ; continue; }
+
+        RD_DEV_NAME=$( echo $(basename $(realpath ${RD_PATH})) | sed 's/-/\//g' )
         RD_SLOT="$(< ${RD_PATH}/slot)"
         RD_STATE="$(< ${RD_PATH}/state)"
         RD_ERRORS="$(< ${RD_PATH}/errors)"
@@ -72,15 +74,21 @@ do_md_health () {
             DEV=$(basename $(dirname ${BLOCK_PATH}))
         fi
 
+        MD_TIME=$(date -d "$(mdadm -D /dev/${1} | sed -n '/Update Time : /s/Update Time : //p')" +%s) #"
+        eval $(mdadm --export -E "/${RD_DEV_NAME}")
+        NOW="$(date +%s)"
+        UPDATE_DIFF_NOW=$(echo "${NOW} - ${MD_UPDATE_TIME}" | bc -l )
+        UPDATE_DIFF_MD=$(echo "${MD_TIME} - ${MD_UPDATE_TIME}" | bc -l )
+
         MSG=""
         if [[ -n ${DO_REPORT} ]]; then
             [[ -n "${BAD_BLOCKS}" ]] && NR_BADBLOCKS=$(echo ${BAD_BLOCKS} | wc -l)
             if [[ "${RD_STATE}" != "in_sync" || "${RD_ERRORS}" != "0" ]]; then
-                MSG="Slot:  ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
+                MSG="Slot:  ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS} ; UpdDIFF -> RelNOW: ${UPDATE_DIFF_NOW} ; RelMD: ${UPDATE_DIFF_MD}"
                 [[ -n "${NR_BADBLOCKS}" && "${NR_BADBLOCKS}" != "0" ]] && MSG="${MSG} ; BadBlocks_NR: ${NR_BADBLOCKS}"
             fi
         else
-            MSG="Slot: ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS}"
+            MSG="Slot: ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS} ; UpdDIFF -> RelNOW: ${UPDATE_DIFF_NOW} ; RelMD: ${UPDATE_DIFF_MD}"
             [[ -n ${BAD_BLOCKS} ]] && MSG="${MSG}\nBad blocks map:\n${BAD_BLOCKS}"
         fi
         [[ -n "${MSG}" ]] && echo -e "${MSG}"
