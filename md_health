@@ -54,7 +54,13 @@ do_md_health () {
     NR_DEVS="$(< /sys/devices/virtual/block/${1}/md/raid_disks)"
     [[ "${DEGRADED}" == "1" ]] && DEGRADED_MSG="${DEGRADED_MSG} Disks ${NR_DEVS_EXISTS}/${NR_DEVS}"
 
-    echo -e "Device: ${1} -> ${STATE}${DEGRADED_MSG}; ${STATUS} ; LastSync: ${LAST_SYNC} ; MISMATCH_CNT: ${MISMATCH_CNT}"
+    # Get latest update time for md array
+    MD_TIME_RAW="$(mdadm -D /dev/${1} | sed -n '/Update Time : /s/Update Time : //p' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+    NOW="$(date +%s)"
+    MD_TIME_MDADM=$(date -d "$(echo ${MD_TIME_RAW})" +%s) #"
+    MD_UPDATE_DIFF_NOW=$(echo "${NOW} - ${MD_TIME_MDADM}" | bc -l )
+
+    echo -e "Device: ${1} -> ${STATE}${DEGRADED_MSG}; ${STATUS} ; LastSync: ${LAST_SYNC} ; MISMATCH_CNT: ${MISMATCH_CNT} ; LastUpd: ${MD_UPDATE_DIFF_NOW}"
 
     for i in $(seq 0 $(( NR_DEVS - 1 )) ); do
         RD_PATH="/sys/devices/virtual/block/${1}/md/rd${i}"
@@ -74,21 +80,29 @@ do_md_health () {
             DEV=$(basename $(dirname ${BLOCK_PATH}))
         fi
 
-        MD_TIME=$(date -d "$(mdadm -D /dev/${1} | sed -n '/Update Time : /s/Update Time : //p')" +%s) #"
-        eval $(mdadm --export -E "/${RD_DEV_NAME}")
+        # Get latest update time for md array
+        MD_TIME_RAW="$(mdadm -D /dev/${1} | sed -n '/Update Time : /s/Update Time : //p' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
+
+        # Get latest update time for md component
+        RD_TIME_RAW="$(mdadm -E /${RD_DEV_NAME} | sed -n '/Update Time : /s/Update Time : //p' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
         NOW="$(date +%s)"
-        UPDATE_DIFF_NOW=$(echo "${NOW} - ${MD_UPDATE_TIME}" | bc -l )
-        UPDATE_DIFF_MD=$(echo "${MD_TIME} - ${MD_UPDATE_TIME}" | bc -l )
+
+        # convert update times to seconds (does not matter TZ as we use the difference)
+        MD_TIME_MDADM=$(date -d "$(echo ${MD_TIME_RAW})" +%s) #"
+        RD_TIME=$(date -d "$(echo ${RD_TIME_RAW})" +%s) #"
+
+        UPDATE_DIFF_NOW=$(echo "${NOW} - ${RD_TIME}" | bc -l )
+        UPDATE_DIFF_MD=$(echo "${MD_TIME_MDADM} - ${RD_TIME}" | bc -l )
 
         MSG=""
         if [[ -n ${DO_REPORT} ]]; then
             [[ -n "${BAD_BLOCKS}" ]] && NR_BADBLOCKS=$(echo ${BAD_BLOCKS} | wc -l)
             if [[ "${RD_STATE}" != "in_sync" || "${RD_ERRORS}" != "0" ]]; then
-                MSG="Slot:  ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS} ; UpdDIFF -> RelNOW: ${UPDATE_DIFF_NOW} ; RelMD: ${UPDATE_DIFF_MD}"
+                MSG="Slot:  ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS} ; UpdDiff -> RelNOW: ${UPDATE_DIFF_NOW} ; RelMD: ${UPDATE_DIFF_MD}"
                 [[ -n "${NR_BADBLOCKS}" && "${NR_BADBLOCKS}" != "0" ]] && MSG="${MSG} ; BadBlocks_NR: ${NR_BADBLOCKS}"
             fi
         else
-            MSG="Slot: ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS} ; UpdDIFF -> RelNOW: ${UPDATE_DIFF_NOW} ; RelMD: ${UPDATE_DIFF_MD}"
+            MSG="Slot: ${RD_SLOT} --> ${DEV}; State: ${RD_STATE} ; Errors: ${RD_ERRORS} ; UpdDiff -> RelNOW: ${UPDATE_DIFF_NOW} ; RelMD: ${UPDATE_DIFF_MD}"
             [[ -n ${BAD_BLOCKS} ]] && MSG="${MSG}\nBad blocks map:\n${BAD_BLOCKS}"
         fi
         [[ -n "${MSG}" ]] && echo -e "${MSG}"
