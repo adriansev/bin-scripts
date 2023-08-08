@@ -1,6 +1,5 @@
 #!/bin/bash
 
-xrd_servers="storage05 storage09 storage10"
 eos_servers="eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07 eos_fst08 eos_fst09 eos_fst10 eos_fst12"
 
 storage_sum () {
@@ -28,10 +27,6 @@ echo -e "Total\t\tUsed\t\tAvailable"
 echo -e "${sum_total_GiB} GiB\t${sum_used_GiB} GiB\t${sum_avail_GiB} GiB"
 echo -e "${sum_total_TiB} TiB\t${sum_used_TiB} TiB\t${sum_avail_TiB} TiB"
 }
-
-echo
-echo "Storage size (physical) on ALICE::ISS:FILE"
-storage_sum "${xrd_servers}"
 
 echo
 echo "Storage size (physical) on ALICE::ISS:EOS"

@@ -12,8 +12,6 @@ source ${HOME}/.mail_issues_secrets
 echo >> ${FILE}
 /usr/bin/ssh eos_mgm eos -b fs ls -b | tail -n +4 | column -t >> ${FILE}
 echo >> ${FILE}
-xrdmapc --list s -r rd.spacescience.ro:1094 | sort >> ${FILE}
-echo >> ${FILE}
 $HOME/bin/xrd_storage_info &>> ${FILE}
 echo >> ${FILE}
 $HOME/bin/storage_md_status &>> ${FILE}

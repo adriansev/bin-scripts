@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-xrd_hosts="storage05 storage09 storage10"
 eos_hosts="eos_fst01 eos_fst02 eos_fst03 eos_fst04 eos_fst05 eos_fst06 eos_fst07 eos_fst08 eos_fst09 eos_fst10 eos_fst12"
 
 MYCMD=$(echo 'df --total -l --block-size=1T /storage* | tail -1 | awk -v HOST=$(hostname -s) '\''{ print HOST"\t"$2,"\t"$3,"\t"$4}'\''' | base64 -w0)
@@ -9,12 +8,6 @@ echo "Size in TiB"
 
 (
 echo -e "Host\t\tTotal\tUsed\tAvailable"
-
-for h in ${xrd_hosts} ; do
-  ssh ${h} "echo ${MYCMD} | base64 -d | bash"
-done
-
-echo
 
 for h in ${eos_hosts} ; do
   ssh ${h} "echo ${MYCMD} | base64 -d | bash"
