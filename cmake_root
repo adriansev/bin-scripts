@@ -3,13 +3,14 @@
 [[ -z "${tools}" ]]&& { echo "tools env var not defined" ; exit 1; }
 [[ ! -d "${tools}" ]]&& { echo "${tools} directory does not exists" ; exit 1; }
 
-ROOT_SRC="${tools}/root_git"
 ROOT_BASEDIR="${tools}/ROOT"
-ROOT_BUILD_DIR="${tools}/ROOT/BUILD"
+ROOT_SRC="${ROOT_BASEDIR}/root-git"
+ROOT_BUILD_DIR="${ROOT_BASEDIR}/BUILD"
 mkdir -p "${ROOT_BUILD_DIR}"
+rm -rf "${ROOT_BUILD_DIR}/*"
 
 TAG="${1}"
-[[ -z "${TAG}" ]] && { echo -e "A tag/destination is required. Choose from:\n$(ls -1 --hide=BUILD --hide=root ${ROOT_BASEDIR}/)"; exit 1; }
+[[ -z "${TAG}" ]] && { echo -e "A tag/destination is required. Choose from:\n$(ls -1 --hide=BUILD --hide=root-git ${ROOT_BASEDIR}/)"; exit 1; }
 shift
 ROOT_INSTALL="${ROOT_BASEDIR}/${TAG}"
 mkdir -p "${ROOT_INSTALL}"
@@ -41,7 +42,7 @@ GCC_MAJOR=$( echo ${GCCVERSION}| cut -f1 -d. )
 
 #PEDANTIC="-Wall -Wextra"
 PEDANTIC=""
-GCCARCH="-march=native"
+##GCCARCH="-march=native"
 
 avx2_enable=$(grep avx2 /proc/cpuinfo &> /dev/null && echo yes)
 avx_enable=$(grep avx /proc/cpuinfo &> /dev/null && echo yes)
@@ -59,6 +60,8 @@ CXXFLAGS="${PEDANTIC} ${GCCARCH} ${AVX}"
 
 command -v ninja &> /dev/null && NINJA="-G Ninja"
 
+command -v pythia8-config &> /dev/null && PYTHIA8=" -DPYTHIA8_INCLUDE_DIR=$(pythia8-config --includedir) -DPYTHIA8_LIBRARY=$(pythia8-config --libdir)/libpythia8.so -DPYTHIA8_DATA=$(pythia8-config --datadir)"
+
 CMAKE=cmake
 command -v cmake3 &> /dev/null && CMAKE=cmake3
 ${CMAKE} ${NINJA} \
@@ -68,22 +71,22 @@ ${CMAKE} ${NINJA} \
 -Dbuiltin_openssl=0 -Dbuiltin_davix=0 -Dbuiltin_fftw3=0 -Dbuiltin_gl2ps=0 -Dbuiltin_unuran=0 \
 -Dbuiltin_cfitsio=0 -Dbuiltin_ftgl=0 -Dbuiltin_glew=0 -Dbuiltin_lz4=0 -Dbuiltin_lzma=0 -Dbuiltin_zlib=0 \
 -Dbuiltin_gsl=0 -Dbuiltin_pcre=0 -Dbuiltin_afterimage=0 -Dbuiltin_freetype=0 -Dbuiltin_xrootd=0 \
--Drfio=0 -Dcastor=0 -Dglobus=0 -Ddcache=0 -Dchirp=0 -Dglite=0 -Dhdfs=0 -Dpch=0 -Dsapdb=0 -Dsrp=0 \
+-Drfio=0 -Dcastor=0 -Dglobus=0 -Ddcache=0 -Dchirp=0 -Dglite=0 -Dhdfs=0 -Dpch=0 -Dsapdb=0 -Dsrp=0 -Dgfal=0 -Dgsl_shared=0 \
 -Doracle=0 -Dbonjour=0 -Dldap=0 -Dodbc=0 \
 -Droot7=1 -Dbuiltin_llvm=1 -Dimt=1 -Dvecgeom=1 -Dveccore=1 -Dbuiltin_veccore=1 -Dfitsio=1 \
 -Ddavix=1 -Dgviz=1 -Dqt5web=1 -During=1 -Droofit=1 -Dminuit2=1 -Dminuit2_omp=1 -Dunuran=1 -Dgdml=1 -Dhttp=1 \
--Dccache=1 -Dsoversion=1 -Dgsl_shared=1 ${CUDA} -Dfgci=1 -Dcefweb=1 -Dwebgui=1 -Dmathmore=1 \
--Drpath=1 \
+-Dccache=1 -Dsoversion=1 ${CUDA} -Dfgci=1 -Dcefweb=1 -Dwebgui=1 -Dmathmore=1 \
+-Drpath=1 ${PYTHIA8} \
 -Dpyroot=ON -DPYTHON_EXECUTABLE=$(type -p python3) \
 -Dbuiltin_vdt=1 -Dvdt=1 -Dbuiltin_vc=1 -Dvc=1 -Dcompression_default=zstd \
-"${ROOT_SRC}" "${@}" | tee cmake_out.txt
+"${@}" "${ROOT_SRC}"  | tee cmake_out.txt
 
 # -Dmpi=1 -Dminuit2_mpiL=1 \
 # -Dcuda=ON -Dcudnn=ON -Dtmva-gpu=ON
 # -DPYTHIA6_LIBRARY="${tools}/heplibs/pythia6/libPythia6.so" \
 # -Djemalloc="1" -Dtcmalloc="1"
 #-DMONALISA_INCLUDE_DIR="/usr/include" -DMONALISA_LIBRARY="/usr/lib64/libapmoncpp.so" \
-#-DPYTHIA8_INCLUDE_DIR="${tools}/heplibs/pythia8/include" -DPYTHIA8_LIBRARY="${tools}/heplibs/pythia8/lib/libpythia8.so" \
+#
 ### -Djemalloc=1 \ breaks cppyyy
 
 
