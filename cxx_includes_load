@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+(return 0 2>/dev/null) && sourced=1 || sourced=0
+[[ "${sourced}" == "0" ]] && { echo "source ${HOME}/bin/cxx_includes_load"; exit; }
+
+ENV_ROOT_PATHS=$(env | grep ROOT | grep -v 'PATH=\|LOADEDMODULES=\|_LMFILES_=\|ROCKS\|rocks')
+readarray -t ENV_ROOT_PATHS_ARR <<< ${ENV_ROOT_PATHS}
+
+for env_var in ${ENV_ROOT_PATHS_ARR[@]}; do
+    line_arr=(${env_var//=/ })
+    include_dir="${line_arr[1]}/include"
+    [[ -d "${include_dir}" ]] && CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}${CPLUS_INCLUDE_PATH:+:}${include_dir}"
+done
+
+C_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}"
+[[ -n ${CPLUS_INCLUDE_PATH} ]] && export CPLUS_INCLUDE_PATH C_INCLUDE_PATH
+

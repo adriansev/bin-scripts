@@ -189,4 +189,5 @@ alias debug_xrootd='source ${HOME}/bin/xrd_debug'
 
 alias ansplay='ansible-playbook '
 
+alias cpp_includes_load='source ${HOME}/bin/cxx_includes_load'
 

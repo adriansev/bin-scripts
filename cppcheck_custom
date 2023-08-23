@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+mkdir -p ${HOME}/cppcheck_dir
+
+cppcheck -v -x c++ --std=c++17 --cppcheck-build-dir=${HOME}/cppcheck_dir \
+--bug-hunting \
+--enable=warning,style,information --suppress=missingIncludeSystem "${@}"
+
+#$(for i in $(echo $CPLUS_INCLUDE_PATH| sed 's/:/ /g');do echo -n "-I $i "; done) \
+#--max-ctu-depth=2 \
