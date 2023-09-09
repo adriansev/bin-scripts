@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+NOW="$(date +%Y%m%d_%H%M%S)"
+LOCK="/tmp/ans_gather_facts_host.lock"
+
+exec {FD}>${LOCK} || exit 1
+/usr/bin/flock -n ${FD} || exit 1
+trap 'rm -f ${LOCK}' EXIT
+
+TGT="${1}"
+shift
+
+pushd ~/ansible/playbooks &> /dev/null
+ans_play --flush-cache "${TGT}" get_facts.yml && echo "${NOW} SUCCESS" || echo "${NOW} FAIL"
+/usr/bin/redis-cli -n 0 BGSAVE
+
+ansible-inventory --list > ${ANSIBLE_HOME}/inventory.json
+
+popd &> /dev/null
+
