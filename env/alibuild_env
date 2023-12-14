@@ -2,11 +2,5 @@
 if [[ -n ${ALIBUILD_WORK_DIR}  ]]; then
     type -p alienv 2>&1 > /dev/null && eval "$(alienv shell-helper)"
     export ALIBUILD_ARCHITECTURE=$(aliBuild architecture)
-
-    export ALIBUILD_SYS_PKG_F="--disable GCC-Toolchain,ninja,autotools,curl,lz4,FFTW3,fmt,cgal,GMP,MPFR,RapidJSON,Clang,make,flatbuffers,double-conversion,ZeroMQ,capstone,json-c,UUID,libtirpc,boost,re2"
-
-    alias alibuild='aliBuild'
-    alias ali_unload='alienv unload $(loaded_aliphys)'
-
 fi
 
