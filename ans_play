@@ -1,38 +1,65 @@
 #!/usr/bin/env bash
 
-ANSIBLE_CONF=$(ansible-config dump | awk -F'= ' '/CONFIG_FILE/{print $2}')
-ANSIBLE_HOME=$(dirname ${ANSIBLE_CONF})
+[[ -z "${ANSIBLE_HOME}" ]] && { echo "ANSIBLE_HOME not defined!!" ; exit 1; }
+[[ -d "${ANSIBLE_HOME}" ]] || { echo "ANSIBLE_HOME defined but not present!!" ; exit 1; }
 
-pushd "${ANSIBLE_HOME}/playbooks" &> /dev/null
+pushd "${ANSIBLE_HOME}/playbooks" &> /dev/null || { echo "Could not cd to ANSIBLE_HOME/playbooks"; exit 1; }
 yml_list="$(ls -1 *.yml)"
 
-ARG1="${1}"
-[[ -z "${ARG1}" ]] && { echo "At least the name of playbook should be supplied (should be last term)"; exit 1; }
+[[ -z "${1}" ]] && { echo "At least the name of playbook should be supplied (should be last term)"; exit 1; }
 
-ansible_inventory_hosts=$(cat ${ANSIBLE_HOME}/inventory.json | jq -nr 'inputs[] | .hosts | values[]' | sort -u)
-ansible_inventory_groups=$(cat ${ANSIBLE_HOME}/inventory.json | jq -r '.all.children[]')
+INVENTORY_JSON="${ANSIBLE_HOME}/inventory.json"
+ansible-inventory --list --export > "${INVENTORY_JSON}"
 
-[[ "${ARG1}" != -* ]] && { IS_HOST=$(echo "${ansible_inventory_hosts}" | grep ${ARG1}); }
-if [[ -n "${IS_HOST}" ]]; then
-  [[ "${ARG1}" != *.spacescience.ro && "${IS_HOST}" == *.spacescience.ro ]] && ARG1="${ARG1}.spacescience.ro"
-  TGT_SPEC="-e target=${ARG1}"
-  shift
-fi
-
-[[ "${ARG1}" != -* && -z "${IS_HOST}" ]] && { IS_GROUP=$(echo "${ansible_inventory_groups}" | grep ${ARG1}); }
-if [[ -n "${IS_GROUP}" ]]; then
-  TGT_SPEC="-e target=${ARG1}"
-  shift
-fi
+ansible_inventory_hosts=$(cat "${INVENTORY_JSON}" | jq -nr 'inputs[] | .hosts | values[]' | sort -u)
+ansible_inventory_groups=$(cat "${INVENTORY_JSON}" | jq -r '.all.children[]')
 
 ARG_LIST=( "${@}" )
 PLAY="${ARG_LIST[-1]}"
-unset ARG_LIST[-1]
 
-IS_PLAY=$(echo "${yml_list}" | grep ${PLAY})
-[[ "${PLAY}" != *.yml && "${IS_PLAY}" == *.yml ]] && PLAY="${PLAY}.yml"
+# search first in playbooks dir
+IS_PLAY=$( find $(pwd -P) -name "${PLAY}" -o -name "${PLAY}.yml" )
+[[ -n "${IS_PLAY}" ]] && PLAY="${IS_PLAY}"
 
-ansible-playbook ${TGT_SPEC} "${ARG_LIST[@]}" "${PLAY}"
+# is playbook is custom check for it's existence
+[[ -f "${PLAY}" ]] || { echo "Playbook ${PLAY} does not exists!"; exit 1; }
+
+# this does not work with bash < 4.3
+# unset ARG_LIST[-1]
+unset 'ARG_LIST[${#ARG_LIST[@]}-1]'
+set -- "${ARG_LIST[@]}"
+
+shopt -s extglob
+POSITIONAL_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -*)
+      POSITIONAL_ARGS+=("${1}") # save positional arg
+      shift # past argument
+      ;;
+    *)
+      ARG1="${1}"
+      shift
+      ;;
+  esac
+done
+
+set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
+
+if [[ -n ${ARG1} ]]; then
+    IS_HOST=$(echo "${ansible_inventory_hosts}" | grep ${ARG1})
+
+    if [[ -n "${IS_HOST}" ]]; then
+        [[ "${ARG1}" != *.spacescience.ro && "${IS_HOST}" == *.spacescience.ro ]] && ARG1="${ARG1}.spacescience.ro"
+        TGT_SPEC="-e target=${ARG1}"
+    fi
+
+    [[ -z "${IS_HOST}" ]] && { IS_GROUP=$(echo "${ansible_inventory_groups}" | grep ${ARG1}); }
+    [[ -n "${IS_GROUP}" ]] && TGT_SPEC="-e target=${ARG1}"
+
+fi
+
+ansible-playbook ${TGT_SPEC} "${@}" "${PLAY}"
 
 popd &> /dev/null
 
