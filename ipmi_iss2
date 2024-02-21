@@ -1,2 +1,2 @@
 #!/bin/bash
-exec ipmitool -I lanplus -U ADMIN -f ~/ipmipass2 -H "$@"
+exec ipmitool -I lan -U ADMIN -f ~/ipmipass2 -H "$@"
