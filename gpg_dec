@@ -2,7 +2,7 @@
 
 NOW () { date +%Y%m%d_%H%M%S; }
 
-file -b "${1}" | grep -E 'GPG.*encrypted.*' &> /dev/null || { echo "${1} is not GPG encrypted"; exit 1; }
+file -b "${1}" | grep -E '[GPG\|PGP].*encrypted.*' &> /dev/null || { echo "${1} is not GPG encrypted"; exit 1; }
 
 fn="$(realpath ${1})"
 outfile="$(dirname ${fn})/$(basename ${fn} .gpg)"
