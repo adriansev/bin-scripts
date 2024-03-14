@@ -1,0 +1,1 @@
+export $(python3 -c 'from alienpy.global_vars import *; print(f"JALIEN_TOKEN_CERT={CERT_NAMES.token_cert} JALIEN_TOKEN_KEY={CERT_NAMES.token_key}");')
