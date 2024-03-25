@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+H=${1}
+shift
+
+ipmiconsole -u ADMIN -p $(< ~/ipmipass2) ${@} -h ${H}
+
