@@ -3,4 +3,4 @@
 HOST="${1}"
 shift
 
-exec IPMIsmctool "${HOST}" $( < ~/ipmismcpass ) "$@"
+exec IPMIsmctool "${HOST}" $( < ~/ipmismcpass2 ) "$@"
