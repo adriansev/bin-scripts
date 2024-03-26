@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import json
+import subprocess
+import shlex
+
+
+sys.argv.pop(0)
+if len(sys.argv) < 1:
+    print('host or ip required for access')
+    sys.exit(1)
+
+HOST = sys.argv[0]
+PASS_FILE = os.path.realpath(os.path.expanduser(os.path.expandvars("~/ipmipass2")))
+PASS = None
+try:
+    with open(PASS_FILE, encoding="ascii", errors="replace") as rel_file:
+        for line in rel_file:
+            PASS = line
+            break
+except Exception:
+    pass
+
+if PASS is None:
+    print('Password could not be read!!!')
+    sys.exit(1)
+
+GEN_ARGS='--ignore-unrecognized-events --ignore-not-available-sensors --bridge-sensors --shared-sensors --interpret-oem-data --output-sensor-thresholds --output-sensor-state --comma-separated-output --no-header-output'
+AUTH_ARGS=f'-u ADMIN -p {PASS}'
+
+CMD=f'ipmimonitoring {AUTH_ARGS} {GEN_ARGS} -h {HOST}'
+
+proc_rez = subprocess.run(shlex.split(CMD), capture_output = True, timeout = 5, text = True)
+
+if int(proc_rez.returncode) != 0:
+    print(f'{proc_rez.stderr}\nCommand exited with {proc_rez.returncode}')
+    sys.exit(1)
+
+
+#print (proc_rez.stdout)
+# ID,Name,Type,State,Reading,Units,Lower NR,Lower C,Lower NC,Upper NC,Upper C,Upper NR,Event
+SENSOR_LIST = []
+
+for sensor in proc_rez.stdout.split('\n'):
+    s_fields = sensor.strip().split(',')
+    if not s_fields or len(s_fields) < 13: continue
+
+    SENSOR_PROPS = {}
+    SENSOR_PROPS['name'] = s_fields[1].strip()
+    SENSOR_PROPS['type'] = s_fields[2].strip()
+    SENSOR_PROPS['state'] = s_fields[3].strip()
+    SENSOR_PROPS['reading'] = s_fields[4].strip()
+    SENSOR_PROPS['units'] = s_fields[5].strip()
+    SENSOR_PROPS['lower_nr'] = s_fields[6].strip()
+    SENSOR_PROPS['lower_c'] = s_fields[7].strip()
+    SENSOR_PROPS['lower_nc'] = s_fields[8].strip()
+    SENSOR_PROPS['upper_nc'] = s_fields[9].strip()
+    SENSOR_PROPS['upper_c'] = s_fields[10].strip()
+    SENSOR_PROPS['upper_nr'] = s_fields[11].strip()
+    SENSOR_PROPS['event'] = s_fields[12].strip()
+    SENSOR = {s_fields[0].strip() : SENSOR_PROPS }
+    SENSOR_LIST.append(SENSOR)
+
+
+from rich.pretty import pprint
+pprint(SENSOR_LIST)
+
+
