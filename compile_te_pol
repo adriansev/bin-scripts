@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+POL=$(realpath "${1}")
+shift
+
+[[ -f "${POL}" ]] || { echo "Specified policy file not found"; exit 1; }
+[[ "${POL}" == *.te ]] || { echo "Specified policy file does not have .te extension"; exit 1; }
+
+pushd $(dirname ${POL}) &> /dev/null || { echo "Could not chdir to policy file dir"; exit 1; }
+
+POL_NAME=$(basename ${POL} .te)
+
+rm -f "${POL_NAME}.mod" "${POL_NAME}.pp"
+
+checkmodule -M -m -o "${POL_NAME}.mod" "${POL_NAME}.te" || { echo "Error creating the module"; exit 1; }
+semodule_package -o "${POL_NAME}.pp" -m "${POL_NAME}.mod" || { echo "Error compiling the module"; exit 1; }
+
+semodule -r "${POL_NAME}"
+semodule -i "${POL_NAME}.pp" || { echo "Error installing the policy"; exit 1; }
+
+rm -f "${POL_NAME}.mod" "${POL_NAME}.pp"
+popd &> /dev/null
+
