@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+H=${1}
+shift
+
+ipmimonitoring -u ADMIN -p $(< ~/ipmipass2) ${@} \
+--ignore-unrecognized-events \
+--ignore-not-available-sensors \
+--bridge-sensors \
+--shared-sensors \
+--interpret-oem-data \
+-h ${H}
