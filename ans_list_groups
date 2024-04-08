@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+[[ -z "${ANSIBLE_HOME}" ]] && { echo "ANSIBLE_HOME not defined!!" ; exit 1; }
+[[ -d "${ANSIBLE_HOME}" ]] || { echo "ANSIBLE_HOME defined but not present!!" ; exit 1; }
+
+pushd "${ANSIBLE_HOME}/playbooks" &> /dev/null || { echo "Could not cd to ANSIBLE_HOME/playbooks"; exit 1; }
+yml_list="$(ls -1 *.yml)"
+
+INVENTORY_JSON="${ANSIBLE_HOME}/inventory.json"
+ansible-inventory --list --export > "${INVENTORY_JSON}"
+
+ansible_inventory_groups=$(cat "${INVENTORY_JSON}" | jq -r '.|keys|values[]' | grep -v "_meta" | sort)
+echo "${ansible_inventory_groups}"
+
+popd &> /dev/null
+

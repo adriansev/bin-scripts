@@ -12,7 +12,7 @@ INVENTORY_JSON="${ANSIBLE_HOME}/inventory.json"
 ansible-inventory --list --export > "${INVENTORY_JSON}"
 
 ansible_inventory_hosts=$(cat "${INVENTORY_JSON}" | jq -nr 'inputs[] | .hosts | values[]' | sort -u)
-ansible_inventory_groups=$(cat "${INVENTORY_JSON}" | jq -r '.all.children[]')
+ansible_inventory_groups=$(cat "${INVENTORY_JSON}" | jq -r '.|keys|values[]' | grep -v "_meta" | sort)
 
 ARG_LIST=( "${@}" )
 PLAY="${ARG_LIST[-1]}"

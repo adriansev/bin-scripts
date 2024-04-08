@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+[[ -z "${ANSIBLE_HOME}" ]] && { echo "ANSIBLE_HOME not defined!!" ; exit 1; }
+[[ -d "${ANSIBLE_HOME}" ]] || { echo "ANSIBLE_HOME defined but not present!!" ; exit 1; }
+
+pushd "${ANSIBLE_HOME}/playbooks" &> /dev/null || { echo "Could not cd to ANSIBLE_HOME/playbooks"; exit 1; }
+yml_list="$(ls -1 *.yml)"
+
+INVENTORY_JSON="${ANSIBLE_HOME}/inventory.json"
+ansible-inventory --list --export > "${INVENTORY_JSON}"
+
+ansible_inventory_hosts=$(cat "${INVENTORY_JSON}" | jq -nr 'inputs[] | .hosts | values[]' | sort -u)
+ansible_inventory_groups=$(cat "${INVENTORY_JSON}" | jq -r '.|keys|values[]' | grep -v "_meta" | sort)
+
+# echo ${ansible_inventory_hosts}
+# echo ${ansible_inventory_groups}
+
+ARG1="${1}"
+IS_HOST=$(echo "${ansible_inventory_hosts}" | grep ${ARG1})
+[[ -z "${IS_HOST}" ]] && { IS_GROUP=$(echo "${ansible_inventory_groups}" | grep ${ARG1}); }
+
+if [[ -n "${IS_HOST}" ]]; then
+    [[ "${ARG1}" != *.spacescience.ro && "${IS_HOST}" == *.spacescience.ro ]] && ARG1="${ARG1}.spacescience.ro"
+    TGT_SPEC="-e target=${ARG1}"
+    shift
+fi
+[[ -n "${IS_GROUP}" ]] && { TGT_SPEC="-e target=${ARG1}"; shift; }
+
+export ANSIBLE_CALLBACKS_ENABLED="minimal" ANSIBLE_STDOUT_CALLBACK="minimal"
+
+ANS_CMD="ansible-playbook ${TGT_SPEC} --extra-vars 'run_command_on_host=\"${@}\"' run_cmd.yml"
+OUT=$(eval "${ANS_CMD}")
+STATUS="$?"
+echo "${OUT}" | grep -v 'rc=\|Shared connection\|non-zero'
+
+exit ${STATUS}
+popd &> /dev/null
+
