@@ -9,9 +9,6 @@ EOF
 else
     sudo -s -- <<EOF
 /home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf stop
-sleep 1
-/home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf show
 EOF
-
 fi
 
