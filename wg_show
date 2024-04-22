@@ -1,0 +1,15 @@
+#!/bin/bash
+
+ARG="${1}"
+
+if [[ "${ARG}" == "list" || -z "${ARG}" ]]; then
+    sudo -s -- <<EOF
+ls -la /etc/wireguard/*.conf
+EOF
+else
+    sudo -s -- <<EOF
+/home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf show
+EOF
+
+fi
+
