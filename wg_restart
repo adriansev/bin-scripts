@@ -11,7 +11,10 @@ else
 /home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf stop
 sleep 1
 /home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf show
+/home/adrian/bin/wg_service /etc/wireguard/${ARG}.conf show
 EOF
 
 fi
+
+## no idea why it need 2 show commands to work
 
