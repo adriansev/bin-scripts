@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+VER="1.1.0"
+
+URL="https://github.com/oras-project/oras/releases/download/v${VER}/oras_${VER}_linux_amd64.tar.gz"
+
+wget ${URL} -O oras.tar.gz
+
+tar -zxvf oras.tar.gz oras
+
+rm -rf oras.tar.gz
+
