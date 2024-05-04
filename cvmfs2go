@@ -7,7 +7,7 @@ export CVMFS2GO_CACHE="${CVMFS2GO_CACHE:-${CVMFS2GO_BASE_DIR}/cache}"
 export CVMFS2GO_MOUNT_DIR="${CVMFS2GO_MOUNT_DIR:-${CVMFS2GO_BASE_DIR}/mount}"
 export CVMFS2GO_IMAGE_DIR="${CVMFS2GO_IMAGE_DIR:-${CVMFS2GO_BASE_DIR}/images}"
 
-export CVMFS2GO_IMG="${CVMFS2GO_IMG:-oras://registry.cern.ch/asevcenc/el7cvmfs:latest}" # Specify the location of Singularity image
+export CVMFS2GO_IMG="${CVMFS2GO_IMG:-oras://registry.cern.ch/asevcenc/el9cvmfs:latest}" # Specify the location of Singularity image
 
 export SINGULARITYENV_PS1='\[\033[1;31m\]${SINGULARITY_NAME}#\[\033[1;32m\][\D{%A %d.%m.%y %H:%M}] \u@\h : \[\033[1;34m\]\w \[\033[00m\]\n'
 export SINGULARITYENV_HOSTPWD="${PWD}"
