@@ -1,1 +1,2 @@
-/cvmfs/alice.cern.ch/bin/alienv enter VO_ALICE@AliPhysics::${1}
+/cvmfs/alice.cern.ch/bin/alienv enter "AliPhysics::${1}"
+

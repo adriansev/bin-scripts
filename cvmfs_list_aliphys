@@ -1,2 +1,1 @@
-#!/bin/bash
-[[ -e /cvmfs/alice.cern.ch/bin/alienv ]] && { /cvmfs/alice.cern.ch/bin/alienv q | awk '/AliPhysics/ { gsub("VO_ALICE@AliPhysics::","",$0); print $0}'; } || echo "no alice cvmfs"
+command ls -1U /cvmfs/alice.cern.ch/el{5,6,7,8,9}-x86_64/Packages/AliPhysics | grep -v AliPhysics
