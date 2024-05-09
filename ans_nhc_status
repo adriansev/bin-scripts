@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ans_run_cmd "${1}" 'hostname; nhc && echo OK || echo FAIL'
+

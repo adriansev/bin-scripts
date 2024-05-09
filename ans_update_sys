@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ans_play ${1} 00UPDATE.yml
+

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ans_play wn_alien 00UPDATE.yml
+
