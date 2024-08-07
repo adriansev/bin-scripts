@@ -158,7 +158,7 @@ alias du3='du -chx --max-depth=3 | sort -rh'
 alias fstab='cat /etc/fstab'
 alias mtab='cat /etc/mtab'
 
-alias ytb="youtube-dl --no-check-certificate"
+alias ytb="youtube-dl --youtube-skip-dash-manifest --no-check-certificate --no-check-extensions --prefer-insecure"
 alias ytb_mp3="ytb -x --audio-format mp3"
 
 alias rsync="rsync -ahuHAXW -e ssh"
