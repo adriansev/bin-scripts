@@ -38,17 +38,19 @@ if int(proc_rez.returncode) != 0:
     print(f'{proc_rez.stderr}\nCommand exited with {proc_rez.returncode}')
     sys.exit(1)
 
-
-#print (proc_rez.stdout)
+# print (proc_rez.stdout)
+# NR = Non-Recoverable, C = Critical, NC = Non-Critical
 # ID,Name,Type,State,Reading,Units,Lower NR,Lower C,Lower NC,Upper NC,Upper C,Upper NR,Event
-SENSOR_LIST = []
+SENSOR_LIST = {}
 
 for sensor in proc_rez.stdout.split('\n'):
     s_fields = sensor.strip().split(',')
     if not s_fields or len(s_fields) < 13: continue
 
     SENSOR_PROPS = {}
-    SENSOR_PROPS['name'] = s_fields[1].strip()
+    ID = s_fields[0].strip()
+    NAME = s_fields[1].strip()
+
     SENSOR_PROPS['type'] = s_fields[2].strip()
     SENSOR_PROPS['state'] = s_fields[3].strip()
     SENSOR_PROPS['reading'] = s_fields[4].strip()
@@ -59,12 +61,12 @@ for sensor in proc_rez.stdout.split('\n'):
     SENSOR_PROPS['upper_nc'] = s_fields[9].strip()
     SENSOR_PROPS['upper_c'] = s_fields[10].strip()
     SENSOR_PROPS['upper_nr'] = s_fields[11].strip()
-    SENSOR_PROPS['event'] = s_fields[12].strip()
-    SENSOR = {s_fields[0].strip() : SENSOR_PROPS }
-    SENSOR_LIST.append(SENSOR)
+    SENSOR_PROPS['event'] = s_fields[12].replace("'","").strip()
+    ## SENSOR = {s_fields[0].strip() : SENSOR_PROPS }
+    ## SENSOR_LIST.append(SENSOR)
+    SENSOR_LIST[NAME] = SENSOR_PROPS
 
 
-from rich.pretty import pprint
-pprint(SENSOR_LIST)
-
+list_str = json.dumps(SENSOR_LIST)
+print(list_str)
 
