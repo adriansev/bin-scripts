@@ -74,6 +74,16 @@ export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}${CPLUS_INCLUDE_PATH:+:}${ROOTSY
 popd &> /dev/null
 }
 
+root_system_enable () {
+# export ROOTSYS="/usr"
+
+# Prevent Cppyy from checking the PCH (and avoid warning)
+# export CLING_STANDARD_PCH=none
+
+export C_INCLUDE_PATH="${C_INCLUDE_PATH}${C_INCLUDE_PATH:+:}/usr/include/root"
+export CPLUS_INCLUDE_PATH="${CPLUS_INCLUDE_PATH}${CPLUS_INCLUDE_PATH:+:}/usr/include/root"
+}
+
 now_str () { date +%Y%m%d_%H%M%S; }
 
 pic_date () { exiftool $1 | grep "Date/Time Original"; }
