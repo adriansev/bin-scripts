@@ -2,6 +2,7 @@
 
 H=${1}
 shift
+[[ -z "${H}" ]] && { echo "Host argument unspecified"; exit 1; }
 
-ipmiconsole -u ADMIN -p $(< ~/ipmipass2) ${@} -h ${H}
+ipmiconsole -u ADMIN -p $(< ~/ipmipass) ${@} -h ${H}
 

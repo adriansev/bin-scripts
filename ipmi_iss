@@ -1,2 +1,3 @@
-#!/bin/bash
-exec ipmitool -I lan -U ADMIN -f ~/ipmipass2 -H "$@"
+#!/usr/bin/env bash
+
+exec ipmitool -I lan -U ADMIN -f ~/ipmipass -H "$@"

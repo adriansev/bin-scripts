@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+HOST="${1}"
+shift
+[[ -z "${HOST}" ]] && { echo "Host argument unspecified"; exit 1; }
+
+exec ipmitool -I lan -U ADMIN -f ~/ipmipass -H "${HOST}" mc reset cold

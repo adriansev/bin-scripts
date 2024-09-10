@@ -3,5 +3,5 @@
 HOST="${1}"
 shift
 
-exec IPMIsmctool "${HOST}" $( < ~/ipmismcpass2 ) ukvm
+exec IPMIsmctool "${HOST}" $( < ~/ipmismcpass ) ukvm
 

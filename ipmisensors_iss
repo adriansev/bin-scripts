@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-H=${1}
+H="${1}"
 shift
+[[ -z "${H}" ]] && { echo "Host argument is not specified"; exit 1; }
 
-ipmimonitoring -u ADMIN -p $(< ~/ipmipass2) ${@} \
+ipmimonitoring -u ADMIN -p $(< ~/ipmipass) ${@} \
 --ignore-unrecognized-events \
 --ignore-not-available-sensors \
 --bridge-sensors \

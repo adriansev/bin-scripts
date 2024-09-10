@@ -1,2 +1,0 @@
-#!/bin/bash
-exec ipmitool -I lan -U ADMIN -f ~/ipmipass -H "$@"
