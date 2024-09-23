@@ -10,7 +10,7 @@ source ${HOME}/.mail_issues_secrets
 
 /home/adrian/bin/alimon_iss_issues > ${FILE} || { echo "Could not write into /var/www/html/issdc dir"; exit 1; }
 echo >> ${FILE}
-/usr/bin/ssh -o StrictHostKeyChecking=no eos_mgm "/root/bin/eos_space_ls;echo;/root/bin/eos_fs_ls;" >> ${FILE}
+/usr/bin/ssh -o StrictHostKeyChecking=no mgm "/root/bin/eos_space_ls;echo;/root/bin/eos_fs_ls;" >> ${FILE}
 echo >> ${FILE}
 $HOME/bin/xrd_storage_info &>> ${FILE}
 echo >> ${FILE}
