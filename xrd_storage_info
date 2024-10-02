@@ -1,6 +1,6 @@
 #!/bin/bash
 
-servers="fst01 fst02 fst03 fst04 fst05 fst06 fst07 fst08 fst09 fst10 fst11 fst12 fst13 fst14 fst15"
+servers="fst01 fst02 fst03 fst04 fst05 fst06 fst07 fst08 fst09 fst10 fst11 fst12 fst13 fst14 fst15 fst16"
 
 storage_sum () {
 srv_list="${1}"
