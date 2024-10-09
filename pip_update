@@ -1,1 +1,1 @@
-python3 -m pip install --no-cache-dir --user --upgrade pip setuptools wheel
+python3 -m pip install --no-cache-dir --upgrade $( [[ -z ${VIRTUAL_ENV} ]] && echo "--user" ) pip setuptools wheel
