@@ -30,6 +30,7 @@ GROUP "devices"
   ENTRY "/sh://x360_rootl/~" URL "/sh://x360_rootl/~"
   ENTRY "/sh://x360_eth/~" URL "/sh://x360_eth/~"
   ENTRY "/sh://x360_eth_rootl/~" URL "/sh://x360_eth_rootl/~"
+  ENTRY "/sh://n2plus/home/adrian" URL "/sh://n2plus/home/adrian"
 ENDGROUP
 GROUP "CERN"
   ENTRY "/sh://lxplus9/~" URL "/sh://lxplus9/~"
