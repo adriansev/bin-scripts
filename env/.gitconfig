@@ -84,3 +84,5 @@
     defaultRemote = origin
 
 
+[init]
+	defaultBranch = master
