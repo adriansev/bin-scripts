@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+
+import datetime
+import os
+import sys
+import json
+import subprocess
+from typing import Union
+
+def is_help(args: Union[str, list], clean_args: bool = False) -> bool:
+    if not args: return False
+    if isinstance(args, str): args = args.split()
+    help_opts = ('-h', '--h', '-help', '--help')
+    help_arg_present = any(opt in args for opt in help_opts)
+    if help_arg_present and clean_args:
+        for opt in help_opts: get_arg(args, opt)
+    return help_arg_present
+
+
+def unixtime2local(timestamp: Union[str, int], decimals: bool = True) -> str:
+    """Convert unix time to a nice custom format"""
+    timestr = str(timestamp)
+    if len(timestr) < 10: return ''
+    micros = None
+    millis = None
+    time_decimals = ''
+    if len(timestr) > 10:
+        time_decimals = timestr[10:]
+        if len(time_decimals) <= 3:
+            time_decimals = float(time_decimals.ljust(3, '0')) * 1000
+            millis = datetime.timedelta(milliseconds=int(time_decimals))
+        else:
+            time_decimals = float(time_decimals.ljust(6, '0')) *1000000
+            micros = datetime.timedelta(microseconds=int(time_decimals))
+
+    unixtime = timestr[:10]
+    utc_time = datetime.datetime.fromtimestamp(int(unixtime), datetime.timezone.utc)
+    local_time = utc_time.astimezone()
+    if decimals and millis:
+        return f'{(local_time + millis).strftime("%Y%m%d_%H%M%S")}.{time_decimals}'
+    if decimals and micros:
+        return (local_time + micros).strftime("%Y%m%d_%H%M%S.%f")
+    return local_time.strftime("%Y%m%d_%H%M%S")
+
+
+status = exitcode = except_msg = None
+msg_out = msg_err = ''
+timeout = 5
+
+args = ['smartctl', '-j', '-i']
+
+help_msg = 'One argument required: full device name (as given to smartctl)'
+
+sys.argv.pop(0)  # remove executable name from argv list
+if len(sys.argv) < 1:
+    print(help_msg)
+    sys.exit(1)
+
+if is_help(sys.argv):
+    print(help_msg)
+    sys.exit(0)
+
+DEV = sys.argv[0]
+args.append(DEV)
+
+try:
+    status = subprocess.run(args, encoding = 'utf-8', errors = 'replace', shell = False, timeout = timeout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+except subprocess.TimeoutExpired:
+    print_err(f"Expired timeout: {timeout} for: {args}")
+    exitcode = int(62)
+except FileNotFoundError:
+    print_err(f"Command not found: {sh_cmd}")
+    exitcode = int(2)
+except Exception:
+    ex_type, ex_value, ex_traceback = sys.exc_info()
+    except_msg = f'Exception:: {ex_type} -> {ex_value}\n{ex_traceback}\n'
+    exitcode = int(1)
+
+if status:
+    if status.stdout: msg_out = status.stdout.strip()
+    if status.stderr: msg_err = status.stderr.strip()
+    exitcode = status.returncode
+if except_msg: msg_err = f'{except_msg}\n{msg_err}'
+
+dev_dict = json.loads(msg_out)
+nice_time = unixtime2local(dev_dict["local_time"]["time_t"], False)
+dump_name = f'{dev_dict["model_name"]}_{dev_dict["serial_number"]}_{nice_time}.txt'
+
+args_fullout = ['smartctl', '-x']
+args_fullout.append(DEV)
+
+try:
+    status = subprocess.run(args_fullout, encoding = 'utf-8', errors = 'replace', shell = False, timeout = timeout, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+except subprocess.TimeoutExpired:
+    print_err(f"Expired timeout: {timeout} for: {args}")
+    exitcode = int(62)
+except FileNotFoundError:
+    print_err(f"Command not found: {sh_cmd}")
+    exitcode = int(2)
+except Exception:
+    ex_type, ex_value, ex_traceback = sys.exc_info()
+    except_msg = f'Exception:: {ex_type} -> {ex_value}\n{ex_traceback}\n'
+    exitcode = int(1)
+
+if status:
+    if status.stdout: msg_out = status.stdout.strip()
+    if status.stderr: msg_err = status.stderr.strip()
+    exitcode = status.returncode
+if except_msg: msg_err = f'{except_msg}\n{msg_err}'
+
+with open(dump_name, "w") as f: print(msg_out, file = f)
+
