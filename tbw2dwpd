@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+
+sys.argv.pop(0)
+
+size = float(sys.argv[0])
+tbw = float(sys.argv[1])
+
+dwpd = (tbw/size)/(5.*365.)
+
+mb2mib_factor = 0.95367431640625
+
+mib_per_day = (dwpd * size * 1000000. * mb2mib_factor)
+speed_24h = mib_per_day / (24*3600)
+speed_12h = mib_per_day / (12*3600)
+
+print(f'For size {size} and TBW {tbw} --> DWPD = {dwpd:.2f}\n'
+       'The constant speed for 5 years to wear the drive:\n'
+      f'24h / 5years continous usage -> {speed_24h:.2f} MiB/s\n'
+      f'12h / 5years continous usage -> {speed_12h:.2f} MiB/s\n'
+     )
+
