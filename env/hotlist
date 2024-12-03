@@ -54,6 +54,7 @@ GROUP "GRID"
   ENTRY "/sh://seau2_root/root" URL "/sh://seau2_root/root"
   ENTRY "/sh://grid04_root/root" URL "/sh://grid04_root/root"
   ENTRY "/sh://grid04/home/asevcenc" URL "/sh://grid04/home/asevcenc"
+  ENTRY "/sh://sbdii/root" URL "/sh://sbdii/root"
 ENDGROUP
 GROUP "AUGER"
   ENTRY "/sh://auger01_root/" URL "/sh://auger01_root/"
