@@ -70,6 +70,8 @@ GROUP "AUGER"
   ENTRY "/sh://augerkit/gluster/users/sevcenco" URL "/sh://augerkit/gluster/users/sevcenco"
 ENDGROUP
 GROUP "VM Servers"
+  ENTRY "/sh://vmhost1" URL "/sh://vmhost1"
+  ENTRY "/sh://vmhost2" URL "/sh://vmhost2"
   ENTRY "/sh://indico_root/root" URL "/sh://indico_root/root"
   ENTRY "/sh://hr_root/root" URL "/sh://hr_root/root"
 ENDGROUP
