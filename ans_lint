@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+source ~/py312/bin/activate
+
+ansible-lint --profile production ${@}
+
