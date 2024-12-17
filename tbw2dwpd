@@ -17,6 +17,7 @@ speed_24h = mib_per_day / (24*3600)
 speed_12h = mib_per_day / (12*3600)
 
 print(f'For size {size} and TBW {tbw} --> DWPD = {dwpd:.2f}\n'
+      f'With a per Day written amount : {mib_per_day:.1f} MiB\n'
        'The constant speed for 5 years to wear the drive:\n'
       f'24h / 5years continous usage -> {speed_24h:.2f} MiB/s\n'
       f'12h / 5years continous usage -> {speed_12h:.2f} MiB/s\n'
