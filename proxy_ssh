@@ -1,3 +1,32 @@
 #!/bin/bash
 
-/usr/bin/ssh -C2qTnNf -o "ExitOnForwardFailure yes" -o "ConnectionAttempts 100" -D $2 $1
+SSH_REMOTE="${1}"
+shift
+LOCAL_PORT="${1}"
+shift
+
+COMPRESS=" -C2 "
+
+ARG="${1}"
+[[ "${ARG}" == "compress" || "${ARG}" == "comp" ]] && { shift; DO_COMPRESS="${COMPRESS}";}
+
+# -D [bind_address:]port
+# Specifies a local “dynamic” application-level port forwarding.  This works by allocating a socket to listen to port on the  local  side,
+# optionally bound to the specified bind_address.
+
+# -q      Quiet mode.
+# -T      Disable pseudo-terminal allocation.
+# -N      Do  not  execute  a remote command.  This is useful for just forwarding ports.
+# -n      Redirects stdin from /dev/null (actually, prevents reading from stdin).  This must be used when ssh is run in the background.
+# -f      Requests ssh to go to background just before command execution.
+#         This is useful if ssh is going to ask for passwords or passphrases, but the user wants it in the background.  This implies -n.
+
+echo /usr/bin/ssh -TnNf "${DO_COMPRESS}" \
+-o "ExitOnForwardFailure yes" \
+-o "IPQoS throughput" \
+-o "ConnectionAttempts 5" \
+-o "ServerAliveInterval 5" \
+-o "ServerAliveCountMax 10" \
+-o "TCPKeepAlive no" \
+"${@}" -D "${LOCAL_PORT}" "${SSH_REMOTE}"
+
