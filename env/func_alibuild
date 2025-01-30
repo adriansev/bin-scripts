@@ -26,3 +26,17 @@ ali_latest () { alibuild_load_aliphys latest ${1}; }
 
 alibuild_load () { alienv load -q ${1} 2>/dev/null; }
 
+o2phys_cvmfs_load () {
+local TAG CVMFS WORK_DIR ALIBUILD_ARCH_PREFIX
+TAG=${1}
+shift
+
+WORK_DIR="/cvmfs/alice.cern.ch"
+ALIBUILD_ARCH_PREFIX="el9-x86_64/Packages"
+
+CVMFS="${WORK_DIR}/${ALIBUILD_ARCH_PREFIX}/O2Physics/${TAG}/etc/profile.d/init.sh"
+
+[[ ! -f ${CVMFS} ]] && { return; }
+
+source "${CVMFS}"
+}
