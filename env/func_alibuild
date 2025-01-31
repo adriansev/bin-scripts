@@ -35,7 +35,6 @@ WORK_DIR="/cvmfs/alice.cern.ch"
 ALIBUILD_ARCH_PREFIX="el9-x86_64/Packages"
 
 CVMFS="${WORK_DIR}/${ALIBUILD_ARCH_PREFIX}/O2Physics/${TAG}/etc/profile.d/init.sh"
-
 [[ ! -f ${CVMFS} ]] && { return; }
 
 source "${CVMFS}"
