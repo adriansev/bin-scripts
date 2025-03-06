@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+HOST="${1}"
+shift
+[[ -z "${HOST}" ]] && { echo "Host argument is not specified"; exit 1; }
+
+ipmitool -I lan -U ADMIN -f ~/ipmipass -H "${HOST}" raw 0x30 0x0d
+
