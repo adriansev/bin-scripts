@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+HOST="${1}"
+shift
+
+SMCIPMITool ${HOST} $(< ~/ipmismcpass) ${@}
+
