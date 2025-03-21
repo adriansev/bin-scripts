@@ -1,2 +1,5 @@
-cd ~/Foldit
+pushd /home.hdd/adrian/Foldit
 ./Foldit
+popd
+
+
