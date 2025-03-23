@@ -18,5 +18,5 @@ shift
 
 ## N.B. !!! The rest of default options for ssh are set in .ssh/conf.d/default !!!
 
-/usr/bin/ssh -TnNf ${@} -D "${LOCAL_PORT}" ${SSH_REMOTE}
+/usr/bin/ssh -o "IPQoS=throughput" -C -TnNf ${@} -D "${LOCAL_PORT}" ${SSH_REMOTE}
 
