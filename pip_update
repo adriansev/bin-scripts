@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 python3 -m pip install --no-cache-dir --upgrade $( [[ -z ${VIRTUAL_ENV} ]] && echo "--user" ) pip
-python3 -m pip install --no-cache-dir --upgrade $( [[ -z ${VIRTUAL_ENV} ]] && echo "--user" ) setuptools[core] wheel distutils
+python3 -m pip install --no-cache-dir --upgrade $( [[ -z ${VIRTUAL_ENV} ]] && echo "--user" ) setuptools[core] wheel
+python3 -m pip install --no-cache-dir --upgrade $( [[ -z ${VIRTUAL_ENV} ]] && echo "--user" ) platformdirs distro
+
+
+
 
