@@ -1,6 +1,0 @@
-
-if [[ -n ${ALIBUILD_WORK_DIR}  ]]; then
-    type -p alienv 2>&1 > /dev/null && eval "$(alienv shell-helper)"
-    export ALIBUILD_ARCHITECTURE=$(aliBuild architecture)
-fi
-

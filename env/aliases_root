@@ -4,6 +4,8 @@ alias root.exe="root.exe -l"
 alias rootn.exe="rootn.exe -l"
 alias root="root.exe -l"
 alias rootn="rootn.exe -l"
+alias rootb="root.exe -l -b "
+alias rootnb="rootn.exe -l -b "
 
 alias rq="root.exe -l -b -q -x"
 

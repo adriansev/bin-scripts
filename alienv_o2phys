@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; return 1; }
+
+ALIBUILD_ARCH=$(aliBuild architecture);
+[[ -z "${ALIBUILD_ARCH}" ]] && { echo "aliBuild architecture could not be determined"; return 1; }
+
+VER="${1}"
+shift
+
+build_list="$(find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/O2Physics/ -mindepth 1 -maxdepth 1 -type d -printf '%P\n' | xargs -n 1)"
+labels_list="$(find ${ALIBUILD_WORK_DIR}/${ALIBUILD_ARCH}/O2Physics/ -mindepth 1 -maxdepth 1 -type l -printf '%P\n' | xargs -n 1)"
+
+list=$(echo -e "${build_list}\n${labels_list}")
+[[ -z ${VER} ]] && { echo "${list}"; exit 0; }
+
+alienv enter O2Physics/"${1}"
+

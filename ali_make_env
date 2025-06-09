@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+[[ -z "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not defined"; exit 1; }
+[[ ! -d "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not present"; exit 1; }
+[[ ! -r "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not readable"; exit 1; }
+[[ ! -w "${ALIBUILD_WORK_DIR}" ]] && { echo "ALIBUILD_WORK_DIR not writable"; exit 1; }
+
+PKG="${1}"
+shift
+
+ALIENV_LOCAL="alienv printenv "
+ALIENV_CVMFS="/cvmfs/alice.cern.ch/bin/alienv printenv "
+
+# if package name have :: then its a cvmfs package 
+[[ ${PKG} == *"::"* ]] && \
+{ USE_CVMFS="yes"; CMD="${ALIENV_CVMFS}"; WORK_DIR="/cvmfs/alice.cern.ch"; } || \
+{ USE_CVMFS=""; CMD="${ALIENV_LOCAL}"; WORK_DIR="${ALIBUILD_WORK_DIR}"; }
+
+# check if alienv
+if [[ -n "${USE_CVMFS}" ]]; then
+    # use ls to trigger autofs
+    ls /cvmfs/alice.cern.ch/bin/alienv &>/dev/null || { echo >&2 "cvmfs/alienv is not found"; exit 1; }
+else
+    hash alienv 2>/dev/null || { echo >&2 "alienv is not found"; exit 1; }
+fi
+
+ALIBUILD_ARCH_PREFIX="slc9_x86-64"
+export ALIBUILD_ARCH_PREFIX WORK_DIR
+
+HASH="$(echo ${PKG} | sha256sum -z | awk '{print $1}')"
+
+# Load the ALICE software env in the script environment
+echo "## ${PKG}" > ali_${HASH}.env
+[[ -a "${USE_CVMFS}" ]]  && echo -ne "ALIBUILD_WORK_DIR=${ALIBUILD_WORK_DIR};export ALIBUILD_WORK_DIR;" >> ali_${HASH}.env
+${CMD} ${PKG} 2>/dev/null >> ali_${HASH}.env
+

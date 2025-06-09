@@ -39,10 +39,7 @@ __CLASSPATH_INS () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${CLASSPATH}" ${
 __CLASSPATH_ADD () { [[ -z "${1}" ]] && return 1; ITEM_IN_PATH "${CLASSPATH}" ${1} && return 0; export CLASSPATH="${CLASSPATH}${CLASSPATH:+:}${1}"; }
 
 ## aliBuild functions
-source ${functions_script_dir}/func_alibuild
-
-## cvmfs functions
-source ${functions_script_dir}/func_cvmfs
+source ${functions_script_dir}/func_alice
 
 ## git functions
 source ${functions_script_dir}/func_git
@@ -258,13 +255,13 @@ stat /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject &> /dev/null ||
 SING_CMD="${1}"
 if [[ "${SING_CMD}" == "shell" ]]; then
     shift
-    singularity shell "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
+    apptainer shell "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
 elif [[ "${SING_CMD}" == "run" ]]; then
     shift
-    singularity run "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
+    apptainer run "${@}" /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest
 elif [[ "${SING_CMD}" == "exec" ]]; then
     shift
-    singularity exec /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest "${@}"
+    apptainer exec /cvmfs/unpacked.cern.ch/registry.hub.docker.com/rootproject/root:latest "${@}"
 fi
 }
 

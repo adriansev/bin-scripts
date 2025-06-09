@@ -1,1 +1,48 @@
-command ls -1U /cvmfs/alice.cern.ch/el{5,6,7,8,9}-x86_64/Packages/${1} | grep -v Packages | sort -u
+#!/usr/bin/env python3
+
+import os
+import sys
+import glob
+import re
+from datetime import datetime
+
+def extract_date_from_name(name):
+    tokens = name.split('-')
+    for token in tokens:
+        if re.fullmatch(r"\d{8}", token):
+            try:
+                return datetime.strptime(token, "%Y%m%d")
+            except ValueError:
+                continue
+    for token in tokens:
+        if re.fullmatch(r"20\d{2}", token):
+            try:
+                return datetime.strptime(token, "%Y")
+            except ValueError:
+                continue
+    return datetime.min
+
+
+def cvmfs_list_pkg(pkg: str = ''):
+    if not pkg: return []
+    pattern = f"/cvmfs/alice.cern.ch/*/Modules/modulefiles/{pkg}"
+    pkg_list = []
+
+    for path in glob.glob(pattern):
+        if os.path.isdir(path):
+            try:
+                pkg_list.extend(os.listdir(path))
+            except OSError as e:
+                print(f"Error listing directory {path}: {e}")
+
+    pkg_list = sorted(pkg_list, key = extract_date_from_name, reverse = False)
+    print("\n".join(pkg_list))
+
+
+sys.argv.pop(0)
+if not sys.argv:
+    sys.exit(1)
+
+cvmfs_list_pkg(sys.argv[0])
+
+
