@@ -10,6 +10,8 @@ GROUP "remote"
   ENTRY "/sh://monitor_adrian/home/adrian/ansible" URL "/sh://monitor_adrian/home/adrian/ansible"
   ENTRY "/sh://monitor_ml/home/monalisa" URL "/sh://monitor_ml/home/monalisa"
   ENTRY "/ftp://MARGARETA@10.10.8.28/" URL "/ftp://MARGARETA@10.10.8.28/"
+  ENTRY "/sh://issaf/software/alice" URL "/sh://issaf/software/alice"
+  ENTRY "/sh://issaf/alice" URL "/sh://issaf/alice"
 ENDGROUP
 GROUP "HARDWARE"
   ENTRY "/home/adrian/Documentation/hardware" URL "/home/adrian/Documentation/hardware"
