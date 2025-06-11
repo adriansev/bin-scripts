@@ -1,2 +1,2 @@
-//usr/bin/env -S root.exe -l "${0}" ; exit $?
+//usr/bin/env -S root.exe -l --web=off "${0}" ; exit $?
 {TBrowser br;}

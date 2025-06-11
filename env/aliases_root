@@ -1,9 +1,9 @@
 
 ## ROOT ALIASES
-alias root.exe="root.exe -l"
-alias rootn.exe="rootn.exe -l"
-alias root="root.exe -l"
-alias rootn="rootn.exe -l"
+alias root.exe="root.exe -l --web=off "
+alias rootn.exe="rootn.exe -l --web=off "
+alias root="root.exe -l --web=off "
+alias rootn="rootn.exe -l --web=off "
 alias rootb="root.exe -l -b "
 alias rootnb="rootn.exe -l -b "
 
