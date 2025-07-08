@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+
+awk -F' ' '!a[$NF]++ {gsub(/^/,"0.0.0.0 ",$NF) ; print $NF ; gsub(/^0\.0\.0\.0/,"::1",$NF) ; print $NF}' ${1}
+
+
