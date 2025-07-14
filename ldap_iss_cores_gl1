@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ldapsearch -o ldif-wrap=no -x -LLL -H ldap://sbdii.spacescience.ro:2170 -b "Mds-Vo-name=RO-13-ISS,o=grid" '(objectClass=GlueSubCluster)' GlueSubClusterPhysicalCPUs GlueSubClusterLogicalCPUs GlueHostProcessorOtherDescription
+

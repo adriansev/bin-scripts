@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+ldapsearch -o ldif-wrap=no -x -LLL -H ldap://sbdii.spacescience.ro:2170 -b "GLUE2DomainID=RO-13-ISS,o=glue" '(objectClass=GLUE2Benchmark)' GLUE2BenchmarkType GLUE2BenchmarkValue
+

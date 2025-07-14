@@ -3,6 +3,8 @@
 H="${1}"
 shift
 
-ldapsearch -x -H ldap://${H} -b o=Infosys
-ldapsearch -x -H ldap://${H} -b o=Infosys "*" modifyTimestamp
+ldapsearch -o ldif-wrap=no -x -H ldap://${H} -b o=Infosys
+echo
+echo
+ldapsearch -o ldif-wrap=no -x -H ldap://${H} -b o=Infosys "*" modifyTimestamp
 
