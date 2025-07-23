@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+DIR="${1}"
+shift
+
+[[ -z "${DIR}" ]] && { echo "No arg provided! Provide the directory that you want to delete"; exit 1; }
+[[ -d "${DIR}" ]] || { echo "Provided argument is not a directory!"; exit 1; }
+
+rm -rf /tmp/empty
+mkdir /tmp/empty
+
+DIR_ABS="$(/usr/bin/realpath --canonicalize-existing ${DIR})"
+[[ -d "${DIR_ABS}" ]] || { echo "Argument did not get resolved to a directory"; exit 1; }
+
+/usr/bin/rsync -a --force --delete /tmp/empty/ "${DIR_ABS}/"
+
+rm -rf /tmp/empty
