@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+speedtest -s 45318 ${@}
+
