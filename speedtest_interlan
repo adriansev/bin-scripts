@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-speedtest-cli --server 34635 ${@}
+speedtest -s 34635 ${@}
 
