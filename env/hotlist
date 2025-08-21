@@ -38,6 +38,7 @@ GROUP "CERN"
   ENTRY "/sh://alibuildmac/~" URL "/sh://alibuildmac/~"
   ENTRY "/sh://alibuildmac03/~" URL "/sh://alibuildmac03/~"
   ENTRY "/sh://alieevee-wn-8/home/asevcenc" URL "/sh://alieevee-wn-8/home/asevcenc"
+  ENTRY "/sh://alieevee-wn-9/home/asevcenc" URL "/sh://alieevee-wn-9/home/asevcenc"
 ENDGROUP
 GROUP "ALICE"
   ENTRY "/sh://alice2_adrian/~" URL "/sh://alice2_adrian/~"
