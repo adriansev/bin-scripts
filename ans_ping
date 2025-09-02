@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
+source ~/py313/bin/activate
+
 ansible ${1:-all} -m ping
 

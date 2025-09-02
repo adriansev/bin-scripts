@@ -18,7 +18,7 @@ $HOME/bin/storage_md_status &>> ${FILE}
 echo >> ${FILE}
 $HOME/bin/storage_smart_status &>> ${FILE}
 
-/usr/bin/curl --url 'smtp://mail2.spacescience.ro:587' \
+/usr/bin/curl --url 'smtp://mail.spacescience.ro:587' \
 --ssl-reqd \
 --mail-from 'adrian.sevcenco@spacescience.ro' \
 --mail-rcpt 'glite@spacescience.ro' \

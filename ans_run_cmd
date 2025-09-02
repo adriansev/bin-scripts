@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+source ~/py313/bin/activate
+
 [[ -z "${ANSIBLE_HOME}" ]] && { echo "ANSIBLE_HOME not defined!!" ; exit 1; }
 [[ -d "${ANSIBLE_HOME}" ]] || { echo "ANSIBLE_HOME defined but not present!!" ; exit 1; }
 
