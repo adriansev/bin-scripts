@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+
+import sys
+import math
+
+## https://iridl.ldeo.columbia.edu/dochelp/QA/Basic/dewpoint.html
+
+sys.argv.pop(0)
+if not sys.argv or len(sys.argv) != 2:
+    print('1st arg: temperature\n2nd arg: relative humidity')
+
+T = float(sys.argv[0])
+RH = float(sys.argv[1])
+
+rh_log = math.log(RH/100.)
+t17 = 17.625 * T
+t243 = 243.04 + T
+t_ratio = t17 / t243
+Td = 243.04 * (rh_log + t_ratio) / (17.625 - rh_log - t_ratio)
+
+print(f'{Td:.2f}')
+
