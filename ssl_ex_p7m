@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+FILE="${1}"
+FILEOUT="${FILE%.*}"
+
+openssl smime -verify -noverify -binary -in "${FILE}" -inform DER -out "${FILEOUT}"
+
