@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+FILE="${1}"
+openssl pkcs7 -in "${FILE}" -inform DER -print_certs | openssl x509 -text -noout
+
