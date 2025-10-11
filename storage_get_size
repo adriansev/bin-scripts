@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-hosts="fst01 fst02 fst03 fst04 fst05 fst06 fst07 fst08 fst09 fst10 fst11 fst12 fst13 fst14 fst15 fst16"
+hosts="fst01 fst02 fst03 fst04 fst05 fst06 fst07 fst08 fst09 fst10 fst11 fst12 fst13 fst14 fst15 fst16 fst17"
 
 MYCMD=$(echo 'df --total -l --block-size=1T /storage* | tail -1 | awk -v HOST=$(hostname -s) '\''{ print HOST"\t"$2,"\t"$3,"\t"$4}'\''' | base64 -w0)
 

@@ -108,6 +108,7 @@ GROUP "EOS"
   ENTRY "/sh://fst14/" URL "/sh://fst14/"
   ENTRY "/sh://fst15/" URL "/sh://fst15/"
   ENTRY "/sh://fst16/" URL "/sh://fst16/"
+  ENTRY "/sh://fst17/" URL "/sh://fst17/"
 ENDGROUP
 GROUP "Switches"
   ENTRY "/sh://switch_dell01_lx/home/linuxadmin" URL "/sh://switch_dell01_lx/home/linuxadmin"
