@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ~/py313/bin/activate
+[[ -n "${PYENV_ACTIVATE}" && -f "${PYENV_ACTIVATE}" ]] && source "${PYENV_ACTIVATE}"
 
 ansible-lint --profile production ${@}
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+[[ -n "${PYENV_ACTIVATE}" && -f "${PYENV_ACTIVATE}" ]] && source "${PYENV_ACTIVATE}"
+
 ARG="${1}"
 shift
 
@@ -20,8 +22,6 @@ detail)
     DETAIL="1"
     ;;
 esac
-
-source ~/py313/bin/activate
 
 script -q /dev/null -c 'ansible all -m ping' > ${HOME}/ans_ping_all.log
 

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+ansible-galaxy collection install --force \
+ansible.posix \
+ansible.utils \
+ansible.netcommon \
+ansible.snmp \
+community.general \
+community.network \
+community.libvirt \
+containers.podman \
+dellemc.os10 \
+oasis_roles.system \
+cloud.common \
+kubevirt.core \
+kubernetes.core \
+h3c_open.comware
+
+ansible-galaxy role install --force \
+danhawker.cornerstone
+
