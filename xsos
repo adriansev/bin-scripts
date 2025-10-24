@@ -1,5 +1,5 @@
 #!/bin/bash
-# xsos v0.7.30 last mod 2023-11-28
+# xsos v0.7.37 last mod 2025-10-22
 # Latest version at <http://github.com/ryran/xsos>
 # RPM packages available at <http://people.redhat.com/rsawhill/rpms>
 # Copyright 2012-2018 Ryan Sawhill Aroha <rsaw@redhat.com>
@@ -183,7 +183,7 @@ fi
 
 # XSOS_ETHTOOL_ERR_REGEX (str: awk-syntax regular expression)
 #   Configures what ETHTOOL() uses to generate the data under the "Interface Errors" heading
-    : ${XSOS_ETHTOOL_ERR_REGEX:='/Missing ethtool_-S file|(drop|disc|err|fifo|buf|fail|miss|OOB|fcs|full|frags|hdr|tso|pause|lost).*: [^0]/ && !/(fdir_|veb\.)/'}
+    : ${XSOS_ETHTOOL_ERR_REGEX:='/Missing ethtool_-S file|(drop|disc|err|fifo|buf|fail|miss|OOB|fcs|full|frags|hdr|tso|pause|lost|csum).*: [^0]/ && !/(fdir_|veb\.)/'}
 
 # XSOS_LSPCI_NET_REGEX (str: regular expression)
 #   Configures what LSPCI() uses to search for peripherals under the "Net" heading
@@ -1672,7 +1672,9 @@ MEMINFO() {
     /^Hugepagesize:/    { Hugepagesize   = $2 }
     /^HugePages_Total:/ { HugepagesTotal = $2 }
     /^HugePages_Free:/  { HugepagesFree  = $2 }
+    /^HugePages_Rsvd:/  { HugepagesRsvd  = $2 }
     /^AnonHugePages:/   { THP_Used       = $2 }
+    /^Percpu:/          { Percpu         = $2 }
     
     END {
       
@@ -1686,6 +1688,7 @@ MEMINFO() {
       MemNoBC_Percent = MemUsedNoBC * 100 / MemTotal
       Dirty_Percent   = Dirty * 100 / MemTotal
       Shmem_Percent   = Shmem * 100 / MemTotal
+      Percpu_Percent  = Percpu * 100 / MemTotal
       Slab_Percent    = Slab * 100 / MemTotal
       PT_Percent      = PageTables * 100 / MemTotal
       HP              = Hugepagesize * HugepagesTotal
@@ -1694,8 +1697,12 @@ MEMINFO() {
       # If have hugepages, calculate in-use
       
       if (HugepagesTotal > 0) {
-        HP_Used         = (HugepagesTotal - HugepagesFree) * Hugepagesize
-        HP_Used_Percent = (HugepagesTotal - HugepagesFree) * 100 / HugepagesTotal
+        HP_Used         = (HugepagesTotal - HugepagesFree - HugepagesRsvd) * Hugepagesize
+        HP_Used_Percent = (HugepagesTotal - HugepagesFree - HugepagesRsvd) * 100 / HugepagesTotal
+        HP_Rsvd         = (HugepagesRsvd) * Hugepagesize
+        HP_Rsvd_Percent = (HugepagesRsvd) * 100 / HugepagesTotal
+        HP_Free         = (HugepagesFree) * Hugepagesize
+        HP_Free_Percent = (HugepagesFree) * 100 / HugepagesTotal
       }
       
       # Else, need to avoid divide-by-zero errors
@@ -1703,6 +1710,10 @@ MEMINFO() {
       else {
         HP_Used         = 0
         HP_Used_Percent = 0
+        HP_Rsvd         = 0
+        HP_Rsvd_Percent = 0
+        HP_Free         = 0
+        HP_Free_Percent = 0
       }
       
       # If meminfo has LowTotal (modern x86_64 boxes do not)...
@@ -1755,7 +1766,8 @@ MEMINFO() {
         PageTables  *= 1024
         HP          *= 1024
         THP_Used    *= 1024
-        if (HugepagesTotal > 0) HP_Used *= 1024
+        Percpu      *= 1024
+        if (HugepagesTotal > 0) { HP_Used *= 1024; HP_Rsvd *= 1024; HP_Free *= 1024 }
         if (LowTotal > 0) { LowUsed *= 1024; LowTotal *= 1024 }
         if (SwapTotal > 0) { SwapUsed *= 1024; SwapTotal *= 1024 }
       }
@@ -1778,7 +1790,8 @@ MEMINFO() {
         PageTables  /= divisor
         HP          /= divisor
         THP_Used    /= divisor
-        if (HugepagesTotal > 0) HP_Used /= divisor
+        Percpu      /= divisor
+        if (HugepagesTotal > 0) { HP_Used /= divisor; HP_Rsvd /= divisor ; HP_Free /=divisor }
         if (LowTotal > 0)  { LowUsed  /= divisor; LowTotal  /= divisor }
         if (SwapTotal > 0) { SwapUsed /= divisor; SwapTotal /= divisor }
       }
@@ -1835,10 +1848,13 @@ MEMINFO() {
       Dirty_Percent   = round(Dirty_Percent,   Prec_Percent)
       HP_PercentRam   = round(HP_PercentRam,   Prec_Percent)
       HP_Used_Percent = round(HP_Used_Percent, Prec_Percent)
+      HP_Rsvd_Percent = round(HP_Rsvd_Percent, Prec_Percent)
+      HP_Free_Percent = round(HP_Free_Percent, Prec_Percent)
       LowUsed_Percent = round(LowUsed_Percent, Prec_Percent)
       Slab_Percent    = round(Slab_Percent,    Prec_Percent)
       PT_Percent      = round(PT_Percent,      Prec_Percent)
       Shmem_Percent   = round(Shmem_Percent,   Prec_Percent)
+      Percpu_Percent  = round(Percpu_Percent,  Prec_Percent)
       Swap_Percent    = round(Swap_Percent,    Prec_Percent)
       
       MemTotal    = round(MemTotal,    Prec_BytesLo)
@@ -1847,6 +1863,8 @@ MEMINFO() {
       Dirty       = round(Dirty,       Prec_BytesHi)
       HP          = round(HP,          Prec_BytesLo)
       HP_Used     = round(HP_Used,     Prec_BytesLo)
+      HP_Rsvd     = round(HP_Rsvd,     Prec_BytesLo)
+      HP_Free     = round(HP_Free,     Prec_BytesLo)
       LowUsed     = round(LowUsed,     Prec_BytesLo)
       LowTotal    = round(LowTotal,    Prec_BytesLo)
       Slab        = round(Slab,        Prec_BytesHi)
@@ -1855,6 +1873,7 @@ MEMINFO() {
       SwapUsed    = round(SwapUsed,    Prec_BytesLo)
       SwapTotal   = round(SwapTotal,   Prec_BytesLo)
       THP_Used    = round(THP_Used,    Prec_BytesHi)
+      Percpu      = round(Percpu,      Prec_BytesHi)
               
       printf    "  %sRAM:%s\n", H2, H0
       printf    "    %s%s%s total ram%s\n", H_IMP, MemTotal, Unit, H0
@@ -1870,7 +1889,7 @@ MEMINFO() {
         printf  "    No ram pre-allocated to HugePages\n"
       else {
         printf  "    %s%s%s pre-allocated to HugePages (%s%% of total ram)%s\n", H_IMP, HP, Unit, HP_PercentRam, H0
-        printf  "    %s%s of HugePages (%s%%) in-use by applications\n", HP_Used, Unit, HP_Used_Percent
+        printf  "    In-use: %s%s (%s%%) / Reserved: %s%s (%s%%) / Free: %s%s (%s%%)\n", HP_Used, Unit, HP_Used_Percent, HP_Rsvd, Unit, HP_Rsvd_Percent, HP_Free, Unit, HP_Free_Percent
       }
       
       printf    "  %sTHP:%s\n", H2, H0
@@ -1880,13 +1899,15 @@ MEMINFO() {
         printf  "    %s%s allocated to THP %s\n", THP_Used, Unit, H0
       }
 
-      printf    "  %sLowMem/Slab/PageTables/Shmem:%s\n", H2, H0
+      printf    "  %sLowMem/Slab/PageTables/Shmem/Percpu:%s\n", H2, H0
       if (SHOW_Lowmem == 1)
         printf  "    %s%s (%s%%) of %s%s LowMem in-use\n", LowUsed, Unit, LowUsed_Percent, LowTotal, Unit
       printf    "    %s%s (%s%%) of total ram used for Slab\n", Slab, Unit, Slab_Percent
       printf    "    %s%s (%s%%) of total ram used for PageTables\n", PageTables, Unit, PT_Percent
+
       if (SHOW_Shmem == 1)
         printf  "    %s%s (%s%%) of total ram used for Shmem\n", Shmem, Unit, Shmem_Percent
+	printf  "    %s%s (%s%%) of total ram used for Percpu\n", Percpu, Unit, Percpu_Percent
       
       printf    "  %sSwap:%s\n", H2, H0
       if (SwapTotal == 0)
@@ -3105,6 +3126,7 @@ SYSCTL() {
   __Pa fs.nr_open  "[fds] "  '{printf "\"%s\"%s  (per-process limit for num open files [see also RLIMIT_NOFILE])", $1,H0}'
   __Pa fs.file-nr "[fds] "  '{printf "\"%s  %s  %s\"%s  (num allocated fds, N/A, num free fds)", $1,$2,$3,H0 }'
   __Pa fs.inode-nr "[inodes] "  '{printf "\"%s  %s\"%s  (nr_inodes allocated, nr_free_inodes)", $1,$2,H0}'
+  __Pa fs.dentry-state "[dentries] "  '{printf "\"%s  %s  %s  %s  %s  %s\"%s  (nr_dentry, nr_unused, age_limit, want_pages, nr_negative, dummy)", $1,$2,$3,$4,$5,$6,H0}'
   
   echo -e "$XSOS_INDENT_H1${c[H2]}net.${c[0]}"
   __Pa net.core.busy_read "[microsec] "  '{printf "\"%s\"%s  ", $1, H0; if ($1==0) printf "(off)"}'
@@ -3146,7 +3168,7 @@ SYSCTL() {
   __P vm.min_free_kbytes
   __Pa vm.nr_hugepages "[$hpgsz-MiB pages] "   "-vHPGSZ=$hpgsz"  '{if ($1>0) printf "\"%s\"%s  (%.1f GiB total)", $1, H0, $1*HPGSZ/1024; else printf "\"%s\"%s", $1, H0}'
   __Pa vm.nr_overcommit_hugepages "[$hpgsz-MiB pages] "   "-vHPGSZ=$hpgsz"  '{if ($1>0) printf "\"%s\"%s  (%.1f GiB total)", $1, H0, $1*HPGSZ/1024; else printf "\"%s\"%s", $1, H0}'
-  __Pa vm.overcommit_memory "[0-2] "   '{if ($1==0) printf "\"0\"%s  (heuristic overcommit)", H0; else if ($1==1) printf "\"1\"%s  (always overcommit, never check)", H0; else if ($1==2) print "\"2\"%s  (always check, never overcommit)", H0}'
+  __Pa vm.overcommit_memory "[0-2] "   '{if ($1==0) printf "\"0\"%s  (heuristic overcommit)", H0; else if ($1==1) printf "\"1\"%s  (always overcommit, never check)", H0; else if ($1==2) printf "\"2\"%s  (always check, never overcommit)", H0}'
   __P vm.overcommit_ratio
   __Pa vm.oom_kill_allocating_task "[bool] "  '{if ($1==0) printf "\"0\"%s  (scan tasklist)", H0; else printf "\"1\"%s  (kill OOM-triggering task)", H0}'
   __Pa vm.panic_on_oom "[0-2] "  '{if ($1==0) printf "\"0\"%s  (no panic)", H0; else if ($1==1) printf "\"1\"%s  (no panic if OOM-triggering task limited by mbind/cpuset)", H0; else if ($1==2) printf "\"2\"%s  (always panic)", H0}'
@@ -3289,7 +3311,7 @@ PSCHECK() {
       {
         # Print fields up through %MEM
         for (i=1; i<fieldvsz; i++)
-          printf $i"❚"
+          printf "%s❚",$i
         
         # Print fields VSZ & RSS
         for (i=fieldvsz; i<fieldtty; i++) {
@@ -4011,6 +4033,7 @@ trap "rm -rf $TMPDIR 2>/dev/null" EXIT
     [[ -n $ip ]]      && IPADDR
     [[ -n $all ]]     && XSOS_IP_VERSION=6 IPADDR
     [[ -n $sysctl ]]  && SYSCTL / 2>/dev/null
+    [[ -n $ps ]]      && PSCHECK
     [[ -n $ss ]]      && SSCHECK
     [[ -n $firewall ]]&& FIREWALL
     [[ -n $ifcfg ]]   && IFCFG
