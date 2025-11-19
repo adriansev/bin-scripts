@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+grp_list="$(nodeset --list-all |xargs)"
+
+GRP="${1}"
+shift
+
+[[ "${GRP}" == "all" ]] && DST=" --all " || DST=" -g ${GRP} "
+
+clush ${DST} ${@}
+
