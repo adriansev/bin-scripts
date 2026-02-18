@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+date -d "@${1}" +%Y%m%d_%H%M%S
+
