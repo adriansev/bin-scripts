@@ -9,6 +9,7 @@ from math import floor
 from typing import NamedTuple
 from typing import Union
 
+from rich.pretty import pprint
 from rich import print
 from rich.console import Console
 from rich.table import Table
@@ -328,6 +329,7 @@ devices_info_list = []
 for dev_phys_path, dev_sys_path in dev_path_mapping:
     ata = scsi = wwn = nvme = ''
     dev_name = os.path.basename(dev_sys_path)
+    if dev_name not in dev_byid_map: continue
     by_id_name_list = dev_byid_map[dev_name]
 
     slot_info = get_slotinfo(dev_name)
@@ -379,7 +381,11 @@ for dev_phys_path, dev_sys_path in dev_path_mapping:
         model_name_nice = f'"{model_name_nice}"'
         serial_nr = smartctl_json['serial_number']
     else:
-        for m in smartctl_json['smartctl']['messages']: print(f"{m['severity']}: {m['string']}")
+        if 'messages' not in smartctl_json['smartctl']:
+            cmd = ' '.join(smartctl_json['smartctl']['argv'])
+            print(f'Failure running "{cmd}" ; exit code {smartctl_json["smartctl"]["exit_status"]}')
+        else:
+            for m in smartctl_json['smartctl']['messages']: print(f"{m['severity']}: {m['string']}")
 
     devices_info_list.append(DEV_INFO(dev = dev_name, dev_id = by_id_name_list, dev_path = dev_sys_path, dev_phys_path = dev_phys_path,
                                       ata = ata, scsi = scsi, wwn = wwn, nvme = nvme, sg = sg_name, dev_maj_min = dev_maj_min,
