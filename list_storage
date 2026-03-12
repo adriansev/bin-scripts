@@ -236,7 +236,7 @@ list_enclosures.sort()
 # get a list of Slots in enclosures
 list_slots = []
 for enc in list_enclosures:
-    l = [ i for i in list_fullpath(enc) if os.path.isdir(i) and 'Slot' in i ]
+    l = [i for i in list_fullpath(enc) if os.path.isdir(i) and ('Slot' in i or 'ArrayDevice' in i)]
     l.sort()
     list_slots.extend(l)
 
