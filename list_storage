@@ -425,6 +425,9 @@ def get_info4encslot(enc,slot):
 def get_dev_info_msg(dev_name_short, do_status: bool = False):
     if dev_name_short == 'EMPTY' or not dev_name_short: return ()
     dev_info = get_info4dev(dev_name_short)
+    if not dev_info: return ()
+    if not dev_info.dev: return ()
+
     if '/nvme/' in dev_info.dev_phys_path:
         return (dev_info.enc, dev_info.slot, dev_info.dev, dev_info.dev_maj_min, dev_info.size, dev_info.model_name, dev_info.serial)
     if '/ata' in dev_info.dev_phys_path:
