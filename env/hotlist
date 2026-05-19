@@ -34,6 +34,7 @@ GROUP "devices"
   ENTRY "/sh://n2plus/home/adrian" URL "/sh://n2plus/home/adrian"
 ENDGROUP
 GROUP "LISA"
+  ENTRY "/sh://kuber_ans/home/anslisa" URL "/sh://kuber_ans/home/anslisa"
   ENTRY "/sh://kuberadm/" URL "/sh://kuberadm/"
   ENTRY "/sh://lisa_wn1/" URL "/sh://lisa_wn1/"
   ENTRY "/sh://lisa_wn2/" URL "/sh://lisa_wn2/"
