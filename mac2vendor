@@ -125,12 +125,80 @@ def _query_api(mac):
         return "ERR"
 
 
+# --- local Wireshark 'manuf' OUI file (consulted before the remote API) -----
+MANUF_PATH = os.environ.get(
+    "MACVENDORS_MANUF",
+    os.path.join(os.path.expanduser("~"), "oui_manuf"),
+)
+_manuf = {}            # (maskbits, prefixvalue) -> vendor string
+_manuf_masks = []      # distinct mask lengths present, sorted descending
+_manuf_loaded = False
+
+
+def _load_manuf():
+    global _manuf_loaded
+    _manuf_loaded = True
+    try:
+        f = open(MANUF_PATH, encoding="utf-8", errors="replace")
+    except OSError:
+        return  # absent -> lookups return None, fall through to the API
+    masks = set()
+    with f:
+        for line in f:
+            line = line.rstrip("\n")
+            if not line or line.lstrip().startswith("#"):
+                continue
+            parts = line.split("\t") if "\t" in line else line.split(None, 2)
+            addr = parts[0].strip()
+            short_name = parts[1].strip() if len(parts) > 1 else ""
+            long_name = parts[2].strip() if len(parts) > 2 else ""
+            vendor = long_name or short_name
+            if not addr or not vendor:
+                continue
+            if "/" in addr:
+                addr, _, bits = addr.partition("/")
+                try:
+                    bits = int(bits)
+                except ValueError:
+                    continue
+            else:
+                bits = None
+            hexstr = re.sub(r"[^0-9a-fA-F]", "", addr).lower()
+            if not hexstr or len(hexstr) > 12:
+                continue
+            if bits is None:
+                bits = len(hexstr) * 4  # implied mask from prefix length
+            if not 1 <= bits <= 48:
+                continue
+            prefix48 = int(hexstr.ljust(12, "0"), 16)
+            _manuf[(bits, prefix48 >> (48 - bits))] = vendor
+            masks.add(bits)
+    _manuf_masks[:] = sorted(masks, reverse=True)
+
+
+def _manuf_lookup(mac):
+    """Longest-prefix (most specific mask first) match, or None."""
+    if not _manuf_loaded:
+        _load_manuf()
+    if not _manuf:
+        return None
+    m = int(mac.replace(":", ""), 16)
+    for bits in _manuf_masks:
+        v = _manuf.get((bits, m >> (48 - bits)))
+        if v is not None:
+            return v
+    return None
+
+
 def lookup_vendor(mac):
     if not _cache_loaded:
         _load_cache()
     oui = mac[:8]
     if oui in _cache:
         return _cache[oui]
+    hit = _manuf_lookup(mac)          # local oui_manuf before the remote query
+    if hit is not None:
+        return hit
     result = _query_api(mac)
     if result != "TIMEOUT" and result != "ERR" and not result.startswith("HTTP"):
         _cache_put(oui, result)
