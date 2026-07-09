@@ -10,17 +10,22 @@ Prints the classification (universal/local + unicast/multicast) plus a
 known-virtualization tag or an OUI-DB vendor lookup, identical to the
 per-MAC "type=" field produced by mac_drop_stats.py.
 
-Vendor lookup uses macvendors.com v1 (token embedded, overridable via
-MACVENDORS_TOKEN), 1 s timeout, attempted ONLY for universally-administered
-unicast MACs. Result tokens: <vendor> / N/A (404) / TIMEOUT / ERR / HTTP<code>.
-Resolved vendors are cached in ~/.cache/mac_oui.cache, keyed by OUI.
+Vendor lookup uses the keyless macvendors.com API (no API key), 1 s timeout,
+attempted ONLY for universally-administered unicast MACs. The keyless tier is
+documented at 1 req/s and 1000/day, so requests are throttled to 1 req/s by
+default (override with MACVENDORS_MIN_INTERVAL seconds). Result tokens:
+<vendor> / N/A (404) / TIMEOUT / ERR / HTTP<code> (e.g. HTTP429 if rate-limited).
+Resolved vendors are cached in ~/.cache/mac_oui.cache, keyed by OUI, which also
+conserves the daily quota across runs.
 
 Exit status: 0 on success, 2 on a missing or malformed MAC argument.
 """
 import os
 import re
 import socket
+import ssl
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -40,17 +45,21 @@ KNOWN_OUI_VM = {
     "00:15:5d": "Hyper-V",
 }
 
-# --- OUI-DB vendor lookup (macvendors.com v1) + on-disk cache ---------------
-MACVENDORS_TOKEN = os.environ.get(
-    "MACVENDORS_TOKEN",
-    "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJtYWN2ZW5kb3JzIiwiZXhw"
-    "IjoxODQ4MjIzNzY5LCJpYXQiOjE1MzM3Mjc3NjksImlzcyI6Im1hY3ZlbmRvcnMiLCJqdGki"
-    "OiI4ZjhhZGM5OC0wNGU4LTQ1OWMtOTBiOC1hYzRiZjU3NmU4NzMiLCJuYmYiOjE1MzM3Mjc3"
-    "NjgsInN1YiI6IjYxNyIsInR5cCI6ImFjY2VzcyJ9.qeby85dPQwBA4oty6dGDv3v2Ij72nrYM"
-    "10W_n4wGBbty1rOD76MGk739f83Ja8KkjDgyStNUOz7_lwCCkkqCUw",
-)
-MACVENDORS_URL = "https://api.macvendors.com/v1/lookup/"
+# --- OUI-DB vendor lookup (keyless macvendors.com API) + on-disk cache ------
+MACVENDORS_URL = "https://api.macvendors.com/"   # keyless: GET .../<MAC>
 LOOKUP_TIMEOUT = 1.0  # seconds
+# Keyless tier is documented at 1 req/s (and 1000/day); throttle to match.
+RATE_MIN_INTERVAL = float(os.environ.get("MACVENDORS_MIN_INTERVAL", "1.0"))
+_last_request = [0.0]  # monotonic timestamp of the previous request start
+
+
+def _throttle():
+    wait = RATE_MIN_INTERVAL - (time.monotonic() - _last_request[0])
+    if wait > 0:
+        time.sleep(wait)
+    _last_request[0] = time.monotonic()
+
+
 CACHE_PATH = os.path.join(os.path.expanduser("~"), ".cache", "mac_oui.cache")
 _cache = {}
 _cache_loaded = False
@@ -81,14 +90,28 @@ def _cache_put(oui, vendor):
         pass
 
 
+def _ssl_context():
+    """Verifying context by default.
+
+    MACVENDORS_CA=/path/to/ca.pem  -> trust an explicit bundle/anchor
+                                      (e.g. an intercepting-proxy or HARICA CA)
+    MACVENDORS_INSECURE=1          -> disable verification (equivalent to the
+                                      `curl -k` in the original mac2vendor).
+                                      This turns off authentication of the peer
+                                      -- use only if you accept the MITM risk.
+    """
+    if os.environ.get("MACVENDORS_INSECURE") == "1":
+        return ssl._create_unverified_context()
+    ca = os.environ.get("MACVENDORS_CA") or None
+    return ssl.create_default_context(cafile=ca)  # ca=None -> system trust store
+
+
 def _query_api(mac):
-    req = urllib.request.Request(
-        MACVENDORS_URL + mac,
-        headers={"Authorization": "Bearer " + MACVENDORS_TOKEN,
-                 "Accept": "text/plain"},
-    )
+    _throttle()
+    req = urllib.request.Request(MACVENDORS_URL + mac)
     try:
-        with urllib.request.urlopen(req, timeout=LOOKUP_TIMEOUT) as r:
+        with urllib.request.urlopen(req, timeout=LOOKUP_TIMEOUT,
+                                    context=_ssl_context()) as r:
             return r.read().decode("utf-8", "replace").strip() or "N/A"
     except (socket.timeout, TimeoutError):
         return "TIMEOUT"
