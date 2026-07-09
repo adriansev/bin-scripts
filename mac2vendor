@@ -1,12 +1,162 @@
-#!/bin/bash
+#!/usr/bin/env python3
+"""Classify a single MAC address and resolve its vendor.
 
-MAC="${1}"
+    mac_info.py <MAC>
 
-TOKEN='eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJtYWN2ZW5kb3JzIiwiZXhwIjoxODQ4MjIzNzY5LCJpYXQiOjE1MzM3Mjc3NjksImlzcyI6Im1hY3ZlbmRvcnMiLCJqdGkiOiI4ZjhhZGM5OC0wNGU4LTQ1OWMtOTBiOC1hYzRiZjU3NmU4NzMiLCJuYmYiOjE1MzM3Mjc3NjgsInN1YiI6IjYxNyIsInR5cCI6ImFjY2VzcyJ9.qeby85dPQwBA4oty6dGDv3v2Ij72nrYM10W_n4wGBbty1rOD76MGk739f83Ja8KkjDgyStNUOz7_lwCCkkqCUw'
+Accepts colon, hyphen, Cisco-dotted, or bare-hex forms in any case
+(e.g. 4c:56:df:46:22:57, 4C-56-DF-46-22-57, 4c56.df46.2257, 4c56df462257).
 
-CURLCMD="curl -fsSlk "
-LINK="https://api.macvendors.com/v1/lookup/${MAC}"
+Prints the classification (universal/local + unicast/multicast) plus a
+known-virtualization tag or an OUI-DB vendor lookup, identical to the
+per-MAC "type=" field produced by mac_drop_stats.py.
 
-VENDOR=$(${CURLCMD} -G "${LINK}" -H "Authorization: Bearer ${TOKEN}" -H "Accept: text/plain")
-echo "${VENDOR}"
+Vendor lookup uses macvendors.com v1 (token embedded, overridable via
+MACVENDORS_TOKEN), 1 s timeout, attempted ONLY for universally-administered
+unicast MACs. Result tokens: <vendor> / N/A (404) / TIMEOUT / ERR / HTTP<code>.
+Resolved vendors are cached in ~/.cache/mac_oui.cache, keyed by OUI.
+
+Exit status: 0 on success, 2 on a missing or malformed MAC argument.
+"""
+import os
+import re
+import socket
+import sys
+import urllib.error
+import urllib.request
+
+# --- MAC classification -----------------------------------------------------
+KNOWN_LOCAL_PREFIXES = {
+    "52:54:00": "QEMU/KVM",
+    "0a:00:27": "VirtualBox host-only",
+    "02:42":    "Docker",
+}
+KNOWN_OUI_VM = {
+    "00:16:3e": "Xen",
+    "08:00:27": "VirtualBox",
+    "00:0c:29": "VMware",
+    "00:50:56": "VMware",
+    "00:05:69": "VMware",
+    "00:1c:42": "Parallels",
+    "00:15:5d": "Hyper-V",
+}
+
+# --- OUI-DB vendor lookup (macvendors.com v1) + on-disk cache ---------------
+MACVENDORS_TOKEN = os.environ.get(
+    "MACVENDORS_TOKEN",
+    "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJtYWN2ZW5kb3JzIiwiZXhw"
+    "IjoxODQ4MjIzNzY5LCJpYXQiOjE1MzM3Mjc3NjksImlzcyI6Im1hY3ZlbmRvcnMiLCJqdGki"
+    "OiI4ZjhhZGM5OC0wNGU4LTQ1OWMtOTBiOC1hYzRiZjU3NmU4NzMiLCJuYmYiOjE1MzM3Mjc3"
+    "NjgsInN1YiI6IjYxNyIsInR5cCI6ImFjY2VzcyJ9.qeby85dPQwBA4oty6dGDv3v2Ij72nrYM"
+    "10W_n4wGBbty1rOD76MGk739f83Ja8KkjDgyStNUOz7_lwCCkkqCUw",
+)
+MACVENDORS_URL = "https://api.macvendors.com/v1/lookup/"
+LOOKUP_TIMEOUT = 1.0  # seconds
+CACHE_PATH = os.path.join(os.path.expanduser("~"), ".cache", "mac_oui.cache")
+_cache = {}
+_cache_loaded = False
+
+
+def _load_cache():
+    global _cache_loaded
+    _cache_loaded = True
+    try:
+        with open(CACHE_PATH, encoding="utf-8") as f:
+            for line in f:
+                oui, sep, vendor = line.rstrip("\n").partition("\t")
+                if sep and oui:
+                    _cache[oui] = vendor
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
+
+
+def _cache_put(oui, vendor):
+    _cache[oui] = vendor
+    try:
+        os.makedirs(os.path.dirname(CACHE_PATH), exist_ok=True)
+        with open(CACHE_PATH, "a", encoding="utf-8") as f:
+            f.write("%s\t%s\n" % (oui, vendor.replace("\t", " ")))
+    except OSError:
+        pass
+
+
+def _query_api(mac):
+    req = urllib.request.Request(
+        MACVENDORS_URL + mac,
+        headers={"Authorization": "Bearer " + MACVENDORS_TOKEN,
+                 "Accept": "text/plain"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=LOOKUP_TIMEOUT) as r:
+            return r.read().decode("utf-8", "replace").strip() or "N/A"
+    except (socket.timeout, TimeoutError):
+        return "TIMEOUT"
+    except urllib.error.HTTPError as e:
+        return "N/A" if e.code == 404 else "HTTP%d" % e.code
+    except urllib.error.URLError as e:
+        if isinstance(e.reason, (socket.timeout, TimeoutError)):
+            return "TIMEOUT"
+        return "ERR"
+    except Exception:
+        return "ERR"
+
+
+def lookup_vendor(mac):
+    if not _cache_loaded:
+        _load_cache()
+    oui = mac[:8]
+    if oui in _cache:
+        return _cache[oui]
+    result = _query_api(mac)
+    if result != "TIMEOUT" and result != "ERR" and not result.startswith("HTTP"):
+        _cache_put(oui, result)
+    return result
+
+
+def known_prefix(mac):
+    for n in (8, 5):
+        p = mac[:n]
+        if p in KNOWN_LOCAL_PREFIXES:
+            return KNOWN_LOCAL_PREFIXES[p]
+        if p in KNOWN_OUI_VM:
+            return KNOWN_OUI_VM[p]
+    return None
+
+
+def classify(mac):
+    first = int(mac[:2], 16)
+    admin = "local" if first & 0x02 else "universal"
+    cast = "multicast" if first & 0x01 else "unicast"
+    label = "%s/%s" % (admin, cast)
+    kp = known_prefix(mac)
+    if kp:
+        return "%s [%s]" % (label, kp)
+    if admin == "universal" and cast == "unicast":
+        return "%s [%s]" % (label, lookup_vendor(mac))
+    return label
+
+
+def normalize_mac(s):
+    """Return canonical 'xx:xx:xx:xx:xx:xx' lowercase, or None if not 48-bit."""
+    hexstr = re.sub(r"[^0-9a-fA-F]", "", s).lower()
+    if len(hexstr) != 12:
+        return None
+    return ":".join(hexstr[i:i + 2] for i in range(0, 12, 2))
+
+
+def main(argv):
+    if len(argv) != 2:
+        sys.stderr.write("usage: %s <MAC>\n" % os.path.basename(argv[0]))
+        return 2
+    mac = normalize_mac(argv[1])
+    if mac is None:
+        sys.stderr.write("error: not a valid 48-bit MAC: %s\n" % argv[1])
+        return 2
+    print("%s  %s" % (mac, classify(mac)))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
 
