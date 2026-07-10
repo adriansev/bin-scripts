@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+cpu=/sys/devices/system/cpu
+for f in scaling_driver scaling_available_governors scaling_governor \
+         energy_performance_preference energy_performance_available_preferences \
+         cpuinfo_min_freq cpuinfo_max_freq; do
+  printf '%-38s %s\n' "$f:" "$(cat $cpu/cpu0/cpufreq/$f 2>/dev/null || echo MISSING)"
+done
+printf '%-38s %s\n' "kernel:"              "$(uname -r)"
+printf '%-38s %s\n' "intel_pstate/status:" "$(cat $cpu/intel_pstate/status 2>/dev/null || echo NA)"
+printf '%-38s %s\n' "amd_pstate/status:"   "$(cat $cpu/amd_pstate/status 2>/dev/null || echo NA)"
+printf '%-38s %s\n' "hwp flag:"            "$(grep -qm1 hwp  /proc/cpuinfo && echo yes || echo no)"
+printf '%-38s %s\n' "cppc flag:"           "$(grep -qm1 cppc /proc/cpuinfo && echo yes || echo no)"
+printf '%-38s %s\n' "cpufreq/boost:"       "$(cat $cpu/cpufreq/boost 2>/dev/null || echo NA)"
+printf '%-38s %s\n' "model:"               "$(grep -m1 'model name' /proc/cpuinfo | cut -d: -f2- | xargs)"
+echo "cpuidle states (index -> name):"
+for s in $cpu/cpu0/cpuidle/state*/name; do printf '  %s -> %s\n' "${s%/name}" "$(cat $s)"; done 2>/dev/null
+
