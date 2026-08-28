@@ -1,5 +1,32 @@
 #!/usr/bin/env bash
+# Collect SMART health status. Interim tooling pending Telegraf inputs.smart.
+set -uo pipefail
 
-echo "Checking for SMART errors on $(hostname) ..."
-for d in $(lsblk -dnp -o NAME); do out="$(smartctl -q errorsonly -H ${d})"; [[ -n ${out} ]] && echo -e "${d}\n${out}" ;done
-echo "done"
+OUT=/run/smart_health.txt
+TMP=$(mktemp "${OUT}.XXXXXX") || exit 1
+trap 'rm -f "${TMP}"' EXIT
+
+{
+    printf '# host: %s    # generated: %s\n\n' "$(hostname -s)" "$(date -Is)"
+
+    # TYPE==disk excludes loop/rom/dm/md; zram reports as disk so filter by name
+    lsblk -dnp -o NAME,TYPE | awk '$2 == "disk" && $1 !~ /zram/ { print $1 }' |
+    while read -r dev; do
+        out=$(smartctl -q errorsonly -H "${dev}" 2>&1)
+        [[ -n "${out}" ]] && printf '%s\n%s\n\n' "${dev}" "${out}"
+    done
+
+    printf '\n'
+} > "${TMP}"
+
+chmod 0644 "${TMP}"
+
+# /tmp is 1777: refuse to write through a symlink or a file we do not own.
+# Removing it first makes the subsequent rename a plain create.
+if [[ -e "${OUT}" || -L "${OUT}" ]]; then
+    [[ -f "${OUT}" && ! -L "${OUT}" && -O "${OUT}" ]] || rm -f "${OUT}"
+fi
+
+mv -f "${TMP}" "${OUT}"
+trap - EXIT
+
