@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+FQDN="${1:-mgm.spacescience.ro}"
+
+host "$FQDN" | awk '/has address/ {print $NF}' | while read -r ip; do
+    out=$(XRD_REQUESTTIMEOUT=10 xrdfs "root://${ip}" query opaquefile "/?mgm.pcmd=is_master" 2>/dev/null) || continue
+    out=$(printf '%s' "$out" | tr -d '\0' | head -n1 | tr -d '[:space:]')
+    [ "${out}" = "OK" ] && echo "${ip}"
+done
+
