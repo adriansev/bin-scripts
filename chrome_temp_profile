@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+PROFILE="$(mktemp -d -t chrome-tmp.XXXXXX)"
+trap 'rm -rf -- "$PROFILE"' EXIT
+
+google-chrome \
+  --user-data-dir="$PROFILE" \
+  --disable-extensions \
+  --no-first-run \
+  --no-default-browser-check \
+  "$@"
+
